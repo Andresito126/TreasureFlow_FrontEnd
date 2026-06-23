@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:treasureflow/features/auth/presentation/widgets/auth_feature_item_widget.dart';
+import 'package:treasureflow/features/auth/citizen/presentation/widgets/auth_feature_item_widget.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_widget.dart';
 import 'package:treasureflow/shared/widgets/social_outline_button_widget.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginSCitizencreen extends StatefulWidget {
+  const LoginSCitizencreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<LoginSCitizencreen> createState() => _LoginSCitizencreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginSCitizencreenState extends State<LoginSCitizencreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:treasureflow/features/auth/presentation/screens/login_screen.dart';
+import 'package:treasureflow/features/auth/citizen/presentation/screens/login_citizen_screen.dart';
 import 'package:treasureflow/shared/theme/dark_theme.dart';
 import 'package:treasureflow/shared/theme/light_theme.dart';
 
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       darkTheme: DarkTheme.theme,
       themeMode: ThemeMode.system,
 
-      home:  LoginScreen(),
+      home:  LoginSCitizencreen(),
     );
   }
 }
