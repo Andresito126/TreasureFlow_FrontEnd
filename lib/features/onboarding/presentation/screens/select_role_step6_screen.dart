@@ -108,6 +108,7 @@ class SelectRoleStep6Screen extends StatelessWidget {
                 roleTitle: 'ESTABLECIMIENTO',
                 icon: Icons.storefront_outlined,
                 onTap: () {
+                  Navigator.pushNamed(context, '/registerLocalStep1');
                   
                 },
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/screens/login_citizen_screen.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/screens/register_citizen_screen.dart';
+import 'package:treasureflow/features/auth/local/presentation/screens/register_local_screen.dart';
 import 'package:treasureflow/features/onboarding/presentation/screens/select_role_step6_screen.dart';
 import 'package:treasureflow/shared/theme/dark_theme.dart';
 import 'package:treasureflow/shared/theme/light_theme.dart';
@@ -30,6 +31,9 @@ class MyApp extends StatelessWidget {
         //ciudaano
         '/login': (context) => const LoginCitizenScreen(),
         '/registerCitizen': (context) => const RegisterCitizenScreen(),
+
+        //local
+        '/registerLocalStep1': (context) => const RegisterLocalScreen(),
         
       },
 
