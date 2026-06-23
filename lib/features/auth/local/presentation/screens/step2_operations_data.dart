@@ -22,21 +22,22 @@ class Step2OperationsData extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Horarios de atención", style: theme.textTheme.titleMedium),
+          Text("Horarios de atención", style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
           const DaySelectorWidget(),
 
           const SizedBox(height: 32),
 
-          Text("Materiales que aceptas", style: theme.textTheme.titleMedium),
+          Text("Materiales que aceptas", style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
-          // Placeholder solicitado
+          
           Container(
             height: 100,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: theme.colorScheme.outline),
             ),
             child: Center(
               child: Text(
@@ -49,7 +50,7 @@ class Step2OperationsData extends StatelessWidget {
           const SizedBox(height: 32),
 
           SwitchListTile(
-            title: const Text("Ofrece recolección a domicilio"),
+            title: Text("Ofrece recolección a domicilio", style: theme.textTheme.bodyMedium),
             value: true,
             onChanged: (val) {},
             activeColor: theme.colorScheme.primary,

@@ -14,7 +14,8 @@ class SocialOutlineButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return SizedBox(
       width: double.infinity,
@@ -24,7 +25,7 @@ class SocialOutlineButtonWidget extends StatelessWidget {
         icon: Icon(icon, size: 28), 
         label: Text(
           text,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyMedium,
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: colors.onSurface,

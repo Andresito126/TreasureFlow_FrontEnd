@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:treasureflow/features/auth/local/presentation/widgets/location_detail_card_widget.dart';
 
-
 class Step3LocationData extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
@@ -37,15 +36,15 @@ class Step3LocationData extends StatelessWidget {
             child: Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              color: const Color(0xff1f2937),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
+              color: theme.colorScheme.surface,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: TextField(
-                  style: TextStyle(color: Colors.white),
+                  style: theme.textTheme.bodyMedium,
                   decoration: InputDecoration(
-                    icon: Icon(Icons.search, color: Colors.white54),
+                    icon: Icon(Icons.search, color: theme.colorScheme.onSurface.withOpacity(0.5)),
                     hintText: "Busca tu dirección...",
-                    hintStyle: TextStyle(color: Colors.white54),
+                    hintStyle: theme.textTheme.bodySmall,
                     border: InputBorder.none,
                   ),
                 ),
@@ -53,14 +52,13 @@ class Step3LocationData extends StatelessWidget {
             ),
           ),
           
-         
           Positioned(
             bottom: 240,
             right: 16,
             child: FloatingActionButton(
               onPressed: () {},
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black87,
+              backgroundColor: theme.colorScheme.surface,
+              foregroundColor: theme.colorScheme.onSurface,
               child: const Icon(Icons.my_location),
             ),
           ),

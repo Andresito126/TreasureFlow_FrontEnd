@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
 
 class RegisterProfileHeaderWidget extends StatelessWidget {
   final VoidCallback onEditPhoto;
@@ -8,7 +7,8 @@ class RegisterProfileHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return SizedBox(
       height: 160,
@@ -22,11 +22,11 @@ class RegisterProfileHeaderWidget extends StatelessWidget {
               color: colors.surfaceVariant, // Placeholder color
             ),
             // child: SvgPicture.asset(
-            //   'assets/images/banner_placeholder.svg', 
+            //   'assets/images/banner_placeholder.svg',
             //   fit: BoxFit.cover,
             // ),
           ),
-          
+
           Positioned(
             bottom: 0,
             child: GestureDetector(
@@ -40,7 +40,10 @@ class RegisterProfileHeaderWidget extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: colors.surface,
-                      border: Border.all(color: colors.background, width: 4),
+                      border: Border.all(
+                        color: theme.scaffoldBackgroundColor,
+                        width: 4,
+                      ),
                     ),
                     child: ClipOval(
                       // child: Image.asset(
@@ -54,9 +57,16 @@ class RegisterProfileHeaderWidget extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: colors.secondary,
                       shape: BoxShape.circle,
-                      border: Border.all(color: colors.background, width: 2),
+                      border: Border.all(
+                        color: theme.scaffoldBackgroundColor,
+                        width: 2,
+                      ),
                     ),
-                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                   ),
                 ],
               ),

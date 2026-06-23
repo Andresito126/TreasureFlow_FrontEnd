@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
-
 class LocationDetailCard extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
@@ -18,12 +17,12 @@ class LocationDetailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    
+    final colors = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: const Color(0xff111827), 
+        color: colors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
@@ -53,39 +52,47 @@ class LocationDetailCard extends StatelessWidget {
                     children: [
                       Text(
                         "Dirección detectada",
-                        style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurface.withOpacity(0.7),
+                        ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         "Av. Nuevo León 123\nCol. Condesa, Cuauhtémoc, 06100, CMDX",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
                   onPressed: onEditAddress,
-                  icon: const Icon(Icons.edit_square, color: Colors.green),
+                  icon: Icon(Icons.edit_square, color: colors.primary),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.05),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    backgroundColor: colors.onSurface.withOpacity(0.05),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ],
             ),
-            
+
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16.0),
               child: Divider(color: Colors.white12, height: 1),
             ),
-            
+
             Text(
               "Ajusta el pin en el mapa para mayor precisión",
-              style: theme.textTheme.bodySmall?.copyWith(color: Colors.white54),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.onSurface.withOpacity(0.5),
+              ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -96,7 +103,10 @@ class LocationDetailCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: PrimaryButtonGreenWidget(text: 'Siguiente', onPressed: onNext),
+                  child: PrimaryButtonGreenWidget(
+                    text: 'Siguiente',
+                    onPressed: onNext,
+                  ),
                 ),
               ],
             ),

@@ -7,6 +7,7 @@ class DaySelectorWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -16,17 +17,14 @@ class DaySelectorWidget extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+            color: isSelected ? colors.primary : Colors.transparent,
             shape: BoxShape.circle,
-            border: isSelected ? null : Border.all(color: theme.colorScheme.outline),
+            border: isSelected ? null : Border.all(color: colors.outline),
           ),
           child: Center(
             child: Text(
               days[index],
-              style: TextStyle(
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.textTheme.bodyMedium,
             ),
           ),
         );

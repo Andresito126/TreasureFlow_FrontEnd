@@ -14,7 +14,8 @@ class PrimaryButtonBlueWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return SizedBox(
       width: double.infinity,
@@ -23,7 +24,7 @@ class PrimaryButtonBlueWidget extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.secondary,
-          foregroundColor: Colors.white,
+          foregroundColor: colors.onSecondary,
           disabledBackgroundColor: colors.secondary.withOpacity(0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
@@ -38,7 +39,10 @@ class PrimaryButtonBlueWidget extends StatelessWidget {
               )
             : Text(
                 text,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colors.onSecondary,
+                ),
               ),
       ),
     );

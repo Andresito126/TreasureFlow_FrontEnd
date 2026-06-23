@@ -30,10 +30,7 @@ class InputFieldWidget extends StatelessWidget {
         if (textInput != null && textInput!.isNotEmpty) ...[
           Text(
             textInput!,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w500,
-            ),
+            style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: 8),
         ],

@@ -24,13 +24,13 @@ class AuthFeatureItemWidget extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           title, 
-          style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 12),
+          style: textTheme.labelMedium,
         ),
         const SizedBox(height: 4),
         Text(
           subtitle,
           textAlign: TextAlign.center,
-          style: textTheme.bodySmall?.copyWith(fontSize: 10, color: colors.onSurface.withOpacity(0.5)),
+          style: textTheme.labelSmall,
         ),
       ],
     );
