@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/widgets/auth_feature_item_widget.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
-import 'package:treasureflow/shared/widgets/primary_button_widget.dart';
+import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/social_outline_button_widget.dart';
 
-class LoginSCitizencreen extends StatefulWidget {
-  const LoginSCitizencreen({super.key});
+class LoginCitizenScreen extends StatefulWidget {
+  const LoginCitizenScreen({super.key});
 
   @override
-  State<LoginSCitizencreen> createState() => _LoginSCitizencreenState();
+  State<LoginCitizenScreen> createState() => _LoginCitizenScreenState();
 }
 
-class _LoginSCitizencreenState extends State<LoginSCitizencreen> {
+class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -134,7 +134,7 @@ class _LoginSCitizencreenState extends State<LoginSCitizencreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    PrimaryButtonWidget(
+                    PrimaryButtonBlueWidget(
                       text: 'Iniciar sesión',
                       onPressed: () {},
                     ),
@@ -182,7 +182,9 @@ class _LoginSCitizencreenState extends State<LoginSCitizencreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.pushNamed(context, '/registerCitizen');
+                          },
                           child: Text(
                             'Regístrate',
                             style: textTheme.bodySmall?.copyWith(

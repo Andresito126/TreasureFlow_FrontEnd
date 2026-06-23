@@ -6,6 +6,7 @@ class InputFieldWidget extends StatelessWidget {
   final String hTPlaceHolder;
   final bool isPassword;
   final IconData? iconInput;
+  final TextInputType? keyboardType;
   final TextEditingController? controller;
 
   const InputFieldWidget({
@@ -14,6 +15,7 @@ class InputFieldWidget extends StatelessWidget {
     required this.hTPlaceHolder,
     this.isPassword = false,
     this.iconInput,
+    this.keyboardType,
     this.controller,
   });
 
@@ -39,6 +41,7 @@ class InputFieldWidget extends StatelessWidget {
         TextFormField(
           controller: controller,
           obscureText: isPassword,
+          keyboardType: keyboardType,
           style: theme.textTheme.bodyMedium,
           decoration: InputDecoration(
             prefixIcon: iconInput != null
