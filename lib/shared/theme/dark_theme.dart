@@ -25,6 +25,36 @@ class DarkTheme {
         error: AppColors.errorDark,
       ),
 
+      textTheme: TextTheme(
+
+        // Titulos principales
+        headlineLarge: const TextStyle(
+          fontSize: 32.0,
+          letterSpacing: 1.5,
+          color: AppColors.textColorDark,
+        ),
+
+        // Titulos secundarios
+        titleLarge: const TextStyle(
+          fontSize: 20.0,
+          letterSpacing: 1.2,
+          color: AppColors.textColorDark,
+        ),
+
+        // Texto normal
+        bodyMedium: const TextStyle(
+          fontSize: 16.0,
+          color: AppColors.textColorDark,
+        ),
+
+        // Texto pequeño
+        bodySmall: const TextStyle(
+          fontSize: 14.0,
+          color: AppColors.textColorDark,
+        ),
+      ),
+
+
       extensions: const [
         AppThemeExtension(
           yellowComplete: AppColors.yellowCompleteDark,
@@ -34,4 +64,5 @@ class DarkTheme {
       ],
     );
   }
+  
 }

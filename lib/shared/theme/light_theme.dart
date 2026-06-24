@@ -10,20 +10,51 @@ class LightTheme {
 
       scaffoldBackgroundColor: AppColors.backgroundLight,
 
-colorScheme: const ColorScheme.light(
-  primary: AppColors.primaryLight,
-  secondary: AppColors.secondaryLight,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.primaryLight,
+        secondary: AppColors.secondaryLight,
 
-  surface: AppColors.backgroundBoxLight,
-  background: AppColors.backgroundLight,
+        surface: AppColors.backgroundBoxLight,
+        background: AppColors.backgroundLight,
 
-  onSurface: AppColors.textColorLight,
-  onPrimary: Colors.white,
-  onSecondary: Colors.white,
+        onSurface: AppColors.textColorLight,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
 
-  outline: AppColors.strokeLight,
-  error: AppColors.errorLight,
-),
+        outline: AppColors.strokeLight,
+        error: AppColors.errorLight,
+      ),
+
+      
+      textTheme: TextTheme(
+
+        // Titulos principales
+        headlineLarge: const TextStyle(
+          fontSize: 32.0,
+          letterSpacing: 1.5,
+          color: AppColors.textColorLight,
+        ),
+
+        // Titulos secundarios
+        titleLarge: const TextStyle(
+          fontSize: 20.0,
+          letterSpacing: 1.2,
+          color: AppColors.textColorLight,
+        ),
+
+        // Texto normal
+        bodyMedium: const TextStyle(
+          fontSize: 16.0,
+          color: AppColors.textColorLight,
+        ),
+
+        // Texto pequeño
+        bodySmall: const TextStyle(
+          fontSize: 14.0,
+          color: AppColors.textColorLight,
+        ),
+      ),
+
 
       extensions: const [
         AppThemeExtension(
