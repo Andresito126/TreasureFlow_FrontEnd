@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../widgets/role_selection_card.dart'; 
+import '../widgets/role_selection_card.dart';
 
 class SelectRoleStep6Screen extends StatelessWidget {
   const SelectRoleStep6Screen({super.key});
@@ -19,7 +18,6 @@ class SelectRoleStep6Screen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              
               Row(
                 children: [
                   Icon(Icons.recycling, color: primaryGreen, size: 28),
@@ -34,12 +32,11 @@ class SelectRoleStep6Screen extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const Spacer(flex: 1),
 
-              
               Image.asset(
-                'assets/images/basurini_happy_placeholder.png', 
+                'assets/images/basurini_happy_placeholder.png',
                 height: 200,
                 errorBuilder: (context, error, stackTrace) => const SizedBox(
                   height: 200,
@@ -57,18 +54,27 @@ class SelectRoleStep6Screen extends StatelessWidget {
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.2,
-                    fontFamily: 'Poppins', 
+                    fontFamily: 'Poppins',
                   ),
                   children: [
-                    TextSpan(text: 'EL VIAJE ', style: TextStyle(color: Colors.white)),
-                    TextSpan(text: 'ESTÁ ', style: TextStyle(color: primaryGreen)),
-                    TextSpan(text: 'LISTO', style: TextStyle(color: Colors.white)),
+                    TextSpan(
+                      text: 'EL VIAJE ',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    TextSpan(
+                      text: 'ESTÁ ',
+                      style: TextStyle(color: primaryGreen),
+                    ),
+                    TextSpan(
+                      text: 'LISTO',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ],
                 ),
               ),
 
               const SizedBox(height: 16),
-              
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -91,7 +97,7 @@ class SelectRoleStep6Screen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-            
+
               RoleSelectionCard(
                 glowColor: primaryGreen,
                 roleTitle: 'CIUDADANO',
@@ -102,24 +108,20 @@ class SelectRoleStep6Screen extends StatelessWidget {
               ),
 
               const SizedBox(height: 20),
-  
+
               RoleSelectionCard(
                 glowColor: primaryYellow,
                 roleTitle: 'ESTABLECIMIENTO',
                 icon: Icons.storefront_outlined,
                 onTap: () {
                   Navigator.pushNamed(context, '/registerLocalStep1');
-                  
                 },
               ),
 
               const Spacer(flex: 2),
-              
 
-              
               TextButton(
                 onPressed: () {
-                  
                   Navigator.pushNamed(context, '/login');
                 },
                 child: RichText(
@@ -130,7 +132,7 @@ class SelectRoleStep6Screen extends StatelessWidget {
                       TextSpan(
                         text: 'Inicia Sesión',
                         style: TextStyle(
-                          color: Color(0xFF34A853), 
+                          color: Color(0xFF34A853),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -141,12 +143,10 @@ class SelectRoleStep6Screen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              
               Align(
                 alignment: Alignment.centerLeft,
                 child: InkWell(
                   onTap: () {
-                    
                     if (Navigator.canPop(context)) {
                       Navigator.pop(context);
                     }
