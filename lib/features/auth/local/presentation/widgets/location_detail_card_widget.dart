@@ -6,12 +6,14 @@ class LocationDetailCard extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
   final VoidCallback onEditAddress;
+  final String address; 
 
   const LocationDetailCard({
     super.key,
     required this.onNext,
     required this.onBack,
     required this.onEditAddress,
+    this.address = "Detectando ubicación...",
   });
 
   @override
@@ -58,7 +60,7 @@ class LocationDetailCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Av. Nuevo León 123\nCol. Condesa, Cuauhtémoc, 06100, CMDX",
+                        address, // ← aquí va el parámetro
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
@@ -78,21 +80,17 @@ class LocationDetailCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16.0),
               child: Divider(color: Colors.white12, height: 1),
             ),
-
             Text(
               "Ajusta el pin en el mapa para mayor precisión",
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colors.onSurface.withOpacity(0.5),
               ),
             ),
-
             const SizedBox(height: 16),
-
             Row(
               children: [
                 Expanded(
