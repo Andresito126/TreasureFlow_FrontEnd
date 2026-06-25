@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_svg/flutter_svg.dart'; 
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
-
-
-
 
 class RegisterCitizenScreen extends StatefulWidget {
   const RegisterCitizenScreen({super.key});
@@ -25,7 +21,6 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
 
   @override
   void dispose() {
-    
     _nameController.dispose();
     _lastNameController.dispose();
     _secondLastNameController.dispose();
@@ -35,8 +30,7 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
     super.dispose();
   }
 
-  void _onConfirmPressed() {
-  }
+  void _onConfirmPressed() {}
 
   @override
   Widget build(BuildContext context) {
@@ -45,32 +39,12 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      backgroundColor: colors.background, 
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        // ACA EL NACK BUTTOON DEL KEVINNNNNNNNN
-
-
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: colors.surface,
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: colors.onSurface),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-        ),
-      ),
+      backgroundColor: colors.background,
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. TÍTULOS
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
@@ -97,55 +71,46 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
 
             const SizedBox(height: 24),
 
-            // ACA DEJARE EL ALTO HARDCODEADO DE MIENTRAS!!!!!!!!!!!! LUEGO SERA RESPONSIVE
             SizedBox(
-              height: 160, 
+              height: 160,
               child: Stack(
                 alignment: Alignment.topCenter,
                 children: [
                   Container(
-                    height: 120, 
+                    height: 120,
                     width: double.infinity,
                     clipBehavior: Clip.antiAlias,
-                    decoration: const BoxDecoration(
-                     
+                    decoration: const BoxDecoration(),
+
+                    child: Image.asset(
+                      'assets/auth/banner.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: colors.surfaceVariant,
+                        child: const Center(child: Icon(Icons.image, size: 50)),
+                      ),
                     ),
-                    
-                    // FOTO BANNERRRRRRRRRRRRRRRRRR
-
-
-                    // child: SvgPicture.asset(
-                    //   'assets/images/banner_placeholder.svg', 
-                    //   fit: BoxFit.cover,
-                    //   placeholderBuilder: (context) => Container(
-                    //     color: colors.surfaceVariant,
-                    //     child: const Center(child: Icon(Icons.image, size: 50)),
-                    //   ),
-                    // ),
                   ),
-                  
+
                   Positioned(
-                    bottom: 0, 
+                    bottom: 0,
                     child: GestureDetector(
                       onTap: () {
-                        
-                        // LOGICA DE CAMARA
                         print("Seleccionar foto de perfil");
                       },
                       child: Stack(
                         alignment: Alignment.bottomRight,
                         children: [
-                          // ACA VA BASURINIIIIII
-
-
-
                           Container(
                             height: 80,
                             width: 80,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: colors.surface,
-                              border: Border.all(color: colors.background, width: 4),
+                              border: Border.all(
+                                color: colors.background,
+                                width: 4,
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
@@ -154,26 +119,29 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
                                 ),
                               ],
                             ),
-
-                            // aca basuriniiiiiiiiiii pero svt
-
-                            // child: ClipOval(
-                              
-                            //   child: Image.asset(
-                            //     '/imagenes/basurini_avatar.png',
-                            //     fit: BoxFit.cover,
-                            //     errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40),
-                            //   ),
-                            // ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/auth/basurini_ball.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
+                              ),
+                            ),
                           ),
-                          
-                          
+
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: colors.secondary, 
+                              color: colors.secondary,
                               shape: BoxShape.circle,
-                              border: Border.all(color: colors.background, width: 2),
+                              border: Border.all(
+                                color: colors.background,
+                                width: 2,
+                              ),
                             ),
                             child: const Icon(
                               Icons.camera_alt,
@@ -203,21 +171,21 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
                       iconInput: Icons.person_outline,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     InputFieldWidget(
                       controller: _lastNameController,
                       hTPlaceHolder: 'Apellido Paterno',
                       iconInput: Icons.person_outline,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     InputFieldWidget(
                       controller: _secondLastNameController,
                       hTPlaceHolder: 'Apellido Materno',
                       iconInput: Icons.person_outline,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     InputFieldWidget(
                       controller: _phoneController,
                       hTPlaceHolder: 'Número de teléfono',
@@ -225,7 +193,7 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     InputFieldWidget(
                       controller: _emailController,
                       hTPlaceHolder: 'Correo electrónico',
@@ -233,23 +201,22 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     InputFieldWidget(
                       controller: _passwordController,
                       hTPlaceHolder: 'Contraseña',
                       iconInput: Icons.lock_outline,
                       isPassword: true,
                     ),
-                    
+
                     const SizedBox(height: 40),
 
-                    
                     PrimaryButtonGreenWidget(
                       text: 'Confirmar datos',
                       onPressed: _onConfirmPressed,
                     ),
-                    
-                    const SizedBox(height: 40), 
+
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),

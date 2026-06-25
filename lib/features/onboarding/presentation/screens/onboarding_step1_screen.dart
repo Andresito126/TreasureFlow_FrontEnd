@@ -56,7 +56,7 @@ class OnboardingStep1Screen extends StatelessWidget {
                           children: [
                             const SizedBox(width: 12),
                             Text(
-                              'Treasure Flow',
+                              'SoftGenix',
                               style: theme.textTheme.titleLarge?.copyWith(
                                 color: Colors.white,
                               ),
