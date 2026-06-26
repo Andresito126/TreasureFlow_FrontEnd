@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
+import 'package:treasureflow/shared/widgets/add_photo_card_widget.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
@@ -136,6 +137,18 @@ class Step1BusinessData extends StatelessWidget {
                   hTPlaceHolder: 'Contraseña',
                   iconInput: Icons.lock,
                   isPassword: true,
+                ),
+
+                const SizedBox(height: 24),
+
+                const Row(
+                  children: [
+                    Expanded(child: AddPhotoCardWidget()),
+                    SizedBox(width: 12),
+                    Expanded(child: AddPhotoCardWidget()),
+                    SizedBox(width: 12),
+                    Expanded(child: AddPhotoCardWidget()),
+                  ],
                 ),
 
                 const SizedBox(height: 32),
