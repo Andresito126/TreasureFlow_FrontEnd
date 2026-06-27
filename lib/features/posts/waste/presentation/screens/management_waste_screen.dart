@@ -80,6 +80,7 @@ class ManagementWasteScreen extends StatelessWidget {
                       fontSize: resFont(13),
                     ),
                     const SizedBox(height: 16),
+                    // remplaza con tu text field
                     _buildDescriptionField(theme, resFont),
                     const SizedBox(height: 16),
                     _buildPhotoSection(),
@@ -255,6 +256,7 @@ class ManagementWasteScreen extends StatelessWidget {
   }
 }
 
+// hacerlo global
 class SelectionCardSpacer extends StatelessWidget {
   const SelectionCardSpacer({super.key});
 

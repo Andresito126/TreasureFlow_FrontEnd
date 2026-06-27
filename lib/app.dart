@@ -27,17 +27,16 @@ class MyApp extends StatelessWidget {
         theme: LightTheme.theme,
         darkTheme: DarkTheme.theme,
         themeMode: ThemeMode.system,
-        home: ManagementWasteScreen(),
-        // initialRoute: '/step6',
-        // routes: {
-        //   // onboarding
-        //   '/step6': (context) => const SelectRoleStep6Screen(),
-        //   // ciudadano
-        //   '/login': (context) => const LoginCitizenScreen(),
-        //   '/registerCitizen': (context) => const RegisterCitizenScreen(),
-        //   // local
-        //   '/registerLocalStep1': (context) => const RegisterLocalScreen(),
-        // },
+        initialRoute: '/step6',
+        routes: {
+          // onboarding
+          '/step6': (context) => const SelectRoleStep6Screen(),
+          // ciudadano
+          '/login': (context) => const LoginCitizenScreen(),
+          '/registerCitizen': (context) => const RegisterCitizenScreen(),
+          // local
+          '/registerLocalStep1': (context) => const RegisterLocalScreen(),
+        },
       ),
     );
   }

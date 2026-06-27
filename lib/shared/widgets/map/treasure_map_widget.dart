@@ -62,7 +62,7 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
             children: [
               // ── 1. Mapa ───────────────────────────────────────────────
               GoogleMap(
-                mapId: '',
+                // mapId: '',
                 onMapCreated: (c) => _mapController = c,
                 initialCameraPosition: CameraPosition(
                   target: provider.initialTarget,
