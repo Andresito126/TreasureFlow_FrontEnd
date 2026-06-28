@@ -66,11 +66,11 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
     if (!_formKey.currentState!.validate()) return;
 
     context.read<RegisterLocalProvider>().setStep1Data(
-      storeName: _nameController.text.trim(),
-      phone: '+52${_phoneController.text.trim()}',
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+          storeName: _nameController.text.trim(),
+          phone: '+52${_phoneController.text.trim()}',
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
 
     widget.onNext();
   }
@@ -119,10 +119,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: colors.surface,
-                                  border: Border.all(
-                                    color: colors.surface,
-                                    width: 4,
-                                  ),
+                                  border: Border.all(color: colors.surface, width: 4),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.1),
@@ -133,19 +130,15 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                                 ),
                                 child: ClipOval(
                                   child: provider.profileImage != null
-                                      ? Image.file(
-                                          provider.profileImage!,
-                                          fit: BoxFit.cover,
-                                        )
+                                      ? Image.file(provider.profileImage!, fit: BoxFit.cover)
                                       : Image.asset(
                                           'assets/auth/basurini_ball.png',
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              const Icon(
-                                                Icons.storefront,
-                                                size: 40,
-                                                color: Colors.grey,
-                                              ),
+                                          errorBuilder: (_, __, ___) => const Icon(
+                                            Icons.storefront,
+                                            size: 40,
+                                            color: Colors.grey,
+                                          ),
                                         ),
                                 ),
                               ),
@@ -154,10 +147,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                                 decoration: BoxDecoration(
                                   color: colors.secondary,
                                   shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: colors.surface,
-                                    width: 2,
-                                  ),
+                                  border: Border.all(color: colors.surface, width: 2),
                                 ),
                                 child: const Icon(
                                   Icons.camera_alt,
@@ -185,9 +175,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                     hTPlaceHolder: 'Nombre del local',
                     iconInput: Icons.storefront,
                     maxLength: 50,
-                    validator: (v) => v == null || v.trim().isEmpty
-                        ? 'Ingresa el nombre del local'
-                        : null,
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Ingresa el nombre del local' : null,
                   ),
 
                   const SizedBox(height: 16),
@@ -200,9 +188,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                     keyboardType: TextInputType.phone,
                     maxLength: 10,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (v) => v == null || v.length != 10
-                        ? 'Ingresa 10 dígitos'
-                        : null,
+                    validator: (v) => v == null || v.length != 10 ? 'Ingresa 10 dígitos' : null,
                   ),
 
                   const SizedBox(height: 16),
@@ -213,13 +199,9 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                     iconInput: Icons.email,
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
-                        return 'Ingresa tu correo';
-                      final emailRegex = RegExp(
-                        r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,}$',
-                      );
-                      if (!emailRegex.hasMatch(v.trim()))
-                        return 'Correo no válido';
+                      if (v == null || v.trim().isEmpty) return 'Ingresa tu correo';
+                      final emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,}$');
+                      if (!emailRegex.hasMatch(v.trim())) return 'Correo no válido';
                       return null;
                     },
                   ),
@@ -231,9 +213,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                     hTPlaceHolder: 'Contraseña',
                     iconInput: Icons.lock,
                     isPassword: true,
-                    validator: (v) => v == null || v.length < 8
-                        ? 'Mínimo 8 caracteres'
-                        : null,
+                    validator: (v) => v == null || v.length < 8 ? 'Mínimo 8 caracteres' : null,
                   ),
 
                   const SizedBox(height: 24),
@@ -261,9 +241,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                                       border: Border.all(color: colors.outline),
                                       image: hasPhoto
                                           ? DecorationImage(
-                                              image: FileImage(
-                                                provider.photos[index],
-                                              ),
+                                              image: FileImage(provider.photos[index]),
                                               fit: BoxFit.cover,
                                             )
                                           : null,
@@ -278,17 +256,10 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                                                 color: Colors.red,
                                                 shape: BoxShape.circle,
                                               ),
-                                              child: const Icon(
-                                                Icons.close,
-                                                size: 14,
-                                                color: Colors.white,
-                                              ),
+                                              child: const Icon(Icons.close, size: 14, color: Colors.white),
                                             ),
                                           )
-                                        : Icon(
-                                            Icons.add_a_photo_outlined,
-                                            color: colors.primary,
-                                          ),
+                                        : Icon(Icons.add_a_photo_outlined, color: colors.primary),
                                   ),
                                 ),
                               ),
@@ -301,10 +272,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
 
                   const SizedBox(height: 32),
 
-                  PrimaryButtonGreenWidget(
-                    text: 'Siguiente',
-                    onPressed: _onNext,
-                  ),
+                  PrimaryButtonGreenWidget(text: 'Siguiente', onPressed: _onNext),
                 ],
               ),
             ),

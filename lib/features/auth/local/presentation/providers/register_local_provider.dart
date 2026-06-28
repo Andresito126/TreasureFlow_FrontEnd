@@ -15,13 +15,13 @@ class RegisterLocalProvider extends ChangeNotifier {
   RegisterLocalProvider({
     required SignUpLocalUseCase signUpLocalUseCase,
     required UploadImageUseCase uploadImageUseCase,
-  }) : _signUpLocalUseCase = signUpLocalUseCase,
-       _uploadImageUseCase = uploadImageUseCase;
+  })  : _signUpLocalUseCase = signUpLocalUseCase,
+        _uploadImageUseCase = uploadImageUseCase;
 
   RegisterLocalStatus _status = RegisterLocalStatus.idle;
   String? _errorMessage;
 
-  //
+  // Step 1
   String _storeName = '';
   String _phone = '';
   String _email = '';
@@ -29,12 +29,12 @@ class RegisterLocalProvider extends ChangeNotifier {
   File? _profileImage;
   final List<File> _photos = [];
 
-  //
+  // Step 2
   final List<OperatingSchedule> _schedules = [];
   final Set<String> _selectedMaterialIds = {};
   bool _hasVehicle = true;
 
-  //
+  // Step 3
   double? _latitude;
   double? _longitude;
   String? _addressText;
@@ -50,8 +50,8 @@ class RegisterLocalProvider extends ChangeNotifier {
   double? get longitude => _longitude;
   String? get addressText => _addressText;
 
-  //  setters
-  void set1ata({
+  // Step 1 setters
+  void setStep1Data({
     required String storeName,
     required String phone,
     required String email,
@@ -82,7 +82,7 @@ class RegisterLocalProvider extends ChangeNotifier {
     }
   }
 
-  //   setters
+  // Step 2 setters
   void setSchedules(List<OperatingSchedule> schedules) {
     _schedules
       ..clear()
@@ -103,7 +103,7 @@ class RegisterLocalProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  //   setters
+  // Step 3 setters
   void setLocation({
     required double latitude,
     required double longitude,
