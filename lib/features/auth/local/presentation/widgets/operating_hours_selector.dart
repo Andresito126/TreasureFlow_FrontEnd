@@ -28,8 +28,15 @@ class DaySchedule {
 
 class OperatingHoursSelector extends StatefulWidget {
   final ValueChanged<List<DaySchedule>>? onChanged;
+  final bool singleDay;
+  final bool singleRange;
 
-  const OperatingHoursSelector({super.key, this.onChanged});
+  const OperatingHoursSelector({
+    super.key,
+    this.onChanged,
+    this.singleDay = false,
+    this.singleRange = false,
+  });
 
   @override
   State<OperatingHoursSelector> createState() => _OperatingHoursSelectorState();
@@ -43,24 +50,33 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
   @override
   void initState() {
     super.initState();
+    final allClosed = widget.singleDay;
     _days = [
-      DaySchedule(shortLabel: 'L', fullName: 'Lunes'),
-      DaySchedule(shortLabel: 'M', fullName: 'Martes'),
-      DaySchedule(shortLabel: 'M', fullName: 'Miércoles'),
-      DaySchedule(shortLabel: 'J', fullName: 'Jueves'),
-      DaySchedule(shortLabel: 'V', fullName: 'Viernes'),
+      DaySchedule(shortLabel: 'L', fullName: 'Lunes', isOpen: !allClosed),
+      DaySchedule(shortLabel: 'M', fullName: 'Martes', isOpen: !allClosed),
+      DaySchedule(shortLabel: 'M', fullName: 'Miércoles', isOpen: !allClosed),
+      DaySchedule(shortLabel: 'J', fullName: 'Jueves', isOpen: !allClosed),
+      DaySchedule(shortLabel: 'V', fullName: 'Viernes', isOpen: !allClosed),
       DaySchedule(shortLabel: 'S', fullName: 'Sábado', isOpen: false),
       DaySchedule(shortLabel: 'D', fullName: 'Domingo', isOpen: false),
     ];
 
-    _expandedDay = _days.firstWhere((d) => d.isOpen, orElse: () => _days.first);
+    _expandedDay = _days.where((d) => d.isOpen).isEmpty
+        ? null
+        : _days.firstWhere((d) => d.isOpen);
   }
 
   void _notify() => widget.onChanged?.call(_days);
 
   void _toggleDay(DaySchedule day) {
     setState(() {
-      day.isOpen = !day.isOpen;
+      if (widget.singleDay) {
+        for (final d in _days) {
+          d.isOpen = d == day ? !d.isOpen : false;
+        }
+      } else {
+        day.isOpen = !day.isOpen;
+      }
       if (day.isOpen) {
         _expandedDay = day;
       } else if (_expandedDay == day) {
@@ -141,7 +157,7 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: day.isOpen ? colors.primary : colors.error.withOpacity(0.08),
+          color: day.isOpen ? colors.primary : colors.error.withValues(alpha:0.08),
           border: day.isOpen
               ? null
               : Border.all(color: colors.error, width: 1.5),
@@ -193,14 +209,14 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
                         textAlign: TextAlign.right,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.bodySmall?.copyWith(
-                          color: colors.onSurface.withOpacity(0.6),
+                          color: colors.onSurface.withValues(alpha:0.6),
                         ),
                       ),
                     ),
                   const SizedBox(width: 8),
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: colors.onSurface.withOpacity(0.6),
+                    color: colors.onSurface.withValues(alpha:0.6),
                   ),
                 ],
               ),
@@ -215,29 +231,30 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
                 children: [
                   for (int i = 0; i < day.ranges.length; i++)
                     _rangeRow(day, day.ranges[i], i),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: () {
-                        setState(
-                          () => day.ranges.add(TimeRangeEntry.defaultRange()),
-                        );
-                        _notify();
-                      },
-                      icon: Icon(Icons.add, size: 16, color: colors.primary),
-                      label: Text(
-                        'Agregar otro horario',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colors.primary,
+                  if (!widget.singleRange)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          setState(
+                            () => day.ranges.add(TimeRangeEntry.defaultRange()),
+                          );
+                          _notify();
+                        },
+                        icon: Icon(Icons.add, size: 16, color: colors.primary),
+                        label: Text(
+                          'Agregar otro horario',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colors.primary,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(0, 0),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -300,7 +317,7 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
             Icon(
               Icons.keyboard_arrow_down,
               size: 16,
-              color: colors.onSurface.withOpacity(0.6),
+              color: colors.onSurface.withValues(alpha:0.6),
             ),
           ],
         ),

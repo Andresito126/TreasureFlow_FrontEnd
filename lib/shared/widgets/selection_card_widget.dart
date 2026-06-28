@@ -3,14 +3,16 @@ import 'package:flutter_svg/svg.dart';
 
 class SelectionCardWidget extends StatelessWidget {
   final String title;
-  final String svgPath;       
-  final bool isSelected;  
+  final String svgPath;
+  final bool isSelected;
+  final VoidCallback? onTap;
 
   const SelectionCardWidget({
     super.key,
     required this.title,
     required this.svgPath,
     required this.isSelected,
+    this.onTap,
   });
 
   @override
@@ -18,14 +20,16 @@ class SelectionCardWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     final backgroundColor = isSelected
-        ? theme.colorScheme.primary.withOpacity(0.08)
+        ? theme.colorScheme.primary.withValues(alpha: 0.08)
         : theme.colorScheme.surface;          
 
     final borderColor = isSelected
         ? theme.colorScheme.primary
         : theme.colorScheme.outline;
 
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
       decoration: BoxDecoration(
         color: backgroundColor,
@@ -52,6 +56,7 @@ class SelectionCardWidget extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

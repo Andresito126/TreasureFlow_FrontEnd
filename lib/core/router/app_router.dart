@@ -8,7 +8,12 @@ import 'package:treasureflow/features/onboarding/presentation/screens/select_rol
 import 'package:treasureflow/features/auth/citizen/presentation/screens/login_citizen_screen.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/screens/register_citizen_screen.dart';
 import 'package:treasureflow/features/auth/local/presentation/screens/register_local_screen.dart';
-import 'package:treasureflow/features/posts/waste/presentation/screens/management_waste_screen.dart';
+import 'package:treasureflow/features/posts/object/presentation/screens/create_object_screen.dart';
+import 'package:treasureflow/features/posts/object/presentation/screens/object_detail_screen.dart';
+import 'package:treasureflow/features/posts/waste/presentation/screens/create_waste_screen.dart';
+import 'package:treasureflow/features/posts/waste/presentation/screens/waste_detail_screen.dart';
+import 'package:treasureflow/features/home/citizen/presentation/screens/home_citizen_screen.dart';
+import 'package:treasureflow/features/home/local/presentation/screens/home_local_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/onboardingStep1',
@@ -56,7 +61,7 @@ final appRouter = GoRouter(
       ),
     ),
 
-        GoRoute(
+    GoRoute(
       path: '/onboardingStep4',
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
@@ -87,23 +92,51 @@ final appRouter = GoRouter(
       ),
     ),
 
-    // ----------------------- CIUDADANO -------------------
-
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginCitizenScreen(),
     ),
+
+
+    // ----------------------- CIUDADANO -------------------
     GoRoute(
       path: '/registerCitizen',
       builder: (context, state) => const RegisterCitizenScreen(),
     ),
+
     GoRoute(
-      path: '/managementWaste',
-      builder: (context, state) => const ManagementWasteScreen(),
+      path: '/homeCitizen',
+      builder: (context, state) => const HomeCitizenScreen(),
+    ),
+
+    // CREAR Y VER DETALLES DE PUBLICACIONES
+    GoRoute(
+      path: '/createWaste',
+      builder: (context, state) => const CreateWasteScreen(),
+    ),
+
+    GoRoute(
+      path: '/createObject',
+      builder: (context, state) => const CreateObjectScreen(),
+    ),
+
+    GoRoute(
+      path: '/objectDetail',
+      builder: (context, state) => const ObjectDetailScreen(),
+    ),
+    GoRoute(
+      path: '/wasteDetail',
+      builder: (context, state) => const WasteDetailScreen(),
     ),
 
     // ----------------------- LOCAL -------------------
-    
+
+    //HOME LOCAL
+    GoRoute(
+      path: '/homeLocal',
+      builder: (context, state) => const HomeLocalScreen(),
+    ),
+
     GoRoute(
       path: '/registerLocalStep1',
       builder: (context, state) => const RegisterLocalScreen(),

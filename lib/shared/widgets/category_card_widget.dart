@@ -15,10 +15,7 @@ class CategoryCardWidget extends StatelessWidget {
     this.icon,
     this.isSelected = false,
     this.onTap,
-  }) : assert(
-         svgPath != null || icon != null,
-         'Debes proporcionar svgPath o icon',
-       );
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +52,8 @@ class CategoryCardWidget extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: theme.colorScheme.onSurface,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
