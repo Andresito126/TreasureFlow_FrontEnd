@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/action_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/activity_summary_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/establishment_card_widget.dart';
@@ -197,6 +198,118 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
     );
   }
 
+  void _showPublishOptions(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colors.outline.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '¿Qué quieres publicar?',
+              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            _publishOption(
+              icon: Icons.recycling,
+              title: 'Publicar residuo',
+              subtitle: 'Material reciclable para establecimientos',
+              colors: colors,
+              textTheme: textTheme,
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/createWaste');
+              },
+            ),
+            const SizedBox(height: 12),
+            _publishOption(
+              icon: Icons.inventory_2_outlined,
+              title: 'Publicar objeto',
+              subtitle: 'Dale una segunda vida a lo que ya no uses',
+              colors: colors,
+              textTheme: textTheme,
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/createObject');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _publishOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required ColorScheme colors,
+    required TextTheme textTheme,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.outline.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 24, color: colors.primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colors.onSurface.withValues(alpha: 0.5),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: colors.onSurface.withValues(alpha: 0.3)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _sectionTitle(String text, TextTheme textTheme) {
     return Text(
       text,
@@ -215,26 +328,27 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
         return Wrap(
           spacing: 12,
           runSpacing: 12,
-          children: const [
+          children: [
             ActionCardWidget(
               title: 'Publicar',
               subtitle: 'Sube algo que ya no uses',
               icon: Icons.add_a_photo_outlined,
-              gradientColors: [Color(0xFF17B593), Color(0xFF5ACA7E)],
+              gradientColors: const [Color(0xFF17B593), Color(0xFF5ACA7E)],
+              onTap: () => _showPublishOptions(context),
             ),
-            ActionCardWidget(
+            const ActionCardWidget(
               title: 'Ver locales',
               subtitle: 'Encuentra dónde llevar tu material',
               icon: Icons.storefront_outlined,
               gradientColors: [Color(0xFF59B3E0), Color(0xFF30A3F3)],
             ),
-            ActionCardWidget(
+            const ActionCardWidget(
               title: 'Explorar',
               subtitle: 'Descubre objetos cerca de ti',
               icon: Icons.explore_outlined,
               gradientColors: [Color(0xFF6D53ED), Color(0xFF9F72F7)],
             ),
-            ActionCardWidget(
+            const ActionCardWidget(
               title: 'Mis ofertas',
               subtitle: 'Gestiona tus publicaciones',
               icon: Icons.local_offer_outlined,

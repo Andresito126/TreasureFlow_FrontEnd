@@ -139,7 +139,7 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
                     PrimaryButtonBlueWidget(
                       text: 'Iniciar sesión',
                       onPressed: () {
-                        context.push('/createWaste');
+                        context.go('/homeCitizen');
                         // context.go('/createWaste');
                       },
                     ),
