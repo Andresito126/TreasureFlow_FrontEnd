@@ -26,6 +26,9 @@ migrate_working_dir/
 .env
 *.env
 android/local.properties
+android/key.properties
+*.jks
+*.keystore
 
 # Flutter/Dart/Pub related
 **/doc/api/

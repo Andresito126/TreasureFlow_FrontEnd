@@ -34,7 +34,6 @@ class _Step2OperationsDataState extends State<Step2OperationsData> {
     _MaterialItem(title: 'Plástico', svgPath: 'assets/icons/plastic.svg'),
     _MaterialItem(title: 'Metal', svgPath: 'assets/icons/metal.svg'),
     _MaterialItem(title: 'Pila/Batería', svgPath: 'assets/icons/battery.svg'),
-    _MaterialItem(title: 'Otros', icon: Icons.more_horiz),
   ];
 
   final Set<String> _selectedMaterials = {};

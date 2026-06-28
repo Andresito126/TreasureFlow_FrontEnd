@@ -6,7 +6,7 @@ import 'package:treasureflow/core/maps/domain/usecases/search_places_usecase.dar
 import 'package:treasureflow/core/maps/presentation/providers/map_provider.dart';
 
 class MapModule {
-  static const apiKey = '';
+  static const apiKey = String.fromEnvironment('MAPS_API_KEY');
 
   static MapProvider createProvider() {
     final datasource = GoogleMapsDatasource(apiKey: apiKey);
