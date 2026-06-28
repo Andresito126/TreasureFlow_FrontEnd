@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/widgets/auth_feature_item_widget.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
-import 'package:treasureflow/shared/widgets/social_outline_button_widget.dart';
 
 class LoginCitizenScreen extends StatefulWidget {
   const LoginCitizenScreen({super.key});
@@ -104,6 +104,8 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
                       hTPlaceHolder: 'Correo electrónico',
                       iconInput: Icons.mail_outline_rounded,
                       controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+
                     ),
                     const SizedBox(height: 16),
                     InputFieldWidget(
@@ -136,39 +138,10 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
 
                     PrimaryButtonBlueWidget(
                       text: 'Iniciar sesión',
-                      onPressed: () {},
-                    ),
-                    const SizedBox(height: 24),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            color: colors.outline.withOpacity(0.3),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text(
-                            'o continua con',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colors.onSurface.withOpacity(0.4),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: colors.outline.withOpacity(0.3),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    SocialOutlineButtonWidget(
-                      text: 'Google',
-                      icon: Icons.g_mobiledata_rounded,
-                      onPressed: () {},
+                      onPressed: () {
+                        context.push('/createWaste');
+                        // context.go('/createWaste');
+                      },
                     ),
                     const SizedBox(height: 24),
 
@@ -183,7 +156,7 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushNamed(context, '/registerCitizen');
+                            context.push('/onboardingStep5');
                           },
                           child: Text(
                             'Regístrate',
@@ -195,7 +168,7 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 72),
 
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
