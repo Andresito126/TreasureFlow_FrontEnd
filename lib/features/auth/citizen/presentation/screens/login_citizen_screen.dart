@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/widgets/auth_feature_item_widget.dart';
+import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_ui_state.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 
@@ -16,10 +19,47 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    final authProvider = context.read<AuthProvider>();
+    authProvider.addListener(_onAuthStatusChanged);
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _onAuthStatusChanged() {
+    final authProvider = context.read<AuthProvider>();
+
+    if (authProvider.status == AuthUiState.success) {
+      context.go('/homeCitizen');
+    }
+
+    if (authProvider.status == AuthUiState.error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Error al iniciar sesión'),
+        ),
+      );
+    }
+  }
+
+  void _onLoginPressed() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Completa todos los campos')),
+      );
+      return;
+    }
+
+    context.read<AuthProvider>().login(email: email, password: password);
   }
 
   @override
@@ -40,17 +80,16 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
               //   child: Padding(
               //     padding: const EdgeInsets.only(
               //       right: 40.0,
-              //     ), 
+              //     ),
               //     child: AuthBasurini(
               //       mood: BasuriniMood.welcome,
               //       speechText: '¡Vamos a\nhacer cosas\ngrandes hoy!',
               //       highlightText:
-              //           'grandes', 
+              //           'grandes',
               //       bubbleType: BasuriniBubbleType.neutral,
               //     ),
               //   ),
               // ),
-
               const SizedBox(height: 40),
 
               RichText(
@@ -105,7 +144,6 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
                       iconInput: Icons.mail_outline_rounded,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-
                     ),
                     const SizedBox(height: 16),
                     InputFieldWidget(
@@ -136,11 +174,13 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    PrimaryButtonBlueWidget(
-                      text: 'Iniciar sesión',
-                      onPressed: () {
-                        context.go('/homeCitizen');
-                        // context.go('/createWaste');
+                    Consumer<AuthProvider>(
+                      builder: (context, auth, _) {
+                        return PrimaryButtonBlueWidget(
+                          text: 'Iniciar sesión',
+                          isLoading: auth.status == AuthUiState.loading,
+                          onPressed: _onLoginPressed,
+                        );
                       },
                     ),
                     const SizedBox(height: 24),

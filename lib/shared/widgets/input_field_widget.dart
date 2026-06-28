@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 // import 'package:treasureflow/shared/theme/app_theme_extension.dart';
 
 class InputFieldWidget extends StatelessWidget {
@@ -8,6 +9,10 @@ class InputFieldWidget extends StatelessWidget {
   final IconData? iconInput;
   final TextInputType? keyboardType;
   final TextEditingController? controller;
+  final String? prefixText;
+  final String? Function(String?)? validator;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
 
   const InputFieldWidget({
     super.key,
@@ -17,6 +22,10 @@ class InputFieldWidget extends StatelessWidget {
     this.iconInput,
     this.keyboardType,
     this.controller,
+    this.prefixText,
+    this.validator,
+    this.maxLength,
+    this.inputFormatters,
   });
 
   @override
@@ -28,10 +37,7 @@ class InputFieldWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (textInput != null && textInput!.isNotEmpty) ...[
-          Text(
-            textInput!,
-            style: theme.textTheme.bodySmall,
-          ),
+          Text(textInput!, style: theme.textTheme.bodySmall),
           const SizedBox(height: 8),
         ],
 
@@ -39,10 +45,43 @@ class InputFieldWidget extends StatelessWidget {
           controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
+          validator: validator,
+          maxLength: maxLength,
+          buildCounter: maxLength != null
+              ? (
+                  context, {
+                  required currentLength,
+                  required isFocused,
+                  required maxLength,
+                }) => null
+              : null,
+          inputFormatters: inputFormatters,
           style: theme.textTheme.bodyMedium,
           decoration: InputDecoration(
-            prefixIcon: iconInput != null
-                ? Icon(iconInput, color: theme.colorScheme.primary)
+            prefixIcon: (iconInput != null || prefixText != null)
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (iconInput != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Icon(
+                            iconInput,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      if (prefixText != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8, right: 4),
+                          child: Text(
+                            prefixText!,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  )
                 : null,
 
             hintText: hTPlaceHolder,
