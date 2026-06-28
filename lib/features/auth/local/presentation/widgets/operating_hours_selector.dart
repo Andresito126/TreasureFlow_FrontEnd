@@ -50,20 +50,17 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
   @override
   void initState() {
     super.initState();
-    final allClosed = widget.singleDay;
     _days = [
-      DaySchedule(shortLabel: 'L', fullName: 'Lunes', isOpen: !allClosed),
-      DaySchedule(shortLabel: 'M', fullName: 'Martes', isOpen: !allClosed),
-      DaySchedule(shortLabel: 'M', fullName: 'Miércoles', isOpen: !allClosed),
-      DaySchedule(shortLabel: 'J', fullName: 'Jueves', isOpen: !allClosed),
-      DaySchedule(shortLabel: 'V', fullName: 'Viernes', isOpen: !allClosed),
+      DaySchedule(shortLabel: 'L', fullName: 'Lunes', isOpen: false),
+      DaySchedule(shortLabel: 'M', fullName: 'Martes', isOpen: false),
+      DaySchedule(shortLabel: 'M', fullName: 'Miércoles', isOpen: false),
+      DaySchedule(shortLabel: 'J', fullName: 'Jueves', isOpen: false),
+      DaySchedule(shortLabel: 'V', fullName: 'Viernes', isOpen: false),
       DaySchedule(shortLabel: 'S', fullName: 'Sábado', isOpen: false),
       DaySchedule(shortLabel: 'D', fullName: 'Domingo', isOpen: false),
     ];
 
-    _expandedDay = _days.where((d) => d.isOpen).isEmpty
-        ? null
-        : _days.firstWhere((d) => d.isOpen);
+    _expandedDay = null;
   }
 
   void _notify() => widget.onChanged?.call(_days);
@@ -91,7 +88,33 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
       context: context,
       initialTime: isStart ? range.start : range.end,
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
+
+    final startMinutes = isStart
+        ? picked.hour * 60 + picked.minute
+        : range.start.hour * 60 + range.start.minute;
+    final endMinutes = isStart
+        ? range.end.hour * 60 + range.end.minute
+        : picked.hour * 60 + picked.minute;
+
+    if (isStart && startMinutes >= endMinutes) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La hora de inicio debe ser menor a la de cierre'),
+        ),
+      );
+      return;
+    }
+
+    if (!isStart && endMinutes <= startMinutes) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La hora de cierre debe ser mayor a la de inicio'),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       if (isStart) {
         range.start = picked;
@@ -157,7 +180,9 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: day.isOpen ? colors.primary : colors.error.withValues(alpha:0.08),
+          color: day.isOpen
+              ? colors.primary
+              : colors.error.withValues(alpha: 0.08),
           border: day.isOpen
               ? null
               : Border.all(color: colors.error, width: 1.5),
@@ -209,14 +234,14 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
                         textAlign: TextAlign.right,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.bodySmall?.copyWith(
-                          color: colors.onSurface.withValues(alpha:0.6),
+                          color: colors.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ),
                   const SizedBox(width: 8),
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: colors.onSurface.withValues(alpha:0.6),
+                    color: colors.onSurface.withValues(alpha: 0.6),
                   ),
                 ],
               ),
@@ -317,7 +342,7 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
             Icon(
               Icons.keyboard_arrow_down,
               size: 16,
-              color: colors.onSurface.withValues(alpha:0.6),
+              color: colors.onSurface.withValues(alpha: 0.6),
             ),
           ],
         ),
