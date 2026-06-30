@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class InfoBannerWidget extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? svgPath;
   final String title;
   final String subtitle;
 
   const InfoBannerWidget({
     super.key,
-    required this.icon,
+    this.icon,
+    this.svgPath,
     required this.title,
     required this.subtitle,
-  });
+  }) : assert(icon != null || svgPath != null);
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +30,9 @@ class InfoBannerWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 30, color: colors.primary),
+          svgPath != null
+              ? SvgPicture.asset(svgPath!, width: 32, height: 32)
+              : Icon(icon, size: 30, color: colors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

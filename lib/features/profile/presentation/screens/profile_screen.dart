@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/features/profile/presentation/providers/profile_posts_provider.dart';
+import 'package:treasureflow/shared/utils/post_status_translator.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 import 'package:treasureflow/shared/widgets/post_card_widget.dart';
 import 'package:treasureflow/shared/widgets/post_filter_bar_widget.dart';
@@ -256,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               itemBuilder: (context, index) {
                 final post = provider.posts[index];
-                final statusInfo = _statusInfo(post.status);
+                final statusInfo = PostStatusTranslator.translate(post.status);
 
                 return PostCardWidget(
                   imageUrl: post.mainPhotoUrl,
@@ -290,19 +291,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  ({String label, Color color}) _statusInfo(String status) {
-    switch (status) {
-      case 'active':
-        return (label: 'Activa', color: const Color(0xFF418839));
-      case 'reserved':
-        return (label: 'Apartada', color: const Color(0xFF30A3F3));
-      case 'completed':
-        return (label: 'Finalizada', color: const Color(0xFF6D53ED));
-      case 'cancelled':
-        return (label: 'Vencida', color: const Color(0xFFE05353));
-      default:
-        return (label: status, color: Colors.grey);
-    }
-  }
 }
-//
