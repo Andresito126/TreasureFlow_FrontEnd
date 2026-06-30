@@ -3,6 +3,10 @@ import 'package:treasureflow/core/media/data/datasources/media_remote_datasource
 import 'package:treasureflow/core/media/data/repositories/media_repository_impl.dart';
 import 'package:treasureflow/core/media/domain/repositories/media_repository.dart';
 import 'package:treasureflow/core/network/api_client.dart';
+import 'package:treasureflow/core/notifications/data/datasources/device_token_remote_datasource.dart';
+import 'package:treasureflow/core/notifications/data/repositories/device_token_repository_impl.dart';
+import 'package:treasureflow/core/notifications/domain/repositories/device_token_repository.dart';
+import 'package:treasureflow/core/notifications/services/notification_service.dart';
 import 'package:treasureflow/core/storage/token_storage.dart';
 import 'package:treasureflow/core/storage/user_storage.dart';
 import 'package:treasureflow/features/auth/citizen/data/datasources/citizen_auth_remote_datasource.dart';
@@ -31,6 +35,8 @@ class AppContainer {
   late final LocalAuthRepository localAuthRepository;
   late final WastePostRepository wastePostRepository;
   late final MyPostsRepository myPostsRepository;
+  late final NotificationService notificationService;
+  late final DeviceTokenRepository deviceTokenRepository;
 
   AppContainer._();
 
@@ -64,5 +70,9 @@ class AppContainer {
 
     final myPostsDatasource = MyPostsRemoteDatasource(apiClient);
     myPostsRepository = MyPostsRepositoryImpl(myPostsDatasource);
+
+    notificationService = NotificationService();
+    final deviceTokenDatasource = DeviceTokenRemoteDatasource(apiClient);
+    deviceTokenRepository = DeviceTokenRepositoryImpl(deviceTokenDatasource);
   }
 }
