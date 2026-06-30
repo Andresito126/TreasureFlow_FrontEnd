@@ -100,7 +100,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _topIconButton(Icons.notifications_outlined, colors, badgeCount: 3),
                 const SizedBox(width: 8),
-                _topIconButton(Icons.settings_outlined, colors),
+                _topIconButton(
+                  Icons.settings_outlined,
+                  colors,
+                  onTap: () => context.push('/settingsCitizen'),
+                ),
               ],
             ),
           ),
@@ -177,17 +181,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _topIconButton(IconData icon, ColorScheme colors, {int? badgeCount}) {
+  Widget _topIconButton(IconData icon, ColorScheme colors, {int? badgeCount, VoidCallback? onTap}) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.9),
-            shape: BoxShape.circle,
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colors.surface.withValues(alpha: 0.9),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: colors.onSurface),
           ),
-          child: Icon(icon, size: 20, color: colors.onSurface),
         ),
         if (badgeCount != null && badgeCount > 0)
           Positioned(
