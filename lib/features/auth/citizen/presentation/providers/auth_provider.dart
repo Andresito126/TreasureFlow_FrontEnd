@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
+import 'package:treasureflow/core/storage/user_storage.dart';
 import 'package:treasureflow/features/auth/domain/usecases/check_auth_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/login_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/logout_usecase.dart';
@@ -9,25 +10,33 @@ class AuthProvider extends ChangeNotifier {
   final LoginUseCase _loginUseCase;
   final LogoutUseCase _logoutUseCase;
   final CheckAuthUseCase _checkAuthUseCase;
+  final UserStorage _userStorage;
 
   AuthProvider({
     required LoginUseCase loginUseCase,
     required LogoutUseCase logoutUseCase,
     required CheckAuthUseCase checkAuthUseCase,
+    required UserStorage userStorage,
   })  : _loginUseCase = loginUseCase,
         _logoutUseCase = logoutUseCase,
-        _checkAuthUseCase = checkAuthUseCase;
+        _checkAuthUseCase = checkAuthUseCase,
+        _userStorage = userStorage;
 
   AuthUiState _status = AuthUiState.idle;
   String? _errorMessage;
   bool _isAuthenticated = false;
+  String? _userType;
 
   AuthUiState get status => _status;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _isAuthenticated;
+  String? get userType => _userType;
 
   Future<void> checkAuth() async {
     _isAuthenticated = await _checkAuthUseCase();
+    if (_isAuthenticated) {
+      _userType = await _userStorage.getUserType();
+    }
     notifyListeners();
   }
 
@@ -42,6 +51,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _loginUseCase(email: email, password: password);
       _isAuthenticated = true;
+      _userType = await _userStorage.getUserType();
       _status = AuthUiState.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -61,6 +71,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _logoutUseCase();
       _isAuthenticated = false;
+      _userType = null;
       _status = AuthUiState.idle;
     } catch (_) {
       _errorMessage = 'Error al cerrar sesión';

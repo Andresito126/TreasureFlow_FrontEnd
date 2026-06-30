@@ -1,218 +1,251 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/posts/object/presentation/widgets/image_gallery_widget.dart';
+import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
+import 'package:treasureflow/features/posts/waste/presentation/providers/waste_detail_provider.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/info_banner_widget.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/offer_item_widget.dart';
-import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
+import 'package:treasureflow/shared/utils/material_type_translator.dart';
+import 'package:treasureflow/shared/utils/post_status_translator.dart';
+import 'package:treasureflow/shared/widgets/image_viewer_screen.dart';
 
 class WasteDetailScreen extends StatefulWidget {
-  const WasteDetailScreen({super.key});
+  final String postId;
+
+  const WasteDetailScreen({super.key, required this.postId});
 
   @override
   State<WasteDetailScreen> createState() => _WasteDetailScreenState();
 }
 
 class _WasteDetailScreenState extends State<WasteDetailScreen> {
-  int _currentNavIndex = 1;
   bool _descriptionExpanded = false;
+  late final WasteDetailProvider _provider;
+
+  static const _dayNames = {
+    1: 'Lunes',
+    2: 'Martes',
+    3: 'Miércoles',
+    4: 'Jueves',
+    5: 'Viernes',
+    6: 'Sábado',
+    7: 'Domingo',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    final container = context.read<AppContainer>();
+    _provider = WastePostModule(container).provideDetailProvider();
+    _provider.addListener(_onProviderChanged);
+    _provider.load(widget.postId);
+  }
+
+  @override
+  void dispose() {
+    _provider.removeListener(_onProviderChanged);
+    super.dispose();
+  }
+
+  void _onProviderChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
+    if (_provider.status == WasteDetailStatus.loading || _provider.status == WasteDetailStatus.idle) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_provider.status == WasteDetailStatus.error) {
+      final colors = Theme.of(context).colorScheme;
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              _provider.errorMessage ?? 'Error al cargar la publicación',
+              style: TextStyle(color: colors.error),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final post = _provider.post!;
+    return _buildContent(post);
+  }
+
+  Widget _buildContent(WastePostDetail post) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const ImageGalleryWidget(
-                        imageUrls: ['1', '2', '3'],
-                      ),
+    final translatedMaterial = MaterialTypeTranslator.translate(post.materialTypeName);
 
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Aluminio (latas)',
-                              style: textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ImageGalleryWidget(
+                    imageUrls: post.photoUrls.isEmpty ? ['placeholder'] : post.photoUrls,
+                    onImageTap: post.photoUrls.isEmpty
+                        ? null
+                        : (index) => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ImageViewerScreen(
+                                  imageUrls: post.photoUrls,
+                                  initialIndex: index,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Publicado por Carlos M.',
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                MaterialTypeTranslator.translate(post.title),
+                                style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _statusBadge(post.status, textTheme),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Publicado ${post.publishedAt}',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colors.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _infoChip(Icons.recycling, translatedMaterial, colors, textTheme),
+                            if (post.distance != null)
+                              _infoChip(Icons.location_on_outlined, post.distance!, colors, textTheme),
+                            _infoChip(Icons.visibility_outlined, '${post.viewsCount} vistas', colors, textTheme),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+
+                        _deliveryModeBanner(post.deliveryMode, textTheme),
+
+                        if (post.deliveryMode == 'home_delivery' && post.schedules.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          ...post.schedules.map((s) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Text(
+                                  '${_dayNames[s.dayOfWeek] ?? s.dayOfWeek}: ${s.startTime} - ${s.endTime}',
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: colors.onSurface.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              )),
+                        ],
+
+                        const SizedBox(height: 20),
+
+                        Text(
+                          'Descripción',
+                          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          post.description,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colors.onSurface.withValues(alpha: 0.7),
+                          ),
+                          maxLines: _descriptionExpanded ? null : 3,
+                          overflow: _descriptionExpanded ? null : TextOverflow.ellipsis,
+                        ),
+                        if (post.description.length > 120)
+                          GestureDetector(
+                            onTap: () => setState(() => _descriptionExpanded = !_descriptionExpanded),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                _descriptionExpanded ? 'Leer menos' : 'Leer más',
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 20),
+
+                        const InfoBannerWidget(
+                          svgPath: 'assets/posts/money_icon.svg',
+                          title: 'Las ofertas se calculan por unidad.',
+                          subtitle: 'El monto final se confirma al pesar el material en la recolección.',
+                        ),
+                        const SizedBox(height: 20),
+
+                        Text(
+                          'Ofertas recibidas',
+                          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const Divider(),
+                        if (post.offers.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Text(
+                              'Aún no has recibido ofertas',
                               style: textTheme.bodySmall?.copyWith(
                                 color: colors.onSurface.withValues(alpha: 0.5),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.scale_outlined, size: 16, color: colors.onSurface.withValues(alpha: 0.6)),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '5 - 15 kg estimados',
-                                  style: textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                _infoChip(Icons.recycling, 'Aluminio', colors, textTheme),
-                                _infoChip(Icons.location_on_outlined, '2.1 km', colors, textTheme),
-                                _infoChip(Icons.access_time, 'Hace 4h', colors, textTheme),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: colors.primary.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                          )
+                        else
+                          ...post.offers.map((offer) => Column(
                                 children: [
-                                  Icon(Icons.local_shipping_outlined, size: 16, color: colors.primary),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Disponible para recolección a domicilio',
-                                    style: textTheme.bodySmall?.copyWith(
-                                      color: colors.primary,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 12,
-                                    ),
+                                  OfferItemWidget(
+                                    name: offer.establishmentName,
+                                    type: _offerStatusLabel(offer.status),
+                                    pricePerKg: '\$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}',
                                   ),
+                                  Divider(color: colors.outline.withValues(alpha: 0.2)),
                                 ],
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            Text(
-                              'Descripción',
-                              style: textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Latas de aluminio limpias, aplastadas para ahorrar espacio. Aproximadamente 8kg de latas de bebidas (coca, refrescos, cerveza). Sin residuos líquidos ni comida.',
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colors.onSurface.withValues(alpha: 0.7),
-                              ),
-                              maxLines: _descriptionExpanded ? null : 3,
-                              overflow: _descriptionExpanded ? null : TextOverflow.ellipsis,
-                            ),
-                            GestureDetector(
-                              onTap: () => setState(() => _descriptionExpanded = !_descriptionExpanded),
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  _descriptionExpanded ? 'Leer menos' : 'Leer más',
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: colors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            const InfoBannerWidget(
-                              icon: Icons.payments_outlined,
-                              title: 'Las ofertas se calculan por kilogramo.',
-                              subtitle: 'El monto final se confirma al pesar el material en la recolección.',
-                            ),
-                            const SizedBox(height: 20),
-
-                            Text(
-                              'Ofertas recibidas',
-                              style: textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Divider(),
-                            const OfferItemWidget(
-                              name: 'EcoRecicla',
-                              type: 'Centro de reciclaje',
-                              pricePerKg: '\$8.50/kg',
-                            ),
-                            Divider(color: colors.outline.withValues(alpha: 0.2)),
-                            const OfferItemWidget(
-                              name: 'Verde Sustentable',
-                              type: 'Planta de reciclaje',
-                              pricePerKg: '\$8.00/kg',
-                            ),
-                            Divider(color: colors.outline.withValues(alpha: 0.2)),
-                            const OfferItemWidget(
-                              name: 'Recicla+',
-                              type: 'Centro de acopio',
-                              pricePerKg: '\$7.50/kg',
-                            ),
-                            const SizedBox(height: 12),
-
-                            Center(
-                              child: GestureDetector(
-                                onTap: () {},
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'Ver todas las ofertas (3)',
-                                      style: textTheme.bodySmall?.copyWith(
-                                        color: colors.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Icon(Icons.arrow_forward, size: 14, color: colors.primary),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-                      ),
-                    ],
+                              )),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-
-              _buildBottomBar(colors, textTheme),
-            ],
-          ),
-
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 70,
-            child: FloatingNavBarWidget(
-              currentIndex: _currentNavIndex,
-              onTap: (index) => setState(() => _currentNavIndex = index),
             ),
           ),
+          _buildBottomBar(post, colors, textTheme),
         ],
       ),
     );
   }
 
-  Widget _buildBottomBar(ColorScheme colors, TextTheme textTheme) {
+  Widget _buildBottomBar(WastePostDetail post, ColorScheme colors, TextTheme textTheme) {
+    final deliveryLabel = post.deliveryMode == 'home_delivery'
+        ? 'Recolección en casa'
+        : post.deliveryMode == 'drop_off'
+            ? 'Entrega en punto de acopio'
+            : 'Recolección o entrega';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -231,28 +264,19 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
           children: [
             Expanded(
               flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.location_on, size: 14, color: colors.primary),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Recolección en casa',
-                        style: textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                  Icon(Icons.location_on, size: 16, color: colors.primary),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      deliveryLabel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
                       ),
-                    ],
-                  ),
-                  Text(
-                    'Tuxtla Gutiérrez, Chiapas',
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 11,
-                      color: colors.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -291,6 +315,86 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
         ),
       ),
     );
+  }
+
+  Widget _statusBadge(String status, TextTheme textTheme) {
+    final info = PostStatusTranslator.translate(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: info.color,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        info.label,
+        style: textTheme.bodySmall?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+      ),
+    );
+  }
+
+  Widget _deliveryModeBanner(String deliveryMode, TextTheme textTheme) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final (icon, label, color) = switch (deliveryMode) {
+      'home_delivery' => (
+          Icons.local_shipping_outlined,
+          'Disponible para recolección a domicilio',
+          colors.primary,
+        ),
+      'drop_off' => (
+          Icons.storefront_outlined,
+          'Debes llevarlo a un punto de acopio',
+          const Color(0xFF30A3F3),
+        ),
+      _ => (
+          Icons.swap_horiz_rounded,
+          'Recolección a domicilio o entrega en punto',
+          const Color(0xFF6D53ED),
+        ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _offerStatusLabel(String status) {
+    switch (status) {
+      case 'pending':
+        return 'Pendiente';
+      case 'accepted':
+        return 'Aceptada';
+      case 'rejected':
+        return 'Rechazada';
+      default:
+        return status;
+    }
   }
 
   Widget _infoChip(IconData icon, String label, ColorScheme colors, TextTheme textTheme) {

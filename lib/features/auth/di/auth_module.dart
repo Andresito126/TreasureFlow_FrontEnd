@@ -23,6 +23,7 @@ class AuthModule {
       loginUseCase: _provideLoginUseCase(),
       logoutUseCase: _provideLogoutUseCase(),
       checkAuthUseCase: _provideCheckAuthUseCase(),
+      userStorage: _appContainer.userStorage,
     );
   }
 }

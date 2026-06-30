@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:treasureflow/features/posts/object/presentation/screens/create_object_screen.dart';
 import 'package:treasureflow/features/posts/object/presentation/screens/object_detail_screen.dart';
 import 'package:treasureflow/features/posts/waste/presentation/screens/create_waste_screen.dart';
+import 'package:treasureflow/features/posts/waste/presentation/screens/waste_detail_local_screen.dart';
 import 'package:treasureflow/features/posts/waste/presentation/screens/waste_detail_screen.dart';
 
 final List<GoRoute> postsRoutes = [
@@ -18,7 +19,11 @@ final List<GoRoute> postsRoutes = [
     builder: (context, state) => const ObjectDetailScreen(),
   ),
   GoRoute(
-    path: '/wasteDetail',
-    builder: (context, state) => const WasteDetailScreen(),
+    path: '/wasteDetail/:id',
+    builder: (context, state) => WasteDetailScreen(postId: state.pathParameters['id']!),
+  ),
+  GoRoute(
+    path: '/wasteDetailLocal/:id',
+    builder: (context, state) => WasteDetailLocalScreen(postId: state.pathParameters['id']!),
   ),
 ];
