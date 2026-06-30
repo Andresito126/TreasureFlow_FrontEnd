@@ -148,7 +148,13 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
               bottom: 0,
               child: FloatingNavBarWidget(
                 currentIndex: _currentNavIndex,
-                onTap: (index) => setState(() => _currentNavIndex = index),
+                onTap: (index) {
+                  if (index == 1) {
+                    context.push('/profile');
+                    return;
+                  }
+                  setState(() => _currentNavIndex = index);
+                },
               ),
             ),
           ],

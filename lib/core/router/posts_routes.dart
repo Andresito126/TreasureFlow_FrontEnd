@@ -18,7 +18,7 @@ final List<GoRoute> postsRoutes = [
     builder: (context, state) => const ObjectDetailScreen(),
   ),
   GoRoute(
-    path: '/wasteDetail',
-    builder: (context, state) => const WasteDetailScreen(),
+    path: '/wasteDetail/:id',
+    builder: (context, state) => WasteDetailScreen(postId: state.pathParameters['id']!),
   ),
 ];

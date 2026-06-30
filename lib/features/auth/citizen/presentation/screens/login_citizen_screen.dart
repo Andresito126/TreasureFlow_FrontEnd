@@ -36,14 +36,15 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
     final authProvider = context.read<AuthProvider>();
 
     if (authProvider.status == AuthUiState.success) {
-      context.go('/homeCitizen');
+      final route = authProvider.userType == 'establishment'
+          ? '/homeLocal'
+          : '/homeCitizen';
+      context.go(route);
     }
 
     if (authProvider.status == AuthUiState.error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Error al iniciar sesión'),
-        ),
+        SnackBar(content: Text(authProvider.errorMessage ?? 'Error al iniciar sesión')),
       );
     }
   }
@@ -80,16 +81,17 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
               //   child: Padding(
               //     padding: const EdgeInsets.only(
               //       right: 40.0,
-              //     ),
+              //     ), 
               //     child: AuthBasurini(
               //       mood: BasuriniMood.welcome,
               //       speechText: '¡Vamos a\nhacer cosas\ngrandes hoy!',
               //       highlightText:
-              //           'grandes',
+              //           'grandes', 
               //       bubbleType: BasuriniBubbleType.neutral,
               //     ),
               //   ),
               // ),
+
               const SizedBox(height: 40),
 
               RichText(
@@ -144,6 +146,7 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
                       iconInput: Icons.mail_outline_rounded,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+
                     ),
                     const SizedBox(height: 16),
                     InputFieldWidget(
