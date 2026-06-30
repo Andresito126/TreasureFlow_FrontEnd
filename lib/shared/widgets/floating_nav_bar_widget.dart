@@ -13,9 +13,7 @@ class FloatingNavBarWidget extends StatelessWidget {
 
   static const _items = [
     _NavItem(icon: Icons.home_rounded, label: 'Inicio'),
-    _NavItem(icon: Icons.history_rounded, label: 'Historial'),
-    _NavItem(icon: Icons.storefront_rounded, label: 'Tienda'),
-    _NavItem(icon: Icons.settings_rounded, label: 'Ajustes'),
+    _NavItem(icon: Icons.person_rounded, label: 'Perfil'),
   ];
 
   @override
@@ -24,7 +22,7 @@ class FloatingNavBarWidget extends StatelessWidget {
     final colors = theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.only(left: 40, right: 40, bottom: 24),
+      margin: const EdgeInsets.only(left: 80, right: 80, bottom: 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         boxShadow: [

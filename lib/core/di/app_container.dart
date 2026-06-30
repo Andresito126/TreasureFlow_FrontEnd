@@ -14,6 +14,12 @@ import 'package:treasureflow/features/auth/domain/repositories/auth_repository.d
 import 'package:treasureflow/features/auth/local/data/datasources/local_auth_remote_datasource.dart';
 import 'package:treasureflow/features/auth/local/data/repositories/local_auth_repository_impl.dart';
 import 'package:treasureflow/features/auth/local/domain/repositories/local_auth_repository.dart';
+import 'package:treasureflow/features/posts/waste/data/datasources/waste_post_remote_datasource.dart';
+import 'package:treasureflow/features/posts/waste/data/repositories/waste_post_repository_impl.dart';
+import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post_repository.dart';
+import 'package:treasureflow/features/profile/data/datasources/my_posts_remote_datasource.dart';
+import 'package:treasureflow/features/profile/data/repositories/my_posts_repository_impl.dart';
+import 'package:treasureflow/features/profile/domain/repositories/my_posts_repository.dart';
 
 class AppContainer {
   late final TokenStorage tokenStorage;
@@ -23,6 +29,8 @@ class AppContainer {
   late final MediaRepository mediaRepository;
   late final CitizenAuthRepository citizenAuthRepository;
   late final LocalAuthRepository localAuthRepository;
+  late final WastePostRepository wastePostRepository;
+  late final MyPostsRepository myPostsRepository;
 
   AppContainer._();
 
@@ -39,7 +47,7 @@ class AppContainer {
     userStorage = UserStorage(tokenStorage);
     apiClient = ApiClient(tokenStorage: tokenStorage);
 
-    final authDatasource = AuthRemoteDatasource(apiClient, tokenStorage);
+    final authDatasource = AuthRemoteDatasource(apiClient, tokenStorage, userStorage);
     authRepository = AuthRepositoryImpl(authDatasource);
 
     final mediaDatasource = MediaRemoteDatasource(apiClient);
@@ -50,5 +58,11 @@ class AppContainer {
 
     final localDatasource = LocalAuthRemoteDatasource(apiClient);
     localAuthRepository = LocalAuthRepositoryImpl(localDatasource);
+
+    final wasteDatasource = WastePostRemoteDatasource(apiClient);
+    wastePostRepository = WastePostRepositoryImpl(wasteDatasource);
+
+    final myPostsDatasource = MyPostsRemoteDatasource(apiClient);
+    myPostsRepository = MyPostsRepositoryImpl(myPostsDatasource);
   }
 }
