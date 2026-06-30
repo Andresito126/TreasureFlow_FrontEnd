@@ -1,13 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/maps/presentation/providers/map_provider.dart';
 import 'package:treasureflow/features/auth/local/presentation/widgets/operating_hours_selector.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/waste_availability.dart';
+import 'package:treasureflow/features/posts/waste/presentation/providers/create_waste_provider.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/location_preview_widget.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
-import 'package:treasureflow/shared/widgets/add_photo_card_widget.dart';
 import 'package:treasureflow/shared/widgets/category_card_widget.dart';
 import 'package:treasureflow/shared/widgets/numbered_step_title.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
@@ -15,10 +18,11 @@ import 'package:treasureflow/shared/widgets/screen_header_widget.dart';
 import 'package:treasureflow/shared/widgets/selection_card_widget.dart';
 
 class _CategoryItem {
+  final String id;
   final String title;
   final String? svgPath;
   final IconData? icon;
-  const _CategoryItem({required this.title, this.svgPath, this.icon});
+  const _CategoryItem({required this.id, required this.title, this.svgPath, this.icon});
 }
 
 class CreateWasteScreen extends StatefulWidget {
@@ -30,26 +34,25 @@ class CreateWasteScreen extends StatefulWidget {
 
 class _CreateWasteScreenState extends State<CreateWasteScreen> {
   static const List<_CategoryItem> _categories = [
-    _CategoryItem(title: 'Aluminio', svgPath: 'assets/icons/aluminum.svg'),
-    _CategoryItem(title: 'Aceite', svgPath: 'assets/icons/oil.svg'),
-    _CategoryItem(title: 'Papel/Cartón', svgPath: 'assets/icons/cardboard.svg'),
-    _CategoryItem(title: 'Plástico', svgPath: 'assets/icons/plastic.svg'),
-    _CategoryItem(title: 'Metal', svgPath: 'assets/icons/metal.svg'),
-    _CategoryItem(title: 'Pila/Batería', svgPath: 'assets/icons/battery.svg'),
-    _CategoryItem(title: 'Otro', icon: Icons.more_horiz),
+    _CategoryItem(id: 'e78a20e5-a69d-4edb-bf50-33831f9aae6e', title: 'Aluminio', svgPath: 'assets/icons/aluminum.svg'),
+    _CategoryItem(id: '2e532ca8-c6de-465d-af27-c2465b74f14c', title: 'Aceite', svgPath: 'assets/icons/oil.svg'),
+    _CategoryItem(id: '1be3bf83-8b1a-421c-8474-a72785bf80b5', title: 'Papel/Cartón', svgPath: 'assets/icons/cardboard.svg'),
+    _CategoryItem(id: 'caa8cf7a-d5f6-4ae6-a9aa-ea92bdf4b334', title: 'Plástico', svgPath: 'assets/icons/plastic.svg'),
+    _CategoryItem(id: '918a523e-655b-4f53-bd86-2d43c2618be5', title: 'Metal', svgPath: 'assets/icons/metal.svg'),
+    _CategoryItem(id: '37962e6b-8f0a-4dd7-9e5d-0db74d021313', title: 'Pila/Batería', svgPath: 'assets/icons/battery.svg'),
   ];
 
-  String? _selectedMaterial;
-  final TextEditingController _otherMaterialController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  int _deliveryMode = -1;
+  final _imagePicker = ImagePicker();
   LatLng? _selectedLocation;
   String? _selectedAddress;
+  List<DaySchedule> _daySchedules = [];
 
   @override
   void initState() {
     super.initState();
     _loadCurrentLocation();
+    context.read<CreateWasteProvider>().addListener(_onStatusChanged);
   }
 
   Future<void> _loadCurrentLocation() async {
@@ -60,14 +63,74 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
     if (place != null) {
       setState(() {
         _selectedLocation = LatLng(place.latitude, place.longitude);
-        _selectedAddress = place.fullAddress;
+        _selectedAddress = '${place.street} ${place.streetNumber}, ${place.city}'.trim();
       });
+      context.read<CreateWasteProvider>().setLocation(
+            latitude: place.latitude,
+            longitude: place.longitude,
+            addressText: _selectedAddress!,
+          );
     }
+  }
+
+  void _onStatusChanged() {
+    final provider = context.read<CreateWasteProvider>();
+
+    if (provider.status == CreateWasteStatus.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Residuo publicado exitosamente')),
+      );
+      provider.reset();
+      context.go('/homeCitizen');
+    }
+
+    if (provider.status == CreateWasteStatus.error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(provider.errorMessage ?? 'Error al publicar')),
+      );
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    final provider = context.read<CreateWasteProvider>();
+    if (provider.photos.length >= 3) return;
+
+    final picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 80,
+    );
+    if (picked != null && mounted) {
+      provider.addPhoto(File(picked.path));
+    }
+  }
+
+  void _onSubmit() {
+    final provider = context.read<CreateWasteProvider>();
+    provider.setDescription(_descriptionController.text);
+
+    if (provider.deliveryMode == 'home_delivery' && _daySchedules.isNotEmpty) {
+      final schedules = <WasteAvailability>[];
+      for (int i = 0; i < _daySchedules.length; i++) {
+        final day = _daySchedules[i];
+        if (!day.isOpen) continue;
+        for (final range in day.ranges) {
+          schedules.add(WasteAvailability(
+            dayOfWeek: i + 1,
+            startTime: '${range.start.hour.toString().padLeft(2, '0')}:${range.start.minute.toString().padLeft(2, '0')}',
+            endTime: '${range.end.hour.toString().padLeft(2, '0')}:${range.end.minute.toString().padLeft(2, '0')}',
+          ));
+        }
+      }
+      provider.setSchedules(schedules);
+    }
+
+    provider.submit();
   }
 
   @override
   void dispose() {
-    _otherMaterialController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -107,7 +170,6 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  //  material 
                   NumberedStepTitle(
                     stepNumber: '1',
                     title: '¿Qué material quieres publicar?',
@@ -115,14 +177,9 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
                   ),
                   const SizedBox(height: 20),
                   _buildCategoryGrid(isTablet),
-                  if (_selectedMaterial == 'Otro') ...[
-                    const SizedBox(height: 16),
-                    _buildOtherMaterialField(theme, textTheme),
-                  ],
 
                   _divider(colors),
 
-                  //  Desc y las fotos 
                   NumberedStepTitle(
                     stepNumber: '2',
                     title: 'Describe tu material',
@@ -135,7 +192,6 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
 
                   _divider(colors),
 
-                  // entrega 
                   NumberedStepTitle(
                     stepNumber: '3',
                     title: '¿Cómo entregas?',
@@ -144,23 +200,32 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
                   const SizedBox(height: 16),
                   _buildDeliveryOptions(isTablet),
 
+                  Consumer<CreateWasteProvider>(
+                    builder: (context, provider, _) {
+                      if (provider.deliveryMode == 'home_delivery') {
+                        return Column(
+                          children: [
+                            _divider(colors),
+                            NumberedStepTitle(
+                              stepNumber: '4',
+                              title: 'Disponibilidad',
+                              fontSize: 13,
+                            ),
+                            const SizedBox(height: 16),
+                            OperatingHoursSelector(
+                              singleDay: true,
+                              singleRange: true,
+                              onChanged: (days) => _daySchedules = days,
+                            ),
+                          ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+
                   _divider(colors),
 
-                  //  dispo 
-                  NumberedStepTitle(
-                    stepNumber: '4',
-                    title: 'Disponibilidad',
-                    fontSize: 13,
-                  ),
-                  const SizedBox(height: 16),
-                  const OperatingHoursSelector(
-                    singleDay: true,
-                    singleRange: true,
-                  ),
-
-                  _divider(colors),
-
-                  //  ubi 
                   NumberedStepTitle(
                     stepNumber: '5',
                     title: 'Ubicación',
@@ -178,9 +243,14 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
 
             const SizedBox(height: 24),
 
-            PrimaryButtonGreenWidget(
-              text: 'Publicar residuo',
-              onPressed: _onSubmit,
+            Consumer<CreateWasteProvider>(
+              builder: (context, provider, _) {
+                return PrimaryButtonGreenWidget(
+                  text: 'Publicar residuo',
+                  isLoading: provider.status == CreateWasteStatus.loading,
+                  onPressed: _onSubmit,
+                );
+              },
             ),
 
             const SizedBox(height: 30),
@@ -198,79 +268,38 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
   }
 
   Widget _buildCategoryGrid(bool isTablet) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final int columns = isTablet ? 4 : 3;
-        const double spacing = 10.0;
-        final double totalSpacing = spacing * (columns - 1);
-        final double cardWidth =
-            (constraints.maxWidth - totalSpacing) / columns;
+    return Consumer<CreateWasteProvider>(
+      builder: (context, provider, _) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final int columns = isTablet ? 4 : 3;
+            const double spacing = 10.0;
+            final double totalSpacing = spacing * (columns - 1);
+            final double cardWidth = (constraints.maxWidth - totalSpacing) / columns;
 
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: _categories.map((category) {
-            final isSelected = _selectedMaterial == category.title;
-            return SizedBox(
-              width: cardWidth,
-              height: 110,
-              child: CategoryCardWidget(
-                title: category.title,
-                svgPath: category.svgPath,
-                icon: category.icon,
-                isSelected: isSelected,
-                onTap: () {
-                  setState(() {
-                    _selectedMaterial =
-                        isSelected ? null : category.title;
-                    if (_selectedMaterial != 'Otro') {
-                      _otherMaterialController.clear();
-                    }
-                  });
-                },
-              ),
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: _categories.map((category) {
+                final isSelected = provider.materialTypeId == category.id;
+                return SizedBox(
+                  width: cardWidth,
+                  height: 110,
+                  child: CategoryCardWidget(
+                    title: category.title,
+                    svgPath: category.svgPath,
+                    icon: category.icon,
+                    isSelected: isSelected,
+                    onTap: () => provider.setMaterialTypeId(
+                      isSelected ? null : category.id,
+                    ),
+                  ),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         );
       },
-    );
-  }
-
-  Widget _buildOtherMaterialField(ThemeData theme, TextTheme textTheme) {
-    final colors = theme.colorScheme;
-
-    return TextFormField(
-      controller: _otherMaterialController,
-      style: textTheme.bodyMedium,
-      maxLength: 50,
-      inputFormatters: [
-        _NoNumbersFormatter(),
-        _MaxWordsFormatter(10),
-      ],
-      decoration: InputDecoration(
-        hintText: '¿Qué material es? (máx. 10 palabras)',
-        hintStyle: textTheme.bodySmall?.copyWith(
-          color: colors.onSurface.withValues(alpha: 0.4),
-        ),
-        prefixIcon: Icon(
-          Icons.category_outlined,
-          color: colors.onSurface.withValues(alpha: 0.4),
-          size: 20,
-        ),
-        counterText: '',
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 16.0,
-          horizontal: 16.0,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colors.outline, width: 1.0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colors.primary, width: 1.5),
-        ),
-      ),
     );
   }
 
@@ -281,6 +310,7 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
       controller: _descriptionController,
       minLines: 1,
       maxLines: 3,
+      maxLength: 200,
       style: textTheme.bodyMedium,
       decoration: InputDecoration(
         hintText: 'Describe tu material (ej. cajas de cartón un poco sucias)',
@@ -292,10 +322,8 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
           color: colors.onSurface.withValues(alpha: 0.4),
           size: 20,
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 16.0,
-          horizontal: 16.0,
-        ),
+        counterText: '',
+        contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colors.outline, width: 1.0),
@@ -309,48 +337,95 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
   }
 
   Widget _buildPhotoSection() {
-    return const Row(
-      children: [
-        Expanded(child: AddPhotoCardWidget()),
-        SizedBox(width: 12),
-        Expanded(child: AddPhotoCardWidget()),
-        SizedBox(width: 12),
-        Expanded(child: AddPhotoCardWidget()),
-      ],
+    return Consumer<CreateWasteProvider>(
+      builder: (context, provider, _) {
+        return Row(
+          children: List.generate(3, (index) {
+            final hasPhoto = index < provider.photos.length;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: index > 0 ? 6 : 0,
+                  right: index < 2 ? 6 : 0,
+                ),
+                child: GestureDetector(
+                  onTap: hasPhoto
+                      ? () => provider.removePhoto(index)
+                      : _pickPhoto,
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Theme.of(context).colorScheme.outline),
+                        image: hasPhoto
+                            ? DecorationImage(
+                                image: FileImage(provider.photos[index]),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: hasPhoto
+                          ? Align(
+                              alignment: Alignment.topRight,
+                              child: Container(
+                                margin: const EdgeInsets.all(4),
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, size: 14, color: Colors.white),
+                              ),
+                            )
+                          : Icon(Icons.add_a_photo_outlined,
+                              color: Theme.of(context).colorScheme.primary),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 
   Widget _buildDeliveryOptions(bool isTablet) {
-    Widget pickup = SelectionCardWidget(
-      title: 'Prefiero que pasen por él',
-      svgPath: 'assets/icons/car.svg',
-      isSelected: _deliveryMode == 0,
-      onTap: () => setState(() => _deliveryMode = 0),
-    );
+    return Consumer<CreateWasteProvider>(
+      builder: (context, provider, _) {
+        Widget pickup = SelectionCardWidget(
+          title: 'Prefiero que pasen por él',
+          svgPath: 'assets/icons/car.svg',
+          isSelected: provider.deliveryMode == 'home_delivery',
+          onTap: () => provider.setDeliveryMode('home_delivery'),
+        );
 
-    Widget deliver = SelectionCardWidget(
-      title: 'Yo lo puedo llevar',
-      svgPath: 'assets/icons/house.svg',
-      isSelected: _deliveryMode == 1,
-      onTap: () => setState(() => _deliveryMode = 1),
-    );
+        Widget deliver = SelectionCardWidget(
+          title: 'Yo lo puedo llevar',
+          svgPath: 'assets/icons/house.svg',
+          isSelected: provider.deliveryMode == 'drop_off',
+          onTap: () => provider.setDeliveryMode('drop_off'),
+        );
 
-    if (isTablet) {
-      return Row(
-        children: [
-          Expanded(child: pickup),
-          const SizedBox(width: 12),
-          Expanded(child: deliver),
-        ],
-      );
-    }
+        if (isTablet) {
+          return Row(
+            children: [
+              Expanded(child: pickup),
+              const SizedBox(width: 12),
+              Expanded(child: deliver),
+            ],
+          );
+        }
 
-    return Column(
-      children: [
-        pickup,
-        const SizedBox(height: 12),
-        deliver,
-      ],
+        return Column(
+          children: [
+            pickup,
+            const SizedBox(height: 12),
+            deliver,
+          ],
+        );
+      },
     );
   }
 
@@ -362,44 +437,13 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
     if (place != null) {
       setState(() {
         _selectedLocation = LatLng(place.latitude, place.longitude);
-        _selectedAddress = place.fullAddress;
+        _selectedAddress = '${place.street} ${place.streetNumber}, ${place.city}'.trim();
       });
+      context.read<CreateWasteProvider>().setLocation(
+            latitude: place.latitude,
+            longitude: place.longitude,
+            addressText: _selectedAddress!,
+          );
     }
-  }
-
-  void _onSubmit() {
-    context.push('/createObject');
-  }
-}
-
-class _NoNumbersFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final filtered = newValue.text.replaceAll(RegExp(r'[0-9]'), '');
-    if (filtered == newValue.text) return newValue;
-    return TextEditingValue(
-      text: filtered,
-      selection: TextSelection.collapsed(offset: filtered.length),
-    );
-  }
-}
-
-class _MaxWordsFormatter extends TextInputFormatter {
-  final int maxWords;
-  const _MaxWordsFormatter(this.maxWords);
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final words = newValue.text.trim().split(RegExp(r'\s+'));
-    if (newValue.text.trim().isEmpty || words.length <= maxWords) {
-      return newValue;
-    }
-    return oldValue;
   }
 }

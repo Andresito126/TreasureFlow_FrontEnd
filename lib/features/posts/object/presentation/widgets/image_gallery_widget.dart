@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class ImageGalleryWidget extends StatefulWidget {
   final List<String> imageUrls;
   final VoidCallback? onBack;
+  final ValueChanged<int>? onImageTap;
 
   const ImageGalleryWidget({
     super.key,
     required this.imageUrls,
     this.onBack,
+    this.onImageTap,
   });
 
   @override
@@ -42,14 +44,34 @@ class _ImageGalleryWidgetState extends State<ImageGalleryWidget> {
                 itemCount: widget.imageUrls.length,
                 onPageChanged: (index) => setState(() => _currentIndex = index),
                 itemBuilder: (context, index) {
-                  return Container(
-                    color: colors.primary.withValues(alpha: 0.08),
-                    child: Center(
-                      child: Icon(
-                        Icons.image_outlined,
-                        size: 60,
-                        color: colors.primary.withValues(alpha: 0.3),
-                      ),
+                  final url = widget.imageUrls[index];
+                  final isNetworkUrl = url.startsWith('http');
+
+                  return GestureDetector(
+                    onTap: isNetworkUrl && widget.onImageTap != null
+                        ? () => widget.onImageTap!(index)
+                        : null,
+                    child: Container(
+                      color: colors.primary.withValues(alpha: 0.08),
+                      child: isNetworkUrl
+                          ? Image.network(
+                              url,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Center(
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  size: 60,
+                                  color: colors.primary.withValues(alpha: 0.3),
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Icon(
+                                Icons.image_outlined,
+                                size: 60,
+                                color: colors.primary.withValues(alpha: 0.3),
+                              ),
+                            ),
                     ),
                   );
                 },
@@ -98,6 +120,9 @@ class _ImageGalleryWidgetState extends State<ImageGalleryWidget> {
             child: Row(
               children: List.generate(widget.imageUrls.length, (index) {
                 final isActive = _currentIndex == index;
+                final url = widget.imageUrls[index];
+                final isNetworkUrl = url.startsWith('http');
+
                 return GestureDetector(
                   onTap: () {
                     _pageController.animateToPage(
@@ -110,6 +135,7 @@ class _ImageGalleryWidgetState extends State<ImageGalleryWidget> {
                     width: 60,
                     height: 50,
                     margin: EdgeInsets.only(right: index < widget.imageUrls.length - 1 ? 8 : 0),
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
@@ -118,13 +144,23 @@ class _ImageGalleryWidgetState extends State<ImageGalleryWidget> {
                       ),
                       color: colors.primary.withValues(alpha: 0.06),
                     ),
-                    child: Center(
-                      child: Icon(
-                        Icons.image_outlined,
-                        size: 20,
-                        color: colors.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
+                    child: isNetworkUrl
+                        ? Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.image_outlined,
+                              size: 20,
+                              color: colors.primary.withValues(alpha: 0.3),
+                            ),
+                          )
+                        : Center(
+                            child: Icon(
+                              Icons.image_outlined,
+                              size: 20,
+                              color: colors.primary.withValues(alpha: 0.3),
+                            ),
+                          ),
                   ),
                 );
               }),
