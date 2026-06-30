@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:treasureflow/app.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/core/notifications/services/notification_service.dart';
+import 'package:treasureflow/firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final container = await AppContainer.create();
   await NotificationService().initialize();
