@@ -77,20 +77,9 @@ class _ImageGalleryWidgetState extends State<ImageGalleryWidget> {
                 },
               ),
               Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
-                left: 16,
-                child: GestureDetector(
-                  onTap: widget.onBack ?? () => Navigator.maybePop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.outline.withValues(alpha: 0.3)),
-                    ),
-                    child: Icon(Icons.arrow_back, size: 20, color: colors.onSurface),
-                  ),
-                ),
+                top: MediaQuery.of(context).padding.top,
+                left: 4,
+                child: BackButton(onPressed: widget.onBack),
               ),
               Positioned(
                 bottom: 12,

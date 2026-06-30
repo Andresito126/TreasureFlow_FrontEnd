@@ -8,6 +8,7 @@ import 'package:treasureflow/features/posts/waste/presentation/providers/waste_d
 import 'package:treasureflow/features/posts/waste/presentation/widgets/info_banner_widget.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/offer_item_widget.dart';
 import 'package:treasureflow/shared/utils/material_type_translator.dart';
+import 'package:treasureflow/shared/utils/post_status_translator.dart';
 import 'package:treasureflow/shared/widgets/image_viewer_screen.dart';
 
 class WasteDetailScreen extends StatefulWidget {
@@ -111,9 +112,18 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          MaterialTypeTranslator.translate(post.title),
-                          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                MaterialTypeTranslator.translate(post.title),
+                                style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _statusBadge(post.status, textTheme),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -122,7 +132,7 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                             color: colors.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
-                     const SizedBox(height: 12),
+                        const SizedBox(height: 12),
 
                         Wrap(
                           spacing: 8,
@@ -136,29 +146,7 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                         ),
                         const SizedBox(height: 14),
 
-                        if (post.deliveryMode == 'home_delivery')
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: colors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.local_shipping_outlined, size: 16, color: colors.primary),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Disponible para recolección a domicilio',
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: colors.primary,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        _deliveryModeBanner(post.deliveryMode, textTheme),
 
                         if (post.deliveryMode == 'home_delivery' && post.schedules.isNotEmpty) ...[
                           const SizedBox(height: 10),
@@ -205,7 +193,7 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                         const SizedBox(height: 20),
 
                         const InfoBannerWidget(
-                          icon: Icons.payments_outlined,
+                          svgPath: 'assets/posts/money_icon.svg',
                           title: 'Las ofertas se calculan por unidad.',
                           subtitle: 'El monto final se confirma al pesar el material en la recolección.',
                         ),
@@ -325,6 +313,73 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _statusBadge(String status, TextTheme textTheme) {
+    final info = PostStatusTranslator.translate(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: info.color,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        info.label,
+        style: textTheme.bodySmall?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+      ),
+    );
+  }
+
+  Widget _deliveryModeBanner(String deliveryMode, TextTheme textTheme) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final (icon, label, color) = switch (deliveryMode) {
+      'home_delivery' => (
+          Icons.local_shipping_outlined,
+          'Disponible para recolección a domicilio',
+          colors.primary,
+        ),
+      'drop_off' => (
+          Icons.storefront_outlined,
+          'Debes llevarlo a un punto de acopio',
+          const Color(0xFF30A3F3),
+        ),
+      _ => (
+          Icons.swap_horiz_rounded,
+          'Recolección a domicilio o entrega en punto',
+          const Color(0xFF6D53ED),
+        ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
