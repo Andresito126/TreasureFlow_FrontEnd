@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:treasureflow/core/router/role_based_navigation.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/widgets/auth_feature_item_widget.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_ui_state.dart';
@@ -36,10 +37,7 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
     final authProvider = context.read<AuthProvider>();
 
     if (authProvider.status == AuthUiState.success) {
-      final route = authProvider.userType == 'establishment'
-          ? '/homeLocal'
-          : '/homeCitizen';
-      context.go(route);
+      goByRole(context, citizenRoute: '/homeCitizen', establishmentRoute: '/homeLocal');
     }
 
     if (authProvider.status == AuthUiState.error) {
