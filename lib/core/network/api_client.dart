@@ -59,6 +59,19 @@ class ApiClient {
     return _handleResponse(response, 'PUT', path, body: body);
   }
 
+  Future<Map<String, dynamic>> patch(
+    String path, {
+    Map<String, dynamic>? body,
+  }) async {
+    final headers = await _buildHeaders();
+    final response = await _client.patch(
+      Uri.parse('$baseUrl$path'),
+      headers: headers,
+      body: body != null ? jsonEncode(body) : null,
+    );
+    return _handleResponse(response, 'PATCH', path, body: body);
+  }
+
   Future<Map<String, dynamic>> delete(String path) async {
     final headers = await _buildHeaders();
     final response = await _client.delete(
@@ -137,6 +150,8 @@ class ApiClient {
         return post(path, body: body);
       case 'PUT':
         return put(path, body: body);
+      case 'PATCH':
+        return patch(path, body: body);
       case 'DELETE':
         return delete(path);
       default:
