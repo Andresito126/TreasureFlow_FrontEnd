@@ -10,6 +10,8 @@ import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_p
 import 'package:treasureflow/features/auth/citizen/presentation/providers/register_citizen_provider.dart';
 import 'package:treasureflow/features/auth/local/di/local_auth_module.dart';
 import 'package:treasureflow/features/auth/local/presentation/providers/register_local_provider.dart';
+import 'package:treasureflow/features/feed/di/feed_module.dart';
+import 'package:treasureflow/features/feed/presentation/providers/feed_provider.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/create_waste_provider.dart';
 import 'package:treasureflow/features/profile/di/profile_module.dart';
@@ -44,6 +46,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<ProfilePostsProvider>(
           create: (_) => ProfileModule(container).provideProfilePostsProvider(),
+        ),
+        ChangeNotifierProvider<FeedProvider>(
+          create: (_) => FeedModule(container).provideFeedProvider(),
         ),
       ],
       child: MaterialApp.router(

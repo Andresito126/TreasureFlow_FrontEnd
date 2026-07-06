@@ -16,6 +16,17 @@ class WastePostRemoteDatasource {
     );
     return response['id'] as String;
   }
+  Future<String> createOffer({
+    required String postId,
+    required double pricePerUnit,
+    required String unit,
+  }) async {
+    final response = await _apiClient.post(
+      '/posts/waste/$postId/offers',
+      body: {'pricePerUnit': pricePerUnit, 'unit': unit},
+    );
+    return response['offerId'] as String;
+  }
 
   Future<WastePostDetail> getDetail(String id) async {
     final response = await _apiClient.get('/posts/$id');

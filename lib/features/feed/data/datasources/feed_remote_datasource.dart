@@ -1,42 +1,27 @@
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
 
-class MyPostsRemoteDatasource {
+class FeedRemoteDatasource {
   final ApiClient _apiClient;
 
-  const MyPostsRemoteDatasource(this._apiClient);
+  const FeedRemoteDatasource(this._apiClient);
 
-  Future<PaginatedPosts> getMyPosts({
-    required String filter,
+  Future<PaginatedPosts> getFeedPosts({
     int limit = 10,
     String? cursor,
   }) async {
     final queryParams = <String>[
-      'filter=$filter',
       'limit=$limit',
       if (cursor != null) 'cursor=$cursor',
     ];
 
-    final response = await _apiClient.get('/posts/me?${queryParams.join('&')}');
+    final response = await _apiClient.get('/posts/feed?${queryParams.join('&')}');
 
     final items = (response['items'] as List)
         .map((item) => _fromJson(item as Map<String, dynamic>))
         .toList();
 
-    CitizenProfile? profile;
-    if (response['profile'] != null) {
-      final p = response['profile'] as Map<String, dynamic>;
-      profile = CitizenProfile(
-        fullName: p['fullName'] as String,
-        email: p['email'] as String,
-        totalEarnings: (p['totalEarnings'] as num).toDouble(),
-        totalPublications: p['totalPublications'] as int,
-        activePublications: p['activePublications'] as int,
-      );
-    }
-
     return PaginatedPosts(
-      profile: profile,
       items: items,
       nextCursor: response['nextCursor'] as String?,
     );

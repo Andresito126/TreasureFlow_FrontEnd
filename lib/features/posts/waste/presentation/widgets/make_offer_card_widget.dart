@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
+const _units = ['kg', 'g', 'l', 'ml', 'unidades'];
+
 class MakeOfferCardWidget extends StatelessWidget {
   final TextEditingController priceController;
   final VoidCallback onSubmit;
   final bool isLoading;
+  final String selectedUnit;
+  final ValueChanged<String> onUnitChanged;
 
   const MakeOfferCardWidget({
     super.key,
     required this.priceController,
     required this.onSubmit,
+    required this.selectedUnit,
+    required this.onUnitChanged,
     this.isLoading = false,
   });
 
@@ -33,12 +39,58 @@ class MakeOfferCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Ingresa el precio que estás dispuesto a pagar por kilogramo',
+            'Ingresa el precio y la unidad del material',
             style: textTheme.bodySmall?.copyWith(
               color: colors.onSurface.withValues(alpha: 0.6),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _units.map((unit) {
+                final isSelected = unit == selectedUnit;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () => onUnitChanged(unit),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? colors.primary
+                            : colors.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? colors.primary
+                              : colors.outline.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Text(
+                        unit,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: isSelected
+                              ? colors.onPrimary
+                              : colors.onSurface.withValues(alpha: 0.7),
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: 14),
           TextField(
             controller: priceController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -46,18 +98,34 @@ class MakeOfferCardWidget extends StatelessWidget {
             decoration: InputDecoration(
               prefixText: '\$ ',
               hintText: 'Ej. 8.50',
-              suffixText: '/kg',
+
+              hintStyle: textTheme.bodyMedium?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.5),
+                fontWeight: FontWeight.w500,
+              ),
+              prefixStyle: textTheme.bodyMedium?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.7),
+              ),
+              suffixStyle: textTheme.bodyMedium?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.7),
+              ),
+              suffixText: '/$selectedUnit',
               contentPadding: const EdgeInsets.symmetric(
                 vertical: 16,
                 horizontal: 16,
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: colors.outline),
+                borderSide: BorderSide(
+                  color: colors.outline.withValues(alpha: 0.55),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: colors.primary, width: 1.5),
+                borderSide: BorderSide(
+                  color: colors.primary.withValues(alpha: 0.7),
+                  width: 1.5,
+                ),
               ),
             ),
           ),

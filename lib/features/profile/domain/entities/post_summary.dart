@@ -1,3 +1,19 @@
+class CitizenProfile {
+  final String fullName;
+  final String email;
+  final double totalEarnings;
+  final int totalPublications;
+  final int activePublications;
+
+  const CitizenProfile({
+    required this.fullName,
+    required this.email,
+    required this.totalEarnings,
+    required this.totalPublications,
+    required this.activePublications,
+  });
+}
+
 class PostSummary {
   final String id;
   final String publicationType;
@@ -19,10 +35,12 @@ class PostSummary {
 }
 
 class PaginatedPosts {
+  final CitizenProfile? profile;
   final List<PostSummary> items;
   final String? nextCursor;
 
   const PaginatedPosts({
+    this.profile,
     required this.items,
     this.nextCursor,
   });
