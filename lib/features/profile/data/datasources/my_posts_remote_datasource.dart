@@ -23,7 +23,20 @@ class MyPostsRemoteDatasource {
         .map((item) => _fromJson(item as Map<String, dynamic>))
         .toList();
 
+    CitizenProfile? profile;
+    if (response['profile'] != null) {
+      final p = response['profile'] as Map<String, dynamic>;
+      profile = CitizenProfile(
+        fullName: p['fullName'] as String,
+        email: p['email'] as String,
+        totalEarnings: (p['totalEarnings'] as num).toDouble(),
+        totalPublications: p['totalPublications'] as int,
+        activePublications: p['activePublications'] as int,
+      );
+    }
+
     return PaginatedPosts(
+      profile: profile,
       items: items,
       nextCursor: response['nextCursor'] as String?,
     );

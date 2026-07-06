@@ -66,6 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildNameSection(colors, textTheme),
+                          const SizedBox(height: 16),
+                          _buildStats(colors, textTheme),
                           const SizedBox(height: 24),
                           Consumer<ProfilePostsProvider>(
                             builder: (context, provider, _) {
@@ -119,6 +121,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildStats(ColorScheme colors, TextTheme textTheme) {
+    return Consumer<ProfilePostsProvider>(
+      builder: (context, provider, _) {
+        final profile = provider.profile;
+        return Row(
+          children: [
+            _statChip(
+              label: 'Ganancias',
+              value: profile != null ? '\$${profile.totalEarnings.toStringAsFixed(2)}' : '—',
+              colors: colors,
+              textTheme: textTheme,
+            ),
+            const SizedBox(width: 8),
+            _statChip(
+              label: 'Publicaciones',
+              value: profile != null ? '${profile.totalPublications}' : '—',
+              colors: colors,
+              textTheme: textTheme,
+            ),
+            const SizedBox(width: 8),
+            _statChip(
+              label: 'Activas',
+              value: profile != null ? '${profile.activePublications}' : '—',
+              colors: colors,
+              textTheme: textTheme,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _statChip({
+    required String label,
+    required String value,
+    required ColorScheme colors,
+    required TextTheme textTheme,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: colors.primary.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: textTheme.bodySmall?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.5),
+                fontSize: 10,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBannerAndAvatar(ColorScheme colors) {
     return SizedBox(
       height: 194,
@@ -157,19 +225,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildNameSection(ColorScheme colors, TextTheme textTheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Carlos Méndez',
-          style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          '@carlosmendez',
-          style: textTheme.bodySmall?.copyWith(color: colors.onSurface.withValues(alpha: 0.5)),
-        ),
-      ],
+    return Consumer<ProfilePostsProvider>(
+      builder: (context, provider, _) {
+        final name = provider.profile?.fullName ?? '—';
+        final email = provider.profile?.email ?? '';
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              name,
+              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              email,
+              style: textTheme.bodySmall?.copyWith(color: colors.onSurface.withValues(alpha: 0.5)),
+            ),
+          ],
+        );
+      },
     );
   }
 
