@@ -15,7 +15,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final int _currentNavIndex = 1;
   final _scrollController = ScrollController();
 
   @override
@@ -113,14 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: FloatingNavBarWidget(
-              currentIndex: _currentNavIndex,
-              onTap: (index) {
-                if (index == 0) {
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
+            child: const FloatingNavBarWidget(currentIndex: 2),
           ),
         ],
       ),

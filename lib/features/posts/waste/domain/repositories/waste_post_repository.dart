@@ -14,4 +14,10 @@ abstract class WastePostRepository {
   });
 
   Future<WastePostDetail> getDetail(String id);
+
+  Future<String> createOffer({
+    required String postId,
+    required double pricePerUnit,
+    required String unit,
+  });
 }

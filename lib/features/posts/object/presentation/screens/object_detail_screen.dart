@@ -145,15 +145,15 @@ class _ObjectDetailScreenState extends State<ObjectDetailScreen> {
             ),
           ),
 
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: FloatingNavBarWidget(
-              currentIndex: _currentNavIndex,
-              onTap: (index) => setState(() => _currentNavIndex = index),
-            ),
-          ),
+          // Positioned(
+          //   left: 0,
+          //   right: 0,
+          //   bottom: 0,
+          //   child: FloatingNavBarWidget(
+          //     currentIndex: _currentNavIndex,
+          //     onTap: (index) => setState(() => _currentNavIndex = index),
+          //   ),
+          // ),
         ],
       ),
     );

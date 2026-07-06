@@ -37,4 +37,17 @@ class WastePostRepositoryImpl implements WastePostRepository {
   Future<WastePostDetail> getDetail(String id) {
     return _datasource.getDetail(id);
   }
+
+  @override
+  Future<String> createOffer({
+    required String postId,
+    required double pricePerUnit,
+    required String unit,
+  }) {
+    return _datasource.createOffer(
+      postId: postId,
+      pricePerUnit: pricePerUnit,
+      unit: unit,
+    );
+  }
 }
