@@ -14,10 +14,26 @@ Future<void> main() async {
   final container = await AppContainer.create();
   await NotificationService().initialize();
 
+  final hasSeenOnboarding = await container.userStorage.hasSeenOnboarding();
+  final hasSession = await container.userStorage.hasSession();
+  final userType = hasSession ? await container.userStorage.getUserType() : null;
+
+  final String initialLocation;
+  if (!hasSeenOnboarding) {
+    initialLocation = '/onboardingStep1';
+  } else if (hasSession) {
+    initialLocation = userType == 'establishment' ? '/homeLocal' : '/homeCitizen';
+  } else {
+    initialLocation = '/login';
+  }
+
   runApp(
     DevicePreview(
       enabled: kIsWeb,
-      builder: (context) => MyApp(container: container),
+      builder: (context) => MyApp(
+        container: container,
+        initialLocation: initialLocation,
+      ),
     ),
   );
 }
