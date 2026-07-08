@@ -39,6 +39,14 @@ class WastePostRepositoryImpl implements WastePostRepository {
   }
 
   @override
+  Future<void> acceptOffer({
+    required String postId,
+    required String offerId,
+  }) {
+    return _datasource.acceptOffer(postId: postId, offerId: offerId);
+  }
+
+  @override
   Future<String> createOffer({
     required String postId,
     required double pricePerUnit,

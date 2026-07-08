@@ -203,20 +203,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Positioned(
             left: 16,
             bottom: -44,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 2)),
-                ],
-              ),
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: colors.primary.withValues(alpha: 0.1),
-                child: Icon(Icons.person, size: 40, color: colors.primary),
-              ),
+            child: Consumer<ProfilePostsProvider>(
+              builder: (context, provider, _) {
+                final pictureUrl = provider.profile?.profilePictureUrl;
+                return Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundColor: colors.primary.withValues(alpha: 0.1),
+                    backgroundImage: pictureUrl != null ? NetworkImage(pictureUrl) : null,
+                    child: pictureUrl == null
+                        ? Icon(Icons.person, size: 40, color: colors.primary)
+                        : null,
+                  ),
+                );
+              },
             ),
           ),
         ],

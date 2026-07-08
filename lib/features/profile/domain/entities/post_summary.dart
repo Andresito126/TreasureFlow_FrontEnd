@@ -1,6 +1,7 @@
 class CitizenProfile {
   final String fullName;
   final String email;
+  final String? profilePictureUrl;
   final double totalEarnings;
   final int totalPublications;
   final int activePublications;
@@ -8,6 +9,7 @@ class CitizenProfile {
   const CitizenProfile({
     required this.fullName,
     required this.email,
+    this.profilePictureUrl,
     required this.totalEarnings,
     required this.totalPublications,
     required this.activePublications,

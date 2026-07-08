@@ -20,4 +20,9 @@ abstract class WastePostRepository {
     required double pricePerUnit,
     required String unit,
   });
+
+  Future<void> acceptOffer({
+    required String postId,
+    required String offerId,
+  });
 }

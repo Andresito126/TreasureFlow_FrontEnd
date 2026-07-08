@@ -31,6 +31,7 @@ class WastePostModule {
   WasteDetailProvider provideDetailProvider() {
     return WasteDetailProvider(
       getWastePostDetailUseCase: _provideGetDetailUseCase(),
+      repository: _appContainer.wastePostRepository,
     );
   }
 

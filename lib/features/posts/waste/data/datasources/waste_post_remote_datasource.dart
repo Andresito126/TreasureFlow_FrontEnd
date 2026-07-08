@@ -1,5 +1,6 @@
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/posts/waste/data/models/create_waste_request_model.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/my_offer.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/offer_summary.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_availability.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
@@ -16,6 +17,17 @@ class WastePostRemoteDatasource {
     );
     return response['id'] as String;
   }
+
+  Future<void> acceptOffer({
+    required String postId,
+    required String offerId,
+  }) async {
+    await _apiClient.patch(
+      '/posts/waste/$postId/offers/$offerId/accept',
+      body: {},
+    );
+  }
+
   Future<String> createOffer({
     required String postId,
     required double pricePerUnit,
@@ -49,6 +61,7 @@ class WastePostRemoteDatasource {
           .toList(),
       offers: (response['offers'] as List)
           .map((o) => OfferSummary(
+                offerId: o['offerId'] as String,
                 establishmentName: o['establishmentName'] as String,
                 pricePerUnit: (o['pricePerUnit'] as num).toDouble(),
                 unit: o['unit'] as String,
@@ -56,6 +69,14 @@ class WastePostRemoteDatasource {
                 distance: o['distance'] as String,
               ))
           .toList(),
+      myOffer: response['myOffer'] != null
+          ? MyOffer(
+              offerId: response['myOffer']['offerId'] as String,
+              pricePerUnit: (response['myOffer']['pricePerUnit'] as num).toDouble(),
+              unit: response['myOffer']['unit'] as String,
+              status: response['myOffer']['status'] as String,
+            )
+          : null,
       viewsCount: response['viewsCount'] as int,
       distance: response['distance'] as String?,
     );
