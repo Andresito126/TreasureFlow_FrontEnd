@@ -10,7 +10,7 @@ class MakeOfferCardWidget extends StatelessWidget {
   final bool isLoading;
   final String selectedUnit;
   final ValueChanged<String> onUnitChanged;
-
+  final String buttonLabel;
   const MakeOfferCardWidget({
     super.key,
     required this.priceController,
@@ -18,6 +18,7 @@ class MakeOfferCardWidget extends StatelessWidget {
     required this.selectedUnit,
     required this.onUnitChanged,
     this.isLoading = false,
+    this.buttonLabel = 'Enviar oferta',
   });
 
   @override
@@ -46,6 +47,7 @@ class MakeOfferCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 14),
 
+          
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -58,9 +60,7 @@ class MakeOfferCardWidget extends StatelessWidget {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 7,
-                      ),
+                          horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? colors.primary
@@ -98,17 +98,6 @@ class MakeOfferCardWidget extends StatelessWidget {
             decoration: InputDecoration(
               prefixText: '\$ ',
               hintText: 'Ej. 8.50',
-
-              hintStyle: textTheme.bodyMedium?.copyWith(
-                color: colors.onSurface.withValues(alpha: 0.5),
-                fontWeight: FontWeight.w500,
-              ),
-              prefixStyle: textTheme.bodyMedium?.copyWith(
-                color: colors.onSurface.withValues(alpha: 0.7),
-              ),
-              suffixStyle: textTheme.bodyMedium?.copyWith(
-                color: colors.onSurface.withValues(alpha: 0.7),
-              ),
               suffixText: '/$selectedUnit',
               contentPadding: const EdgeInsets.symmetric(
                 vertical: 16,
@@ -116,22 +105,17 @@ class MakeOfferCardWidget extends StatelessWidget {
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: colors.outline.withValues(alpha: 0.55),
-                ),
+                borderSide: BorderSide(color: colors.outline),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: colors.primary.withValues(alpha: 0.7),
-                  width: 1.5,
-                ),
+                borderSide: BorderSide(color: colors.primary, width: 1.5),
               ),
             ),
           ),
           const SizedBox(height: 16),
           PrimaryButtonGreenWidget(
-            text: 'Enviar oferta',
+            text: buttonLabel,
             isLoading: isLoading,
             onPressed: onSubmit,
           ),
