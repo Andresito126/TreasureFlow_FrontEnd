@@ -17,8 +17,6 @@ class HomeCitizenScreen extends StatefulWidget {
 }
 
 class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
-  int _currentNavIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -146,16 +144,7 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: FloatingNavBarWidget(
-                currentIndex: _currentNavIndex,
-                onTap: (index) {
-                  if (index == 1) {
-                    context.push('/profile');
-                    return;
-                  }
-                  setState(() => _currentNavIndex = index);
-                },
-              ),
+              child: const FloatingNavBarWidget(currentIndex: 0),
             ),
           ],
         ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/accepted_offer_card_widget.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/local_action_card_widget.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/review_card_widget.dart';
@@ -15,8 +14,6 @@ class HomeLocalScreen extends StatefulWidget {
 }
 
 class _HomeLocalScreenState extends State<HomeLocalScreen> {
-  int _currentNavIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -92,16 +89,7 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: FloatingNavBarWidget(
-                currentIndex: _currentNavIndex,
-                onTap: (index) {
-                  if (index == 1) {
-                    context.push('/profile');
-                    return;
-                  }
-                  setState(() => _currentNavIndex = index);
-                },
-              ),
+              child: const FloatingNavBarWidget(currentIndex: 0),
             ),
           ],
         ),

@@ -20,6 +20,7 @@ class ProfilePostsProvider extends ChangeNotifier {
   List<PostSummary> _posts = [];
   String? _nextCursor;
   bool _isLoadingMore = false;
+  CitizenProfile? _profile;
 
   MyPostsStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -27,6 +28,7 @@ class ProfilePostsProvider extends ChangeNotifier {
   List<PostSummary> get posts => List.unmodifiable(_posts);
   bool get hasMore => _nextCursor != null;
   bool get isLoadingMore => _isLoadingMore;
+  CitizenProfile? get profile => _profile;
 
   Future<void> loadPosts({bool reset = true}) async {
     if (reset) {
@@ -41,6 +43,7 @@ class ProfilePostsProvider extends ChangeNotifier {
         filter: _filterValues[_selectedFilterIndex],
         cursor: reset ? null : _nextCursor,
       );
+      if (reset && result.profile != null) _profile = result.profile;
       _posts = reset ? result.items : [..._posts, ...result.items];
       _nextCursor = result.nextCursor;
       _status = MyPostsStatus.success;

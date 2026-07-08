@@ -1,20 +1,34 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
 
 class FloatingNavBarWidget extends StatelessWidget {
   final int currentIndex;
-  final ValueChanged<int> onTap;
 
-  const FloatingNavBarWidget({
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-  });
+  const FloatingNavBarWidget({super.key, required this.currentIndex});
 
   static const _items = [
     _NavItem(icon: Icons.home_rounded, label: 'Inicio'),
+    _NavItem(icon: Icons.explore_rounded, label: 'Explorar'),
     _NavItem(icon: Icons.person_rounded, label: 'Perfil'),
   ];
+
+  void _onTap(BuildContext context, int tappedIndex) {
+    if (tappedIndex == currentIndex) return;
+
+    switch (tappedIndex) {
+      case 0:
+        final isEstablishment =
+            context.read<AuthProvider>().userType == 'establishment';
+        context.go(isEstablishment ? '/homeLocal' : '/homeCitizen');
+      case 1:
+        context.go('/feed');
+      case 2:
+        context.go('/profile');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +37,7 @@ class FloatingNavBarWidget extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(left: 80, right: 80, bottom: 24),
+      // margin: const EdgeInsets.only(left: 48, right: 48, bottom: 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
@@ -43,9 +58,7 @@ class FloatingNavBarWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: colors.surface.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: colors.outline.withValues(alpha: 0.1),
-              ),
+              border: Border.all(color: colors.outline.withValues(alpha: 0.1)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -55,7 +68,7 @@ class FloatingNavBarWidget extends StatelessWidget {
                   item: _items[index],
                   isActive: isActive,
                   colors: colors,
-                  onTap: () => onTap(index),
+                  onTap: () => _onTap(context, index),
                 );
               }),
             ),
@@ -93,7 +106,9 @@ class FloatingNavBarWidget extends StatelessWidget {
         child: Icon(
           item.icon,
           size: 24,
-          color: isActive ? colors.onPrimary : colors.onSurface.withValues(alpha: 0.5),
+          color: isActive
+              ? colors.onPrimary
+              : colors.onSurface.withValues(alpha: 0.5),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:treasureflow/core/di/app_container.dart';
+import 'package:treasureflow/core/notifications/domain/usecases/register_device_token_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/check_auth_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/login_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/logout_usecase.dart';
@@ -18,12 +19,17 @@ class AuthModule {
   CheckAuthUseCase _provideCheckAuthUseCase() =>
       CheckAuthUseCase(_appContainer.userStorage);
 
+  RegisterDeviceTokenUseCase _provideRegisterDeviceTokenUseCase() =>
+      RegisterDeviceTokenUseCase(_appContainer.deviceTokenRepository);
+
   AuthProvider provideAuthProvider() {
     return AuthProvider(
       loginUseCase: _provideLoginUseCase(),
       logoutUseCase: _provideLogoutUseCase(),
       checkAuthUseCase: _provideCheckAuthUseCase(),
       userStorage: _appContainer.userStorage,
+      registerDeviceTokenUseCase: _provideRegisterDeviceTokenUseCase(),
+      notificationService: _appContainer.notificationService,
     );
   }
 }
