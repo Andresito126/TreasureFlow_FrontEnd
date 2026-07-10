@@ -64,6 +64,7 @@ class WasteDetailLocalProvider extends ChangeNotifier {
       await _createOfferUseCase(postId: postId, pricePerUnit: pricePerUnit, unit: unit);
       _offerStatus = OfferStatus.submitted;
       notifyListeners();
+      await load(postId);
       return true;
     } on ApiException catch (e) {
       _offerError = e.message;

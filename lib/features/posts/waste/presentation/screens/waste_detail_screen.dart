@@ -51,6 +51,51 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
 
   void _onProviderChanged() => setState(() {});
 
+  Future<void> _confirmAccept({
+    required String postId,
+    required String offerId,
+    required String establishmentName,
+    required String price,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final colors = Theme.of(ctx).colorScheme;
+        final textTheme = Theme.of(ctx).textTheme;
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('¿Aceptar oferta?', style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Estás a punto de aceptar la oferta de:', style: textTheme.bodySmall?.copyWith(color: colors.onSurface.withValues(alpha: 0.6))),
+              const SizedBox(height: 8),
+              Text(establishmentName, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text(price, style: textTheme.bodySmall?.copyWith(color: colors.primary, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Text('El resto de las ofertas serán rechazadas automáticamente.', style: textTheme.bodySmall?.copyWith(color: colors.onSurface.withValues(alpha: 0.5))),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Sí, aceptar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      _provider.acceptOffer(postId: postId, offerId: offerId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_provider.status == WasteDetailStatus.loading || _provider.status == WasteDetailStatus.idle) {
@@ -215,16 +260,31 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                             ),
                           )
                         else
-                          ...post.offers.map((offer) => Column(
-                                children: [
-                                  OfferItemWidget(
-                                    name: offer.establishmentName,
-                                    type: _offerStatusLabel(offer.status),
-                                    pricePerKg: '\$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}',
-                                  ),
-                                  Divider(color: colors.outline.withValues(alpha: 0.2)),
-                                ],
-                              )),
+                          ...post.offers.map((offer) {
+                            final isAccepting =
+                                _provider.acceptingOfferId == offer.offerId &&
+                                _provider.acceptStatus == AcceptOfferStatus.accepting;
+                            final canAccept = post.status == 'active' && offer.status == 'pending';
+                            return Column(
+                              children: [
+                                OfferItemWidget(
+                                  name: offer.establishmentName,
+                                  pricePerUnit: '\$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}',
+                                  status: offer.status,
+                                  isAccepting: isAccepting,
+                                  onAccept: canAccept
+                                      ? () => _confirmAccept(
+                                            postId: post.id,
+                                            offerId: offer.offerId,
+                                            establishmentName: offer.establishmentName,
+                                            price: '\$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}',
+                                          )
+                                      : null,
+                                ),
+                                Divider(color: colors.outline.withValues(alpha: 0.2)),
+                              ],
+                            );
+                          }),
                         const SizedBox(height: 12),
                       ],
                     ),
@@ -382,19 +442,6 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
         ],
       ),
     );
-  }
-
-  String _offerStatusLabel(String status) {
-    switch (status) {
-      case 'pending':
-        return 'Pendiente';
-      case 'accepted':
-        return 'Aceptada';
-      case 'rejected':
-        return 'Rechazada';
-      default:
-        return status;
-    }
   }
 
   Widget _infoChip(IconData icon, String label, ColorScheme colors, TextTheme textTheme) {

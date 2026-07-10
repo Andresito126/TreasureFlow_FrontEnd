@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
+import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/shared/widgets/custom_back_button_widget.dart';
 import '../widgets/role_selection_card.dart';
 
@@ -148,8 +150,9 @@ class SelectRoleStep6Screen extends StatelessWidget {
                       glowColor: primaryGreen,
                       roleTitle: 'CIUDADANO',
                       icon: Icons.person_outline,
-                      onTap: () {
-                        context.push('/registerCitizen');
+                      onTap: () async {
+                        await context.read<AppContainer>().userStorage.markOnboardingSeen();
+                        if (context.mounted) context.push('/registerCitizen');
                       },
                     ),
 
@@ -159,16 +162,18 @@ class SelectRoleStep6Screen extends StatelessWidget {
                       glowColor: primaryYellow,
                       roleTitle: 'ESTABLECIMIENTO',
                       icon: Icons.storefront_outlined,
-                      onTap: () {
-                        context.push('/registerLocalStep1');
+                      onTap: () async {
+                        await context.read<AppContainer>().userStorage.markOnboardingSeen();
+                        if (context.mounted) context.push('/registerLocalStep1');
                       },
                     ),
 
                     const Spacer(flex: 2),
 
                     TextButton(
-                      onPressed: () {
-                        context.push('/login');
+                      onPressed: () async {
+                        await context.read<AppContainer>().userStorage.markOnboardingSeen();
+                        if (context.mounted) context.push('/login');
                       },
                       child: RichText(
                         text: TextSpan(

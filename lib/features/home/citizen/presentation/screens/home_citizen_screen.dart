@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:treasureflow/features/home/citizen/domain/entities/citizen_home.dart';
+import 'package:treasureflow/features/home/citizen/presentation/providers/citizen_home_provider.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/action_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/activity_summary_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/establishment_card_widget.dart';
@@ -18,6 +21,14 @@ class HomeCitizenScreen extends StatefulWidget {
 
 class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CitizenHomeProvider>().load();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -27,117 +38,82 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(colors, textTheme),
-                  const SizedBox(height: 20),
+            Consumer<CitizenHomeProvider>(
+              builder: (context, provider, _) {
+                final data = provider.data;
 
-                  const PremiumBannerWidget(),
-                  const SizedBox(height: 20),
-
-                  _sectionTitle('Resumen de tus actividades', textTheme),
-                  const SizedBox(height: 12),
-                  const ActivitySummaryCardWidget(
-                    amount: '\$ 1,265.75',
-                    percentChange: '18%',
-                  ),
-                  const SizedBox(height: 12),
-                  const IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                return RefreshIndicator(
+                  onRefresh: provider.load,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: StatCardWidget(
-                            icon: Icons.article_outlined,
-                            value: '15',
-                            title: 'Publicaciones hechas',
-                            subtitle: 'Activas y finalizadas',
+                        _buildHeader(data, colors, textTheme),
+                        const SizedBox(height: 20),
+
+                        const PremiumBannerWidget(),
+                        const SizedBox(height: 20),
+
+                        _sectionTitle('Resumen de tus actividades', textTheme),
+                        const SizedBox(height: 12),
+                        ActivitySummaryCardWidget(
+                          amount: data != null
+                              ? '\$${data.monthlyEarnings.toStringAsFixed(2)}'
+                              : '\$ —',
+                          percentChange: '—',
+                        ),
+                        const SizedBox(height: 12),
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: StatCardWidget(
+                                  icon: Icons.article_outlined,
+                                  value: data != null ? '${data.totalPublications}' : '—',
+                                  title: 'Publicaciones hechas',
+                                  subtitle: 'Activas y finalizadas',
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: StatCardWidget(
+                                  icon: Icons.inventory_2_outlined,
+                                  value: data != null ? '${data.itemsObtained}' : '—',
+                                  title: 'Objetos obtenidos',
+                                  subtitle: 'De segunda vida',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: StatCardWidget(
-                            icon: Icons.inventory_2_outlined,
-                            value: '15',
-                            title: 'Objetos obtenidos',
-                            subtitle: 'De segunda vida',
-                          ),
-                        ),
+                        const SizedBox(height: 24),
+
+                        _sectionTitle('¿Qué vas a hacer hoy?', textTheme),
+                        const SizedBox(height: 12),
+                        _buildActionCards(),
+                        const SizedBox(height: 24),
+
+                        _sectionTitle('Establecimientos destacados', textTheme),
+                        const SizedBox(height: 12),
+                        _buildEstablishments(data, colors, textTheme),
+                        const SizedBox(height: 24),
+
+                        _sectionTitle('Objetos cerca de ti', textTheme),
+                        const SizedBox(height: 12),
+                        _buildNearbyItems(data, colors, textTheme),
+                        const SizedBox(height: 24),
+
+                        _sectionTitle('Ofertas recibidas', textTheme),
+                        const SizedBox(height: 12),
+                        _buildReceivedOffers(data, colors, textTheme),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  _sectionTitle('¿Qué vas a hacer hoy?', textTheme),
-                  const SizedBox(height: 12),
-                  _buildActionCards(),
-                  const SizedBox(height: 24),
-
-                  _sectionTitle('Establecimientos destacados', textTheme),
-                  const SizedBox(height: 12),
-                  _buildHorizontalList(
-                    itemCount: 5,
-                    itemBuilder: (index) => const EstablishmentCardWidget(
-                      name: 'MetalRecicla S.A',
-                      distance: '1.5 km',
-                      rating: 4.8,
-                      reviewCount: 50,
-                      materials: ['Metales', 'Plásticos', 'Baterías'],
-                      isPremium: true,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  _sectionTitle('Objetos cerca de ti', textTheme),
-                  const SizedBox(height: 12),
-                  _buildHorizontalList(
-                    itemCount: 5,
-                    itemBuilder: (index) => const ObjectNearbyCardWidget(
-                      objectName: 'Mesa de madera',
-                      price: '\$1,200',
-                      ownerName: 'Andre Gutiérrez',
-                      timeAgo: '3 hrs',
-                      distance: '1.5 km',
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  _sectionTitle('Ofertas recibidas', textTheme),
-                  const SizedBox(height: 12),
-                  _buildHorizontalList(
-                    itemCount: 3,
-                    itemBuilder: (index) {
-                      final offers = [
-                        const OfferCardWidget(
-                          objectName: 'Silla de madera',
-                          offeredPrice: '\$120',
-                          buyerName: 'EcoCentro Verde',
-                          timeAgo: 'hace 2 hrs',
-                          status: 'Pendiente',
-                        ),
-                        const OfferCardWidget(
-                          objectName: 'Bicicleta urbana',
-                          offeredPrice: '\$250',
-                          buyerName: 'GreenShop',
-                          timeAgo: 'hace 5 hrs',
-                          status: 'Pendiente',
-                        ),
-                        const OfferCardWidget(
-                          objectName: 'Mesa de centro',
-                          offeredPrice: '\$180',
-                          buyerName: 'Hogar Sustentable',
-                          timeAgo: 'hace 1 día',
-                          status: 'Aceptada',
-                        ),
-                      ];
-                      return offers[index];
-                    },
-                  ),
-                ],
-              ),
+                );
+              },
             ),
 
             Positioned(
@@ -152,13 +128,17 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
     );
   }
 
-  Widget _buildHeader(ColorScheme colors, TextTheme textTheme) {
+  Widget _buildHeader(CitizenHome? data, ColorScheme colors, TextTheme textTheme) {
+    final pictureUrl = data?.profilePictureUrl;
     return Row(
       children: [
         CircleAvatar(
           radius: 22,
           backgroundColor: colors.primary.withValues(alpha: 0.1),
-          child: Icon(Icons.person, color: colors.primary),
+          backgroundImage: pictureUrl != null ? NetworkImage(pictureUrl) : null,
+          child: pictureUrl == null
+              ? Icon(Icons.person, color: colors.primary)
+              : null,
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -166,10 +146,8 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hola, Carlos!',
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                data != null ? 'Hola, ${data.fullName.split(' ').first}!' : 'Hola!',
+                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
               Text(
                 'Vamos a ayudar el planeta hoy',
@@ -190,6 +168,117 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
           child: Icon(Icons.notifications_outlined, size: 22, color: colors.primary),
         ),
       ],
+    );
+  }
+
+  Widget _buildEstablishments(CitizenHome? data, ColorScheme colors, TextTheme textTheme) {
+    final establishments = data?.nearbyEstablishments ?? [];
+
+    if (data == null) {
+      return _buildHorizontalList(
+        itemCount: 3,
+        itemBuilder: (_) => const EstablishmentCardWidget(
+          name: 'MetalRecicla S.A',
+          distance: '1.5 km',
+          rating: 4.8,
+          reviewCount: 50,
+          materials: ['Metales', 'Plásticos'],
+          isPremium: true,
+        ),
+      );
+    }
+
+    if (establishments.isEmpty) {
+      return _emptySection('No hay establecimientos cercanos', colors, textTheme);
+    }
+
+    return _buildHorizontalList(
+      itemCount: establishments.length,
+      itemBuilder: (i) => EstablishmentCardWidget(
+        name: establishments[i].storeName,
+        distance: establishments[i].distance,
+        rating: establishments[i].averageRating,
+        reviewCount: 0,
+        materials: establishments[i].materials,
+        isOpen: establishments[i].isOpen,
+      ),
+    );
+  }
+
+  Widget _buildNearbyItems(CitizenHome? data, ColorScheme colors, TextTheme textTheme) {
+    final items = data?.nearbyItems ?? [];
+
+    if (data == null) {
+      return _buildHorizontalList(
+        itemCount: 3,
+        itemBuilder: (_) => const ObjectNearbyCardWidget(
+          objectName: 'Mesa de madera',
+          price: '\$1,200',
+          ownerName: 'Andre Gutiérrez',
+          timeAgo: '3 hrs',
+          distance: '1.5 km',
+        ),
+      );
+    }
+
+    if (items.isEmpty) {
+      return _emptySection('No hay objetos cerca de ti', colors, textTheme);
+    }
+
+    return _buildHorizontalList(
+      itemCount: items.length,
+      itemBuilder: (i) => ObjectNearbyCardWidget(
+        objectName: items[i].description,
+        price: '—',
+        ownerName: 'Ciudadano',
+        timeAgo: items[i].publishedAt,
+        distance: items[i].distance,
+      ),
+    );
+  }
+
+  Widget _buildReceivedOffers(CitizenHome? data, ColorScheme colors, TextTheme textTheme) {
+    final offers = data?.receivedOffers ?? [];
+
+    if (data == null) {
+      return _buildHorizontalList(
+        itemCount: 2,
+        itemBuilder: (_) => const OfferCardWidget(
+          objectName: 'Silla de madera',
+          offeredPrice: '\$120',
+          buyerName: 'EcoCentro Verde',
+          timeAgo: 'hace 2 hrs',
+          status: 'Pendiente',
+        ),
+      );
+    }
+
+    if (offers.isEmpty) {
+      return _emptySection('No tienes ofertas recibidas', colors, textTheme);
+    }
+
+    return _buildHorizontalList(
+      itemCount: offers.length,
+      itemBuilder: (i) => OfferCardWidget(
+        objectName: 'Publicación de residuo',
+        offeredPrice: '\$${offers[i].pricePerUnit.toStringAsFixed(2)}/${offers[i].unit}',
+        buyerName: offers[i].establishmentName,
+        timeAgo: offers[i].offeredAt,
+        status: 'Pendiente',
+        onTap: () => context.push('/wasteDetail/${offers[i].publicationId}'),
+      ),
+    );
+  }
+
+  Widget _emptySection(String message, ColorScheme colors, TextTheme textTheme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Text(
+        message,
+        style: textTheme.bodySmall?.copyWith(
+          color: colors.onSurface.withValues(alpha: 0.4),
+        ),
+      ),
     );
   }
 
@@ -283,10 +372,7 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  ),
+                  Text(title, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
@@ -308,9 +394,7 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
   Widget _sectionTitle(String text, TextTheme textTheme) {
     return Text(
       text,
-      style: textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-      ),
+      style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 
@@ -350,11 +434,7 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
               gradientColors: [Color(0xFFF5A32E), Color(0xFFFEC562)],
             ),
           ].map((card) {
-            return SizedBox(
-              width: cardWidth,
-              height: cardHeight,
-              child: card,
-            );
+            return SizedBox(width: cardWidth, height: cardHeight, child: card);
           }).toList(),
         );
       },

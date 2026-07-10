@@ -29,6 +29,7 @@ class MyPostsRemoteDatasource {
       profile = CitizenProfile(
         fullName: p['fullName'] as String,
         email: p['email'] as String,
+        profilePictureUrl: p['profilePictureUrl'] as String?,
         totalEarnings: (p['totalEarnings'] as num).toDouble(),
         totalPublications: p['totalPublications'] as int,
         activePublications: p['activePublications'] as int,

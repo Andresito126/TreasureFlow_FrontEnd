@@ -4,8 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treasureflow/core/notifications/domain/entities/notification_payload.dart';
-import 'package:treasureflow/core/router/app_router.dart';
 
 /// Top-level handler required by FCM for background/terminated messages.
 /// Cannot be a class method.
@@ -26,6 +26,11 @@ class NotificationService {
   final _messaging = FirebaseMessaging.instance;
   final _localNotifications = FlutterLocalNotificationsPlugin();
   int _notificationId = 0;
+  GoRouter? _router;
+
+  void setRouter(GoRouter router) {
+    _router = router;
+  }
 
   Future<void> initialize() async {
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
@@ -154,7 +159,7 @@ class NotificationService {
 
   void _navigate(String route) {
     if (route.isEmpty) return;
-    appRouter.go(route);
+    _router?.go(route);
   }
 
   // ── Utilities ────────────────────────────────────────────────────────────

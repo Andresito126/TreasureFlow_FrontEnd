@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/posts/object/presentation/widgets/image_gallery_widget.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/my_offer.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/waste_detail_local_provider.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/info_banner_widget.dart';
@@ -25,18 +26,30 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
   bool _descriptionExpanded = false;
   final _priceController = TextEditingController();
   String _selectedUnit = 'kg';
+  bool _offerPrefilled = false;
 
   @override
   void initState() {
     super.initState();
     _provider = WastePostModule(context.read<AppContainer>()).provideDetailLocalProvider();
+    _provider.addListener(_prefillOfferOnce);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _provider.load(widget.postId);
     });
   }
 
+  void _prefillOfferOnce() {
+    if (_offerPrefilled) return;
+    final offer = _provider.post?.myOffer;
+    if (offer == null) return;
+    _offerPrefilled = true;
+    _priceController.text = offer.pricePerUnit.toString();
+    setState(() => _selectedUnit = offer.unit);
+  }
+
   @override
   void dispose() {
+    _provider.removeListener(_prefillOfferOnce);
     _priceController.dispose();
     super.dispose();
   }
@@ -72,7 +85,7 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
     if (success) {
       _priceController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Oferta de \$$priceText/kg enviada correctamente')),
+        const SnackBar(content: Text('Oferta enviada correctamente')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,7 +111,7 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
           style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          '¿Seguro que quieres ofertar \$$price por kilogramo para este residuo?',
+          '¿Seguro que quieres ofertar \$$price/$_selectedUnit para este residuo?',
           style: textTheme.bodyMedium,
         ),
         actions: [
@@ -156,9 +169,12 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
       body: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: RefreshIndicator(
+              onRefresh: () => _provider.load(widget.postId),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ImageGalleryWidget(
                     imageUrls: post.photoUrls,
@@ -255,6 +271,11 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                         ),
                         const SizedBox(height: 20),
 
+                        if (post.myOffer != null)
+                          _existingOfferBanner(post.myOffer!, colors, textTheme),
+
+                        if (post.myOffer != null) const SizedBox(height: 16),
+
                         MakeOfferCardWidget(
                           priceController: _priceController,
                           isLoading: provider.isSubmitting,
@@ -262,6 +283,7 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                           selectedUnit: _selectedUnit,
                           onUnitChanged: (unit) =>
                               setState(() => _selectedUnit = unit),
+                          buttonLabel: post.myOffer != null ? 'Actualizar oferta' : 'Enviar oferta',
                         ),
                         const SizedBox(height: 12),
                       ],
@@ -271,6 +293,7 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
               ),
             ),
           ),
+        ),
           _buildBottomBar(post, colors, textTheme, provider),
         ],
       ),
@@ -342,7 +365,7 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                         )
                       else ...[
                         Text(
-                          'Confirmar oferta',
+                          post.myOffer != null ? 'Actualizar oferta' : 'Confirmar oferta',
                           style: textTheme.bodySmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -359,6 +382,47 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _existingOfferBanner(MyOffer offer, ColorScheme colors, TextTheme textTheme) {
+    final isAccepted = offer.status == 'accepted';
+    final color = isAccepted ? Colors.green : colors.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(isAccepted ? Icons.check_circle_outline : Icons.local_offer_outlined,
+              size: 20, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isAccepted ? 'Tu oferta fue aceptada' : 'Ya enviaste una oferta',
+                  style: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '\$${offer.pricePerUnit.toStringAsFixed(2)} / ${offer.unit}',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colors.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

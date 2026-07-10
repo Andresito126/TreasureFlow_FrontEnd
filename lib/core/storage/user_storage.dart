@@ -4,6 +4,7 @@ import 'package:treasureflow/core/storage/token_storage.dart';
 class UserStorage {
   static const _kUserType = 'user_type';
   static const _kUserId = 'user_id';
+  static const _kOnboardingSeen = 'onboarding_seen';
 
   final TokenStorage _tokenStorage;
   final FlutterSecureStorage _storage;
@@ -26,6 +27,14 @@ class UserStorage {
   Future<String?> getUserType() => _storage.read(key: _kUserType);
 
   Future<String?> getUserId() => _storage.read(key: _kUserId);
+
+  Future<bool> hasSeenOnboarding() async {
+    final value = await _storage.read(key: _kOnboardingSeen);
+    return value == 'true';
+  }
+
+  Future<void> markOnboardingSeen() =>
+      _storage.write(key: _kOnboardingSeen, value: 'true');
 
   Future<void> clearSession() async {
     await Future.wait([

@@ -241,7 +241,7 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
                         controller: _nameController,
                         hTPlaceHolder: 'Nombre',
                         iconInput: Icons.person_outline,
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]'))],
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]'))],
                         validator: (v) => v == null || v.trim().isEmpty ? 'Ingresa tu nombre' : null,
                       ),
 
