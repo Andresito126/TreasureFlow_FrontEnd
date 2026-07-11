@@ -9,11 +9,13 @@ import 'place_search_field.dart';
 class TreasureMapWidget extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
+  final String nextLabel;
 
   const TreasureMapWidget({
     super.key,
     required this.onNext,
     required this.onBack,
+    this.nextLabel = 'Siguiente',
   });
 
   @override
@@ -60,9 +62,11 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
           resizeToAvoidBottomInset: false,
           body: Stack(
             children: [
-              // ── 1. Mapa ───────────────────────────────────────────────
+            
+            
               GoogleMap(
-                // mapId: '',
+              
+              
                 onMapCreated: (c) => _mapController = c,
                 initialCameraPosition: CameraPosition(
                   target: provider.initialTarget,
@@ -78,7 +82,8 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
                 tiltGesturesEnabled: provider.isEditing,
               ),
 
-              // ── 2. Pin fijo en el centro ──────────────────────────────
+            
+            
               const IgnorePointer(
                 child: Center(
                   child: Padding(
@@ -92,7 +97,8 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
                 ),
               ),
 
-              // ── 3. Buscador (solo en modo edición) ────────────────────
+            
+            
               if (provider.isEditing)
                 Positioned(
                   top: 12,
@@ -100,7 +106,8 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
                   right: 12,
                   child: PlaceSearchField(
                     provider: provider,
-                    // Oculta card y FAB mientras el teclado está abierto
+                  
+                  
                     onFocusChanged: (hasFocus) =>
                         setState(() => _isSearching = hasFocus),
                     onSuggestionSelected: (placeId) async {
@@ -117,22 +124,26 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
                   ),
                 ),
 
-              // ── 4. Botón "mi ubicación" — se oculta al buscar ─────────
+            
+            
               if (!_isSearching)
                 Positioned(
                   bottom: 260,
                   right: 12,
                   child: FloatingActionButton.small(
                     heroTag: 'myLocation',
-                    backgroundColor: colors.surface, // backgroundBoxLight/Dark
+                    backgroundColor: colors.surface,
+                    
                     foregroundColor:
-                        colors.onSurface, // negro/blanco según modo
+                        colors.onSurface,
+                        
                     onPressed: () => _goToCurrentLocation(provider),
                     child: const Icon(Icons.my_location),
                   ),
                 ),
 
-              // ── 5. AddressCard — se oculta al buscar ──────────────────
+            
+            
               if (!_isSearching)
                 Positioned(
                   bottom: 0,
@@ -147,6 +158,7 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
                         ? provider.exitEditMode
                         : widget.onBack,
                     onNext: widget.onNext,
+                    nextLabel: widget.nextLabel,
                   ),
                 ),
             ],

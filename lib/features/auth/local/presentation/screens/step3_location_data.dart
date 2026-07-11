@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/maps/presentation/providers/map_provider.dart';
 import 'package:treasureflow/features/auth/local/presentation/providers/register_local_provider.dart';
+import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/map/treasure_map_widget.dart';
 
 class Step3LocationData extends StatefulWidget {
@@ -30,17 +31,15 @@ class _Step3LocationDataState extends State<Step3LocationData> {
     final provider = context.read<RegisterLocalProvider>();
 
     if (provider.status == RegisterLocalStatus.success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Establecimiento registrado exitosamente'),
-        ),
-      );
+      AppToast.show(context, 'Establecimiento registrado exitosamente', type: ToastType.success);
       context.go('/login');
     }
 
     if (provider.status == RegisterLocalStatus.error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(provider.errorMessage ?? 'Error al registrar')),
+      AppToast.show(
+        context,
+        provider.errorMessage ?? 'Error al registrar',
+        type: ToastType.error,
       );
     }
   }
@@ -51,9 +50,7 @@ class _Step3LocationDataState extends State<Step3LocationData> {
 
     final pin = mapProvider.pinLocation;
     if (pin == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona una ubicación en el mapa')),
-      );
+      AppToast.show(context, 'Selecciona una ubicación en el mapa', type: ToastType.warning);
       return;
     }
 
@@ -71,7 +68,7 @@ class _Step3LocationDataState extends State<Step3LocationData> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: TreasureMapWidget(onNext: _onConfirm, onBack: widget.onBack),
+      body: TreasureMapWidget(onNext: _onConfirm, onBack: widget.onBack, nextLabel: 'Crear cuenta'),
     );
   }
 }

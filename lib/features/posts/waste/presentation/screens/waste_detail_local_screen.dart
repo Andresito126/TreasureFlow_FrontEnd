@@ -10,6 +10,7 @@ import 'package:treasureflow/features/posts/waste/presentation/widgets/info_bann
 import 'package:treasureflow/features/posts/waste/presentation/widgets/make_offer_card_widget.dart';
 import 'package:treasureflow/shared/utils/material_type_translator.dart';
 import 'package:treasureflow/shared/utils/post_status_translator.dart';
+import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/image_viewer_screen.dart';
 
 class WasteDetailLocalScreen extends StatefulWidget {
@@ -57,17 +58,13 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
   Future<void> _onSendOffer() async {
     final priceText = _priceController.text.trim();
     if (priceText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa el precio que ofreces')),
-      );
+      AppToast.show(context, 'Ingresa el precio que ofreces', type: ToastType.warning);
       return;
     }
 
     final price = double.tryParse(priceText);
     if (price == null || price <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa un precio válido')),
-      );
+      AppToast.show(context, 'Ingresa un precio válido', type: ToastType.warning);
       return;
     }
 
@@ -84,15 +81,12 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
 
     if (success) {
       _priceController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Oferta enviada correctamente')),
-      );
+      AppToast.show(context, 'Oferta enviada correctamente', type: ToastType.success);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_provider.offerError ?? 'Error al enviar la oferta'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      AppToast.show(
+        context,
+        _provider.offerError ?? 'Error al enviar la oferta',
+        type: ToastType.error,
       );
       _provider.resetOfferStatus();
     }

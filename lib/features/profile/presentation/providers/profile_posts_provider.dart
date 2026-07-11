@@ -8,8 +8,8 @@ enum MyPostsStatus { idle, loading, success, error }
 class ProfilePostsProvider extends ChangeNotifier {
   final GetMyPostsUseCase _getMyPostsUseCase;
 
-  static const filterLabels = ['Todas', 'Activas', 'Con ofertas', 'Apartadas', 'Finalizadas'];
-  static const _filterValues = ['all', 'active', 'with_offers', 'reserved', 'completed'];
+  static const filterLabels = ['Todas', 'En revisión', 'Activas', 'Con ofertas', 'Apartadas', 'Finalizadas', 'Rechazadas'];
+  static const _filterValues = ['all', 'pending_moderation', 'active', 'with_offers', 'reserved', 'completed', 'rejected'];
 
   ProfilePostsProvider({required GetMyPostsUseCase getMyPostsUseCase})
       : _getMyPostsUseCase = getMyPostsUseCase;
