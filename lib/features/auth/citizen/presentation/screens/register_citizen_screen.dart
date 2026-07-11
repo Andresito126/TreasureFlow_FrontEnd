@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_ui_state.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/providers/register_citizen_provider.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
+import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
 class RegisterCitizenScreen extends StatefulWidget {
@@ -49,15 +50,15 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
     final provider = context.read<RegisterCitizenProvider>();
 
     if (provider.status == AuthUiState.success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cuenta creada exitosamente')),
-      );
+      AppToast.show(context, 'Cuenta creada exitosamente', type: ToastType.success);
       context.go('/login');
     }
 
     if (provider.status == AuthUiState.error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(provider.errorMessage ?? 'Error al registrar')),
+      AppToast.show(
+        context,
+        provider.errorMessage ?? 'Error al registrar',
+        type: ToastType.error,
       );
     }
   }

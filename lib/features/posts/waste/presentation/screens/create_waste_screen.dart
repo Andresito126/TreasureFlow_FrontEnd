@@ -12,6 +12,7 @@ import 'package:treasureflow/features/posts/waste/presentation/providers/create_
 import 'package:treasureflow/core/maps/presentation/screens/location_picker_screen.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/location_preview_widget.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
+import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/category_card_widget.dart';
 import 'package:treasureflow/shared/widgets/numbered_step_title.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
@@ -78,16 +79,16 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
     final provider = context.read<CreateWasteProvider>();
 
     if (provider.status == CreateWasteStatus.success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Residuo publicado exitosamente')),
-      );
+      AppToast.show(context, 'Publicación enviada, está en revisión', type: ToastType.info);
       provider.reset();
       context.go('/homeCitizen');
     }
 
     if (provider.status == CreateWasteStatus.error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(provider.errorMessage ?? 'Error al publicar')),
+      AppToast.show(
+        context,
+        provider.errorMessage ?? 'Error al publicar',
+        type: ToastType.error,
       );
     }
   }

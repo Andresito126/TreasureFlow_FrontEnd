@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:treasureflow/shared/widgets/app_toast.dart';
 
 class TimeRangeEntry {
   TimeOfDay start;
@@ -98,19 +99,19 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
         : picked.hour * 60 + picked.minute;
 
     if (isStart && startMinutes >= endMinutes) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La hora de inicio debe ser menor a la de cierre'),
-        ),
+      AppToast.show(
+        context,
+        'La hora de inicio debe ser menor a la de cierre',
+        type: ToastType.warning,
       );
       return;
     }
 
     if (!isStart && endMinutes <= startMinutes) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La hora de cierre debe ser mayor a la de inicio'),
-        ),
+      AppToast.show(
+        context,
+        'La hora de cierre debe ser mayor a la de inicio',
+        type: ToastType.warning,
       );
       return;
     }

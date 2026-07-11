@@ -4,6 +4,7 @@ import 'package:treasureflow/features/auth/local/domain/entities/operating_sched
 import 'package:treasureflow/features/auth/local/presentation/providers/register_local_provider.dart';
 import 'package:treasureflow/features/auth/local/presentation/widgets/operating_hours_selector.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
+import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/category_card_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
@@ -82,10 +83,14 @@ class _Step2OperationsDataState extends State<Step2OperationsData>
   void _onNext() {
     final provider = context.read<RegisterLocalProvider>();
 
+    final hasOpenDay = _daySchedules.any((d) => d.isOpen);
+    if (!hasOpenDay) {
+      AppToast.show(context, 'Agrega al menos un día de atención', type: ToastType.warning);
+      return;
+    }
+
     if (provider.selectedMaterialIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona al menos un material')),
-      );
+      AppToast.show(context, 'Selecciona al menos un material', type: ToastType.warning);
       return;
     }
 
@@ -202,7 +207,7 @@ class _Step2OperationsDataState extends State<Step2OperationsData>
   Widget _divider(ColorScheme colors) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Divider(height: 1, color: colors.outline.withOpacity(0.7)),
+      child: Divider(height: 1, color: colors.outline.withValues(alpha: 0.7)),
     );
   }
 
@@ -278,7 +283,7 @@ class _Step2OperationsDataState extends State<Step2OperationsData>
                       Text(
                         '¿Cuentas con vehículo para recolección a domicilio?',
                         style: textTheme.bodySmall?.copyWith(
-                          color: colors.onSurface.withOpacity(0.6),
+                          color: colors.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -309,7 +314,7 @@ class _Step2OperationsDataState extends State<Step2OperationsData>
                         Text(
                           'Esto nos ayuda a conectarte con más personas',
                           style: textTheme.bodySmall?.copyWith(
-                            color: colors.onSurface.withOpacity(0.6),
+                            color: colors.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -319,7 +324,7 @@ class _Step2OperationsDataState extends State<Step2OperationsData>
                   Switch(
                     value: provider.hasVehicle,
                     onChanged: (val) => provider.setHasVehicle(val),
-                    activeColor: colors.onPrimary,
+                    activeThumbColor: colors.onPrimary,
                     activeTrackColor: colors.primary,
                   ),
                 ],

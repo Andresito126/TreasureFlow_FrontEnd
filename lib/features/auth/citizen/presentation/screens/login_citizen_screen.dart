@@ -6,6 +6,7 @@ import 'package:treasureflow/features/auth/citizen/presentation/widgets/auth_fea
 import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_ui_state.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
+import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 
 class LoginCitizenScreen extends StatefulWidget {
@@ -41,8 +42,10 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
     }
 
     if (authProvider.status == AuthUiState.error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Error al iniciar sesión')),
+      AppToast.show(
+        context,
+        authProvider.errorMessage ?? 'Error al iniciar sesión',
+        type: ToastType.error,
       );
     }
   }
@@ -52,9 +55,7 @@ class _LoginCitizenScreenState extends State<LoginCitizenScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa todos los campos')),
-      );
+      AppToast.show(context, 'Completa todos los campos', type: ToastType.warning);
       return;
     }
 
