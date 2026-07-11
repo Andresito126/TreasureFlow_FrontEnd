@@ -3,6 +3,7 @@ import 'package:treasureflow/core/router/onboarding_routes.dart';
 import 'package:treasureflow/core/router/auth_routes.dart';
 import 'package:treasureflow/core/router/home_routes.dart';
 import 'package:treasureflow/core/router/posts_routes.dart';
+import 'package:treasureflow/core/router/sales_routes.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
 
 const _onboardingPaths = {
@@ -46,6 +47,7 @@ GoRouter createRouter({
       ...authRoutes,
       ...homeRoutes,
       ...postsRoutes,
+      ...salesRoutes,
     ],
   );
 }

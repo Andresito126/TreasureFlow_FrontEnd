@@ -9,25 +9,32 @@ class FloatingNavBarWidget extends StatelessWidget {
 
   const FloatingNavBarWidget({super.key, required this.currentIndex});
 
-  static const _items = [
-    _NavItem(icon: Icons.home_rounded, label: 'Inicio'),
-    _NavItem(icon: Icons.explore_rounded, label: 'Explorar'),
-    _NavItem(icon: Icons.person_rounded, label: 'Perfil'),
-  ];
-
-  void _onTap(BuildContext context, int tappedIndex) {
-    if (tappedIndex == currentIndex) return;
-
-    switch (tappedIndex) {
-      case 0:
-        final isEstablishment =
-            context.read<AuthProvider>().userType == 'establishment';
-        context.go(isEstablishment ? '/homeLocal' : '/homeCitizen');
-      case 1:
-        context.go('/feed');
-      case 2:
-        context.go('/profile');
-    }
+  /// Ciudadano: Inicio(0), Explorar(1), Ventas(2), Perfil(3).
+  /// Establecimiento: Inicio(0), Explorar(1), Perfil(2).
+  List<_NavItem> _itemsFor(bool isEstablishment) {
+    return [
+      _NavItem(
+        icon: Icons.home_rounded,
+        label: 'Inicio',
+        route: isEstablishment ? '/homeLocal' : '/homeCitizen',
+      ),
+      const _NavItem(
+        icon: Icons.explore_rounded,
+        label: 'Explorar',
+        route: '/feed',
+      ),
+      if (!isEstablishment)
+        const _NavItem(
+          icon: Icons.sell_rounded,
+          label: 'Ventas',
+          route: '/mySales',
+        ),
+      const _NavItem(
+        icon: Icons.person_rounded,
+        label: 'Perfil',
+        route: '/profile',
+      ),
+    ];
   }
 
   @override
@@ -35,9 +42,12 @@ class FloatingNavBarWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
+    final isEstablishment =
+        context.read<AuthProvider>().userType == 'establishment';
+    final items = _itemsFor(isEstablishment);
+
     return Container(
-      margin: const EdgeInsets.only(left: 80, right: 80, bottom: 24),
-      // margin: const EdgeInsets.only(left: 48, right: 48, bottom: 24),
+      margin: const EdgeInsets.only(left: 48, right: 48, bottom: 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
@@ -62,13 +72,16 @@ class FloatingNavBarWidget extends StatelessWidget {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(_items.length, (index) {
+              children: List.generate(items.length, (index) {
                 final isActive = currentIndex == index;
                 return _buildItem(
-                  item: _items[index],
+                  item: items[index],
                   isActive: isActive,
                   colors: colors,
-                  onTap: () => _onTap(context, index),
+                  onTap: () {
+                    if (index == currentIndex) return;
+                    context.go(items[index].route);
+                  },
                 );
               }),
             ),
@@ -118,5 +131,6 @@ class FloatingNavBarWidget extends StatelessWidget {
 class _NavItem {
   final IconData icon;
   final String label;
-  const _NavItem({required this.icon, required this.label});
+  final String route;
+  const _NavItem({required this.icon, required this.label, required this.route});
 }
