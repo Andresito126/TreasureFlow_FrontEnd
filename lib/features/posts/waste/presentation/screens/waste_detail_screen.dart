@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/posts/object/presentation/widgets/image_gallery_widget.dart';
@@ -306,6 +307,8 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
             ? 'Entrega en punto de acopio'
             : 'Recolección o entrega';
 
+    final isReserved = post.status == 'reserved';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -346,7 +349,9 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
             Expanded(
               flex: 3,
               child: GestureDetector(
-                onTap: () {},
+                onTap: isReserved
+                    ? () => context.push('/saleDetail/${post.id}')
+                    : () {},
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
@@ -356,12 +361,17 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Ver todas las ofertas',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                      Flexible(
+                        child: Text(
+                          isReserved
+                              ? 'Continuar con la venta'
+                              : 'Ver todas las ofertas',
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
