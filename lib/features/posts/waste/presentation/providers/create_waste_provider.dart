@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/media/domain/usecases/upload_image_usecase.dart';
 import 'package:treasureflow/core/network/api_client.dart';
-import 'package:treasureflow/features/posts/waste/domain/entities/waste_availability.dart';
 import 'package:treasureflow/features/posts/waste/domain/usecases/create_waste_post_usecase.dart';
 
 enum CreateWasteStatus { idle, loading, success, error }
@@ -26,7 +25,6 @@ class CreateWasteProvider extends ChangeNotifier {
   String? _description;
   String _deliveryMode = 'drop_off';
   final List<File> _photos = [];
-  final List<WasteAvailability> _schedules = [];
   double? _latitude;
   double? _longitude;
   String? _addressText;
@@ -49,16 +47,7 @@ class CreateWasteProvider extends ChangeNotifier {
 
   void setDeliveryMode(String mode) {
     _deliveryMode = mode;
-    if (mode != 'home_delivery') {
-      _schedules.clear();
-    }
     notifyListeners();
-  }
-
-  void setSchedules(List<WasteAvailability> schedules) {
-    _schedules
-      ..clear()
-      ..addAll(schedules);
   }
 
   void setLocation({
@@ -98,10 +87,6 @@ class CreateWasteProvider extends ChangeNotifier {
       _setError('Selecciona una ubicación');
       return;
     }
-    if (_deliveryMode == 'home_delivery' && _schedules.isEmpty) {
-      _setError('Agrega al menos un horario de disponibilidad');
-      return;
-    }
 
     _status = CreateWasteStatus.loading;
     _errorMessage = null;
@@ -125,7 +110,6 @@ class CreateWasteProvider extends ChangeNotifier {
         photoUrls: photoUrls,
         materialTypeId: _materialTypeId!,
         deliveryMode: _deliveryMode,
-        schedules: _deliveryMode == 'home_delivery' ? _schedules : [],
       );
 
       _status = CreateWasteStatus.success;
@@ -154,7 +138,6 @@ class CreateWasteProvider extends ChangeNotifier {
     _description = null;
     _deliveryMode = 'drop_off';
     _photos.clear();
-    _schedules.clear();
     _latitude = null;
     _longitude = null;
     _addressText = null;

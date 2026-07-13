@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/available_slot.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
+import 'package:treasureflow/shared/utils/pickup_label_formatter.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
 const _units = ['kg', 'g', 'l', 'ml', 'unidades'];
@@ -11,12 +13,28 @@ class MakeOfferCardWidget extends StatelessWidget {
   final String selectedUnit;
   final ValueChanged<String> onUnitChanged;
   final String buttonLabel;
+
+  final DateTime? selectedDate;
+  final TimeOfDay? startTime;
+  final TimeOfDay? endTime;
+  final VoidCallback onPickDate;
+  final VoidCallback onPickStartTime;
+  final VoidCallback onPickEndTime;
+  final AvailableSlot? matchingSlot;
+
   const MakeOfferCardWidget({
     super.key,
     required this.priceController,
     required this.onSubmit,
     required this.selectedUnit,
     required this.onUnitChanged,
+    required this.onPickDate,
+    required this.onPickStartTime,
+    required this.onPickEndTime,
+    this.selectedDate,
+    this.startTime,
+    this.endTime,
+    this.matchingSlot,
     this.isLoading = false,
     this.buttonLabel = 'Enviar oferta',
   });
@@ -40,14 +58,13 @@ class MakeOfferCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Ingresa el precio y la unidad del material',
+            'Precio, unidad y fecha en la que pasarías por el material',
             style: textTheme.bodySmall?.copyWith(
               color: colors.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 14),
 
-          
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -93,7 +110,8 @@ class MakeOfferCardWidget extends StatelessWidget {
           const SizedBox(height: 14),
           TextField(
             controller: priceController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
             style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             decoration: InputDecoration(
               prefixText: '\$ ',
@@ -113,6 +131,69 @@ class MakeOfferCardWidget extends StatelessWidget {
               ),
             ),
           ),
+
+          const SizedBox(height: 18),
+          Text(
+            'Fecha de recolección',
+            style: textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Propón el día y horario en que pasarías a recoger',
+            style: textTheme.bodySmall?.copyWith(
+              fontSize: 11,
+              color: colors.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          _pickerChip(
+            context,
+            icon: Icons.calendar_today_outlined,
+            label: selectedDate != null
+                ? formatPickupLabel(_dateToIso(selectedDate!), '', '')
+                : 'Seleccionar fecha',
+            isSet: selectedDate != null,
+            onTap: onPickDate,
+            expand: true,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _pickerChip(
+                  context,
+                  icon: Icons.schedule,
+                  label: startTime != null
+                      ? 'Desde ${_formatTime(startTime!)}'
+                      : 'Hora inicio',
+                  isSet: startTime != null,
+                  onTap: onPickStartTime,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _pickerChip(
+                  context,
+                  icon: Icons.schedule,
+                  label: endTime != null
+                      ? 'Hasta ${_formatTime(endTime!)}'
+                      : 'Hora fin',
+                  isSet: endTime != null,
+                  onTap: onPickEndTime,
+                ),
+              ),
+            ],
+          ),
+
+          if (matchingSlot != null) ...[
+            const SizedBox(height: 10),
+            _occupancyIndicator(matchingSlot!, colors, textTheme),
+          ],
+
           const SizedBox(height: 16),
           PrimaryButtonGreenWidget(
             text: buttonLabel,
@@ -123,4 +204,108 @@ class MakeOfferCardWidget extends StatelessWidget {
       ),
     );
   }
+
+  Widget _pickerChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool isSet,
+    required VoidCallback onTap,
+    bool expand = false,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: expand ? double.infinity : null,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: isSet
+              ? colors.primary.withValues(alpha: 0.06)
+              : colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSet
+                ? colors.primary.withValues(alpha: 0.5)
+                : colors.outline,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSet
+                  ? colors.primary
+                  : colors.onSurface.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.bodySmall?.copyWith(
+                  fontWeight: isSet ? FontWeight.w600 : FontWeight.normal,
+                  color: isSet
+                      ? colors.primary
+                      : colors.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _occupancyIndicator(
+      AvailableSlot slot, ColorScheme colors, TextTheme textTheme) {
+    final isFull = slot.isFull;
+    final color = isFull ? const Color(0xFFE8930C) : const Color(0xFF2D7D46);
+    final text = isFull
+        ? 'Ese día ya tienes ${slot.maxSlots} recolecciones agendadas. '
+            'Puedes continuar, pero considera elegir otro día.'
+        : '${slot.slotsUsed} de ${slot.maxSlots} recolecciones agendadas ese día';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isFull ? Icons.warning_amber_rounded : Icons.event_available,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: textTheme.bodySmall?.copyWith(
+                fontSize: 11,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _dateToIso(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
+
+  static String _formatTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 }

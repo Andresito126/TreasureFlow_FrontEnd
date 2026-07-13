@@ -6,8 +6,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/maps/presentation/providers/map_provider.dart';
-import 'package:treasureflow/features/auth/local/presentation/widgets/operating_hours_selector.dart';
-import 'package:treasureflow/features/posts/waste/domain/entities/waste_availability.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/create_waste_provider.dart';
 import 'package:treasureflow/core/maps/presentation/screens/location_picker_screen.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/location_preview_widget.dart';
@@ -48,7 +46,6 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
   final _imagePicker = ImagePicker();
   LatLng? _selectedLocation;
   String? _selectedAddress;
-  List<DaySchedule> _daySchedules = [];
 
   @override
   void initState() {
@@ -111,22 +108,6 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
   void _onSubmit() {
     final provider = context.read<CreateWasteProvider>();
     provider.setDescription(_descriptionController.text);
-
-    if (provider.deliveryMode == 'home_delivery' && _daySchedules.isNotEmpty) {
-      final schedules = <WasteAvailability>[];
-      for (int i = 0; i < _daySchedules.length; i++) {
-        final day = _daySchedules[i];
-        if (!day.isOpen) continue;
-        for (final range in day.ranges) {
-          schedules.add(WasteAvailability(
-            dayOfWeek: i + 1,
-            startTime: '${range.start.hour.toString().padLeft(2, '0')}:${range.start.minute.toString().padLeft(2, '0')}',
-            endTime: '${range.end.hour.toString().padLeft(2, '0')}:${range.end.minute.toString().padLeft(2, '0')}',
-          ));
-        }
-      }
-      provider.setSchedules(schedules);
-    }
 
     provider.submit();
   }
@@ -202,34 +183,10 @@ class _CreateWasteScreenState extends State<CreateWasteScreen> {
                   const SizedBox(height: 16),
                   _buildDeliveryOptions(isTablet),
 
-                  Consumer<CreateWasteProvider>(
-                    builder: (context, provider, _) {
-                      if (provider.deliveryMode == 'home_delivery') {
-                        return Column(
-                          children: [
-                            _divider(colors),
-                            NumberedStepTitle(
-                              stepNumber: '4',
-                              title: 'Disponibilidad',
-                              fontSize: 13,
-                            ),
-                            const SizedBox(height: 16),
-                            OperatingHoursSelector(
-                              singleDay: true,
-                              singleRange: true,
-                              onChanged: (days) => _daySchedules = days,
-                            ),
-                          ],
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-
                   _divider(colors),
 
                   NumberedStepTitle(
-                    stepNumber: '5',
+                    stepNumber: '4',
                     title: 'Ubicación',
                     fontSize: 13,
                   ),

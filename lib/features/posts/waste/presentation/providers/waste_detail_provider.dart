@@ -5,7 +5,10 @@ import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post
 import 'package:treasureflow/features/posts/waste/domain/usecases/get_waste_post_detail_usecase.dart';
 
 enum WasteDetailStatus { idle, loading, success, error }
+
 enum AcceptOfferStatus { idle, accepting, done, error }
+
+enum RejectOfferStatus { idle, rejecting, done, error }
 
 class WasteDetailProvider extends ChangeNotifier {
   final GetWastePostDetailUseCase _getWastePostDetailUseCase;
@@ -14,8 +17,8 @@ class WasteDetailProvider extends ChangeNotifier {
   WasteDetailProvider({
     required GetWastePostDetailUseCase getWastePostDetailUseCase,
     required WastePostRepository repository,
-  })  : _getWastePostDetailUseCase = getWastePostDetailUseCase,
-        _repository = repository;
+  }) : _getWastePostDetailUseCase = getWastePostDetailUseCase,
+       _repository = repository;
 
   WasteDetailStatus _status = WasteDetailStatus.idle;
   String? _errorMessage;
@@ -25,6 +28,10 @@ class WasteDetailProvider extends ChangeNotifier {
   String? _acceptError;
   String? _acceptingOfferId;
 
+  RejectOfferStatus _rejectStatus = RejectOfferStatus.idle;
+  String? _rejectError;
+  String? _rejectingOfferId;
+
   WasteDetailStatus get status => _status;
   String? get errorMessage => _errorMessage;
   WastePostDetail? get post => _post;
@@ -32,6 +39,10 @@ class WasteDetailProvider extends ChangeNotifier {
   AcceptOfferStatus get acceptStatus => _acceptStatus;
   String? get acceptError => _acceptError;
   String? get acceptingOfferId => _acceptingOfferId;
+
+  RejectOfferStatus get rejectStatus => _rejectStatus;
+  String? get rejectError => _rejectError;
+  String? get rejectingOfferId => _rejectingOfferId;
 
   Future<void> load(String id) async {
     _status = WasteDetailStatus.loading;
@@ -52,7 +63,10 @@ class WasteDetailProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> acceptOffer({required String postId, required String offerId}) async {
+  Future<bool> acceptOffer({
+    required String postId,
+    required String offerId,
+  }) async {
     _acceptStatus = AcceptOfferStatus.accepting;
     _acceptingOfferId = offerId;
     _acceptError = null;
@@ -76,6 +90,36 @@ class WasteDetailProvider extends ChangeNotifier {
       return false;
     } finally {
       _acceptingOfferId = null;
+    }
+  }
+
+  Future<bool> rejectOffer({
+    required String postId,
+    required String offerId,
+  }) async {
+    _rejectStatus = RejectOfferStatus.rejecting;
+    _rejectingOfferId = offerId;
+    _rejectError = null;
+    notifyListeners();
+
+    try {
+      await _repository.rejectOffer(postId: postId, offerId: offerId);
+      _rejectStatus = RejectOfferStatus.done;
+      notifyListeners();
+      await load(postId);
+      return true;
+    } on ApiException catch (e) {
+      _rejectError = e.message;
+      _rejectStatus = RejectOfferStatus.error;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _rejectError = 'Ocurrió un error al rechazar la oferta';
+      _rejectStatus = RejectOfferStatus.error;
+      notifyListeners();
+      return false;
+    } finally {
+      _rejectingOfferId = null;
     }
   }
 
