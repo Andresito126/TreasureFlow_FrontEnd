@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:treasureflow/features/sales/presentation/models/sale_ui_model.dart';
-import 'package:treasureflow/features/sales/presentation/ui_states/sale_status.dart';
-import 'package:treasureflow/features/sales/presentation/widgets/sale_card_widget.dart';
+import 'package:treasureflow/features/sales/citizen/presentation/models/sale_ui_model.dart';
+import 'package:treasureflow/features/sales/citizen/presentation/ui_states/sale_status.dart';
+import 'package:treasureflow/features/sales/citizen/presentation/widgets/sale_card_widget.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 import 'package:treasureflow/shared/widgets/screen_header_widget.dart';
 
@@ -15,8 +15,9 @@ class MySalesScreen extends StatelessWidget {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    final inProgress =
-        mockSales.where((s) => s.status != SaleStatus.completed).toList();
+    final inProgress = mockSales
+        .where((s) => s.status != SaleStatus.completed)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -80,19 +81,13 @@ class MySalesScreen extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: colors.primary.withValues(alpha: 0.1),
               ),
-              child: Icon(
-                Icons.sell_outlined,
-                size: 40,
-                color: colors.primary,
-              ),
+              child: Icon(Icons.sell_outlined, size: 40, color: colors.primary),
             ),
             const SizedBox(height: 20),
             Text(
               'No tienes ventas en curso',
               textAlign: TextAlign.center,
-              style: textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(

@@ -1,6 +1,5 @@
-import 'package:treasureflow/features/sales/presentation/ui_states/sale_status.dart';
-
-// pra el mockkkkkkkkkkkkkkkkkkkk
+import 'package:treasureflow/features/sales/citizen/presentation/ui_states/sale_status.dart';
+// MOCKKKKKKKKKKKKKKKKKKKKKKKKK
 class SaleUiModel {
   final String id;
   final String wasteTitle;

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:treasureflow/features/sales/presentation/models/sale_ui_model.dart';
-import 'package:treasureflow/features/sales/presentation/ui_states/sale_status.dart';
-
+import 'package:treasureflow/features/sales/citizen/presentation/models/sale_ui_model.dart';
+import 'package:treasureflow/features/sales/citizen/presentation/ui_states/sale_status.dart';
 
 class SaleCardWidget extends StatelessWidget {
   final SaleUiModel sale;
@@ -102,8 +101,9 @@ class SaleCardWidget extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: step / 4,
                           minHeight: 5,
-                          backgroundColor:
-                              colors.outline.withValues(alpha: 0.2),
+                          backgroundColor: colors.outline.withValues(
+                            alpha: 0.2,
+                          ),
                           color: colors.primary,
                         ),
                       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+
 class AmountComparisonWidget extends StatelessWidget {
   final double estimatedAmount;
   final double finalAmount;

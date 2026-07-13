@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
 import 'package:treasureflow/features/profile/presentation/providers/profile_posts_provider.dart';
 import 'package:treasureflow/shared/utils/post_status_translator.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
@@ -115,12 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: FloatingNavBarWidget(
-              currentIndex:
-                  context.read<AuthProvider>().userType == 'establishment'
-                      ? 2
-                      : 3,
-            ),
+            child: const FloatingNavBarWidget(currentIndex: 3),
           ),
         ],
       ),

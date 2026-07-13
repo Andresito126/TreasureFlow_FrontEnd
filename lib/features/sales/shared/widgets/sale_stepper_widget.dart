@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// el flujo de venta es  ofertaa, entrega, pesaje, pago.
 class SaleStepperWidget extends StatelessWidget {
   final int currentStep; // 1..4
 

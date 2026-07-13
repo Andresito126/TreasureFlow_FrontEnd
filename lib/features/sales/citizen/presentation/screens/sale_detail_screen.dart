@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:treasureflow/features/sales/presentation/models/sale_ui_model.dart';
-import 'package:treasureflow/features/sales/presentation/ui_states/sale_status.dart';
-import 'package:treasureflow/features/sales/presentation/widgets/amount_comparison_widget.dart';
-import 'package:treasureflow/features/sales/presentation/widgets/delivery_qr_card_widget.dart';
-import 'package:treasureflow/features/sales/presentation/widgets/payment_method_selector_widget.dart';
-import 'package:treasureflow/features/sales/presentation/widgets/sale_stepper_widget.dart';
+import 'package:treasureflow/features/sales/citizen/presentation/models/sale_ui_model.dart';
+import 'package:treasureflow/features/sales/citizen/presentation/ui_states/sale_status.dart';
+import 'package:treasureflow/features/sales/citizen/presentation/widgets/amount_comparison_widget.dart';
+import 'package:treasureflow/features/sales/citizen/presentation/widgets/delivery_qr_card_widget.dart';
+import 'package:treasureflow/features/sales/shared/widgets/payment_method_selector_widget.dart';
+import 'package:treasureflow/features/sales/shared/widgets/sale_stepper_widget.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
-/// Detalle de una venta: pantalla única cuyo contenido cambia según el
-/// estado de la venta (stepper Oferta → Entrega → Pesaje → Pago).
 class SaleDetailScreen extends StatefulWidget {
   final String saleId;
 
@@ -31,7 +29,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     super.initState();
     _sale = mockSales.firstWhere(
       (s) => s.id == widget.saleId,
-      // Post real apartado que aún no está en los mocks → venta nueva
+
       orElse: () => mockSales.first.copyWith(status: SaleStatus.accepted),
     );
   }
@@ -47,9 +45,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   void _onSimulateScan() => _advanceTo(SaleStatus.weighing);
 
   void _onSimulateWeighing() => _advanceTo(
-        SaleStatus.amountReview,
-        finalWeight: _sale.estimatedQuantity * 1.24,
-      );
+    SaleStatus.amountReview,
+    finalWeight: _sale.estimatedQuantity * 1.24,
+  );
 
   void _onAcceptAmount() {
     _advanceTo(SaleStatus.paymentPending);
@@ -66,7 +64,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Reportar inconveniente',
-          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: TextField(
           controller: controller,
@@ -146,7 +146,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     };
   }
 
-  // ── Paso 1: Oferta aceptada ─────────────────────────────────────────
+  // paso 1: o aceptada ─────────────────────────────────────────
   List<Widget> _buildAcceptedStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -170,8 +170,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                     color: colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(Icons.recycling_rounded,
-                      color: colors.primary, size: 28),
+                  child: Icon(
+                    Icons.recycling_rounded,
+                    color: colors.primary,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -222,8 +225,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                     ),
                   ),
                 ),
-                Icon(Icons.star_rounded,
-                    size: 16, color: const Color(0xFFE8A13D)),
+                Icon(
+                  Icons.star_rounded,
+                  size: 16,
+                  color: const Color(0xFFE8A13D),
+                ),
                 const SizedBox(width: 2),
                 Text(
                   '${_sale.establishmentRating} · ${_sale.establishmentDistance}',
@@ -279,8 +285,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.info_outline_rounded,
-                      size: 16, color: Color(0xFFC77F1A)),
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 16,
+                    color: Color(0xFFC77F1A),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -310,9 +319,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  isDropOff
-                      ? Icons.storefront_outlined
-                      : Icons.home_outlined,
+                  isDropOff ? Icons.storefront_outlined : Icons.home_outlined,
                   size: 20,
                   color: colors.primary,
                 ),
@@ -347,7 +354,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     ];
   }
 
-  // ── Paso 2: Entrega (QR) ────────────────────────────────────────────
+  // paso 2: Entrega qr vaya ────────────────────────────────────────────
   List<Widget> _buildHandoffStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -370,7 +377,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           children: [
             Text(
               'Detalles de la entrega',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             _detailRow('Residuo', _sale.wasteTitle),
@@ -386,8 +395,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.access_time_rounded,
-                      size: 13, color: Color(0xFFC77F1A)),
+                  const Icon(
+                    Icons.access_time_rounded,
+                    size: 13,
+                    color: Color(0xFFC77F1A),
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Pendiente de pesaje',
@@ -404,7 +416,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         ),
       ),
       const SizedBox(height: 24),
-      // Botón temporal de demo — se elimina al conectar el backend
+
       OutlinedButton.icon(
         onPressed: _onSimulateScan,
         icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
@@ -413,7 +425,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     ];
   }
 
-  // ── Paso 3a: Pesando ────────────────────────────────────────────────
+  // paso 3a: pesando ────────────────────────────────────────────────
   List<Widget> _buildWeighingStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -436,7 +448,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
             Text(
               'El establecimiento está pesando tu material…',
               textAlign: TextAlign.center,
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -451,7 +465,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         ),
       ),
       const SizedBox(height: 24),
-      // Botón temporal de demo — se elimina al conectar el backend
+
       OutlinedButton.icon(
         onPressed: _onSimulateWeighing,
         icon: const Icon(Icons.scale_rounded, size: 18),
@@ -460,7 +474,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     ];
   }
 
-  // ── Paso 3b: Revisar monto ──────────────────────────────────────────
+  // paso 3b: revisar monto ──────────────────────────────────────────
   List<Widget> _buildAmountReviewStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -476,7 +490,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           children: [
             Text(
               'Resumen del pesaje',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             _detailRow('Residuo', _sale.wasteTitle),
@@ -488,10 +504,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               'Precio por ${_sale.unit}',
               '\$${_sale.pricePerUnit.toStringAsFixed(2)}',
             ),
-            Divider(
-              height: 24,
-              color: colors.outline.withValues(alpha: 0.3),
-            ),
+            Divider(height: 24, color: colors.outline.withValues(alpha: 0.3)),
             Row(
               children: [
                 Expanded(
@@ -529,8 +542,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.check_circle_outline_rounded,
-                size: 16, color: colors.primary),
+            Icon(
+              Icons.check_circle_outline_rounded,
+              size: 16,
+              color: colors.primary,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -554,7 +570,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     ];
   }
 
-  // ── Paso 4: Pago ────────────────────────────────────────────────────
+  // paso 4: pago ────────────────────────────────────────────────────
   List<Widget> _buildPaymentStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -599,16 +615,16 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         text: 'Recibí el pago',
         onPressed: _paymentMethod == null
             ? () => AppToast.show(
-                  context,
-                  'Selecciona un método de pago',
-                  type: ToastType.warning,
-                )
+                context,
+                'Selecciona un método de pago',
+                type: ToastType.warning,
+              )
             : _onConfirmPayment,
       ),
     ];
   }
 
-  // ── Venta completada ────────────────────────────────────────────────
+  // completada ────────────────────────────────────────────────
   List<Widget> _buildCompletedStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -655,7 +671,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           children: [
             Text(
               'Resumen de la venta',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             _detailRow('Residuo', _sale.wasteTitle),
@@ -696,7 +714,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     ];
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────
+  // ── helpers ─────────────────────────────────────────────────────────
   Widget _sectionTitle(IconData icon, String title) {
     final theme = Theme.of(context);
     return Row(

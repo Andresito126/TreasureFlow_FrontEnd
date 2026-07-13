@@ -9,8 +9,10 @@ class FloatingNavBarWidget extends StatelessWidget {
 
   const FloatingNavBarWidget({super.key, required this.currentIndex});
 
-  /// Ciudadano: Inicio(0), Explorar(1), Ventas(2), Perfil(3).
-  /// Establecimiento: Inicio(0), Explorar(1), Perfil(2).
+  /// Ciudadano: inicio(0), explorar(1), ventas(2), perfil(3).
+  /// Establecimiento: inicio(0), explorar(1), compras(2), perfil(3).
+
+
   List<_NavItem> _itemsFor(bool isEstablishment) {
     return [
       _NavItem(
@@ -23,7 +25,13 @@ class FloatingNavBarWidget extends StatelessWidget {
         label: 'Explorar',
         route: '/feed',
       ),
-      if (!isEstablishment)
+      if (isEstablishment)
+        const _NavItem(
+          icon: Icons.local_shipping_rounded,
+          label: 'Compras',
+          route: '/myPurchases',
+        )
+      else
         const _NavItem(
           icon: Icons.sell_rounded,
           label: 'Ventas',

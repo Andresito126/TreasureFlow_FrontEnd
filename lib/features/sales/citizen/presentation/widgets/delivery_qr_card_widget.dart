@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+
+
 class DeliveryQrCardWidget extends StatelessWidget {
   final String payload;
 
@@ -41,12 +43,10 @@ class DeliveryQrCardWidget extends StatelessWidget {
                 height: size,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  // Fondo blanco fijo: el QR debe tener contraste en dark mode
+                  
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: colors.outline.withValues(alpha: 0.2),
-                  ),
+                  border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
                 ),
                 child: CustomPaint(
                   painter: _FakeQrPainter(seed: payload.hashCode),
@@ -59,6 +59,7 @@ class DeliveryQrCardWidget extends StatelessWidget {
     );
   }
 }
+
 
 class _FakeQrPainter extends CustomPainter {
   final int seed;
@@ -74,7 +75,7 @@ class _FakeQrPainter extends CustomPainter {
 
     var state = seed;
     bool nextBit() {
-      // LCG simple para pseudo-aleatorio determinístico
+      
       state = (state * 1103515245 + 12345) & 0x7fffffff;
       return (state >> 16) & 1 == 1;
     }
