@@ -1,6 +1,5 @@
 import 'package:treasureflow/features/posts/waste/domain/entities/my_offer.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/offer_summary.dart';
-import 'package:treasureflow/features/posts/waste/domain/entities/waste_availability.dart';
 
 class WastePostDetail {
   final String id;
@@ -11,7 +10,6 @@ class WastePostDetail {
   final String status;
   final String materialTypeName;
   final String deliveryMode;
-  final List<WasteAvailability> schedules;
   final List<OfferSummary> offers;
   final MyOffer? myOffer;
   final int viewsCount;
@@ -26,7 +24,6 @@ class WastePostDetail {
     required this.status,
     required this.materialTypeName,
     required this.deliveryMode,
-    required this.schedules,
     required this.offers,
     this.myOffer,
     required this.viewsCount,

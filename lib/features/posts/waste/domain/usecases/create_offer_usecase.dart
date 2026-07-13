@@ -9,11 +9,17 @@ class CreateOfferUseCase {
     required String postId,
     required double pricePerUnit,
     String unit = 'kg',
+    required String proposedPickupDate,
+    required String proposedPickupStart,
+    required String proposedPickupEnd,
   }) {
     return _repository.createOffer(
       postId: postId,
       pricePerUnit: pricePerUnit,
       unit: unit,
+      proposedPickupDate: proposedPickupDate,
+      proposedPickupStart: proposedPickupStart,
+      proposedPickupEnd: proposedPickupEnd,
     );
   }
 }

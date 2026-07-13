@@ -1,4 +1,3 @@
-import 'package:treasureflow/features/posts/waste/domain/entities/waste_availability.dart';
 import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post_repository.dart';
 
 class CreateWastePostUseCase {
@@ -14,7 +13,6 @@ class CreateWastePostUseCase {
     required List<String> photoUrls,
     required String materialTypeId,
     required String deliveryMode,
-    required List<WasteAvailability> schedules,
   }) {
     return _repository.create(
       description: description,
@@ -24,7 +22,6 @@ class CreateWastePostUseCase {
       photoUrls: photoUrls,
       materialTypeId: materialTypeId,
       deliveryMode: deliveryMode,
-      schedules: schedules,
     );
   }
 }
