@@ -29,6 +29,7 @@ class LocationPreviewWidget extends StatelessWidget {
             width: double.infinity,
             child: location != null
                 ? GoogleMap(
+                    key: ValueKey(location),
                     initialCameraPosition: CameraPosition(
                       target: location!,
                       zoom: 15,

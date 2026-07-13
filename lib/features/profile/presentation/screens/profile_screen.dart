@@ -114,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: const FloatingNavBarWidget(currentIndex: 2),
+            child: const FloatingNavBarWidget(currentIndex: 3),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/accepted_offer_card_widget.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/local_action_card_widget.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/review_card_widget.dart';
@@ -63,12 +64,15 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
                     textTheme,
                   ),
                   const SizedBox(height: 12),
-                  const AcceptedOfferCardWidget(
-                    title: '50 botellas PET',
-                    price: '\$10.00',
-                    date: '2 Jun 2026',
-                    address:
-                        'Olivo Sur 503-315, Patria Nueva, 29045 Tuxtla Gutiérrez, Chis.',
+                  GestureDetector(
+                    onTap: () => context.push('/myPurchases'),
+                    child: const AcceptedOfferCardWidget(
+                      title: '50 botellas PET',
+                      price: '\$10.00',
+                      date: '2 Jun 2026',
+                      address:
+                          'Olivo Sur 503-315, Patria Nueva, 29045 Tuxtla Gutiérrez, Chis.',
+                    ),
                   ),
                   const SizedBox(height: 24),
 
