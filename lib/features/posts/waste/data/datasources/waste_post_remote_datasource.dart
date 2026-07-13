@@ -1,8 +1,8 @@
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/posts/waste/data/models/create_waste_request_model.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/available_slot.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/my_offer.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/offer_summary.dart';
-import 'package:treasureflow/features/posts/waste/domain/entities/waste_availability.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
 
 class WastePostRemoteDatasource {
@@ -28,16 +28,60 @@ class WastePostRemoteDatasource {
     );
   }
 
+  Future<void> rejectOffer({
+    required String postId,
+    required String offerId,
+  }) async {
+    await _apiClient.patch(
+      '/posts/waste/$postId/offers/$offerId/reject',
+      body: {},
+    );
+  }
+
   Future<String> createOffer({
     required String postId,
     required double pricePerUnit,
     required String unit,
+    required String proposedPickupDate,
+    required String proposedPickupStart,
+    required String proposedPickupEnd,
   }) async {
     final response = await _apiClient.post(
       '/posts/waste/$postId/offers',
-      body: {'pricePerUnit': pricePerUnit, 'unit': unit},
+      body: {
+        'pricePerUnit': pricePerUnit,
+        'unit': unit,
+        'proposedPickupDate': proposedPickupDate,
+        'proposedPickupStart': proposedPickupStart,
+        'proposedPickupEnd': proposedPickupEnd,
+      },
     );
     return response['offerId'] as String;
+  }
+
+  Future<List<AvailableSlot>> getAvailableSlots(String establishmentId) async {
+    final now = DateTime.now();
+    final from =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+
+    final response = await _apiClient.getList(
+      '/establishments/$establishmentId/available-slots?from=$from&days=30',
+    );
+
+    return response
+        .map(
+          (s) => AvailableSlot(
+            date: s['date'] as String,
+            dayLabel: s['dayLabel'] as String,
+            start: s['start'] as String,
+            end: s['end'] as String,
+            slotsUsed: s['slotsUsed'] as int,
+            maxSlots: s['maxSlots'] as int,
+          ),
+        )
+        .toList();
   }
 
   Future<WastePostDetail> getDetail(String id) async {
@@ -52,29 +96,34 @@ class WastePostRemoteDatasource {
       status: response['status'] as String,
       materialTypeName: response['materialTypeName'] as String,
       deliveryMode: response['deliveryMode'] as String,
-      schedules: (response['schedules'] as List)
-          .map((s) => WasteAvailability(
-                dayOfWeek: s['dayOfWeek'] as int,
-                startTime: s['startTime'] as String,
-                endTime: s['endTime'] as String,
-              ))
-          .toList(),
       offers: (response['offers'] as List)
-          .map((o) => OfferSummary(
-                offerId: o['offerId'] as String,
-                establishmentName: o['establishmentName'] as String,
-                pricePerUnit: (o['pricePerUnit'] as num).toDouble(),
-                unit: o['unit'] as String,
-                status: o['status'] as String,
-                distance: o['distance'] as String,
-              ))
+          .map(
+            (o) => OfferSummary(
+              offerId: o['offerId'] as String,
+              establishmentName: o['establishmentName'] as String,
+              pricePerUnit: (o['pricePerUnit'] as num).toDouble(),
+              unit: o['unit'] as String,
+              status: o['status'] as String,
+              distance: o['distance'] as String,
+              proposedPickupDate: o['proposedPickupDate'] as String? ?? '',
+              proposedPickupStart: o['proposedPickupStart'] as String? ?? '',
+              proposedPickupEnd: o['proposedPickupEnd'] as String? ?? '',
+            ),
+          )
           .toList(),
       myOffer: response['myOffer'] != null
           ? MyOffer(
               offerId: response['myOffer']['offerId'] as String,
-              pricePerUnit: (response['myOffer']['pricePerUnit'] as num).toDouble(),
+              pricePerUnit: (response['myOffer']['pricePerUnit'] as num)
+                  .toDouble(),
               unit: response['myOffer']['unit'] as String,
               status: response['myOffer']['status'] as String,
+              proposedPickupDate:
+                  response['myOffer']['proposedPickupDate'] as String? ?? '',
+              proposedPickupStart:
+                  response['myOffer']['proposedPickupStart'] as String? ?? '',
+              proposedPickupEnd:
+                  response['myOffer']['proposedPickupEnd'] as String? ?? '',
             )
           : null,
       viewsCount: response['viewsCount'] as int,
