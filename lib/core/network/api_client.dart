@@ -13,8 +13,8 @@ class ApiClient {
   bool _isRefreshing = false;
 
   ApiClient({required TokenStorage tokenStorage})
-      : _client = http.Client(),
-        _tokenStorage = tokenStorage;
+    : _client = http.Client(),
+      _tokenStorage = tokenStorage;
 
   Future<Map<String, String>> _buildHeaders() async {
     final token = await _tokenStorage.getAccessToken();
@@ -31,6 +31,38 @@ class ApiClient {
       headers: headers,
     );
     return _handleResponse(response, 'GET', path);
+  }
+
+  Future<List<dynamic>> getList(String path) async {
+    final headers = await _buildHeaders();
+    final response = await _client.get(
+      Uri.parse('$baseUrl$path'),
+      headers: headers,
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.body.isNotEmpty
+          ? jsonDecode(response.body) as List<dynamic>
+          : <dynamic>[];
+    }
+
+    if (response.statusCode == 401 && !_isRefreshing) {
+      final refreshed = await _tryRefreshToken();
+      if (refreshed) {
+        return getList(path);
+      }
+      await _tokenStorage.deleteTokens();
+    }
+
+    final errorBody = response.body.isNotEmpty
+        ? jsonDecode(response.body)
+        : null;
+    throw ApiException(
+      statusCode: response.statusCode,
+      message: errorBody is Map<String, dynamic>
+          ? (errorBody['message']?.toString() ?? 'Error desconocido')
+          : 'Error desconocido',
+    );
   }
 
   Future<Map<String, dynamic>> post(
