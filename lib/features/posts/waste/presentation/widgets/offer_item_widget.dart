@@ -3,17 +3,23 @@ import 'package:flutter/material.dart';
 class OfferItemWidget extends StatelessWidget {
   final String name;
   final String pricePerUnit;
+  final String pickupLabel;
   final String status;
   final bool isAccepting;
+  final bool isRejecting;
   final VoidCallback? onAccept;
+  final VoidCallback? onReject;
 
   const OfferItemWidget({
     super.key,
     required this.name,
     required this.pricePerUnit,
     required this.status,
+    this.pickupLabel = '',
     this.isAccepting = false,
+    this.isRejecting = false,
     this.onAccept,
+    this.onReject,
   });
 
   @override
@@ -25,6 +31,7 @@ class OfferItemWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
             radius: 20,
@@ -50,6 +57,7 @@ class OfferItemWidget extends StatelessWidget {
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2),
                 Text(
                   pricePerUnit,
                   style: textTheme.bodySmall?.copyWith(
@@ -57,17 +65,38 @@ class OfferItemWidget extends StatelessWidget {
                     color: colors.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
+                if (pickupLabel.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined,
+                          size: 12, color: colors.primary),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          pickupLabel,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: colors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
           const SizedBox(width: 12),
-          _buildAction(context, colors, textTheme),
+          _buildAction(colors, textTheme),
         ],
       ),
     );
   }
 
-  Widget _buildAction(BuildContext context, ColorScheme colors, TextTheme textTheme) {
+  Widget _buildAction(ColorScheme colors, TextTheme textTheme) {
     if (status == 'accepted') {
       return _statusBadge('Aceptada', const Color(0xFF2D7D46), textTheme);
     }
@@ -75,35 +104,68 @@ class OfferItemWidget extends StatelessWidget {
       return _statusBadge('Rechazada', colors.error, textTheme);
     }
 
-    // pending
-    if (isAccepting) {
-      return SizedBox(
-        width: 70,
-        child: Center(
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: colors.primary),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (isAccepting)
+          _actionSpinner(colors.primary)
+        else
+          GestureDetector(
+            onTap: onAccept,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: colors.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Aceptar',
+                style: textTheme.bodySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
           ),
-        ),
-      );
-    }
+        const SizedBox(height: 6),
+        if (isRejecting)
+          _actionSpinner(colors.error)
+        else
+          GestureDetector(
+            onTap: onReject,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border:
+                    Border.all(color: colors.error.withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                'Rechazar',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.error,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 
-    return GestureDetector(
-      onTap: onAccept,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: colors.primary,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          'Aceptar',
-          style: textTheme.bodySmall?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
+  Widget _actionSpinner(Color color) {
+    return SizedBox(
+      width: 70,
+      height: 30,
+      child: Center(
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2, color: color),
         ),
       ),
     );

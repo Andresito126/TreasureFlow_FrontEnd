@@ -1,6 +1,6 @@
 import 'package:treasureflow/features/posts/waste/data/datasources/waste_post_remote_datasource.dart';
 import 'package:treasureflow/features/posts/waste/data/models/create_waste_request_model.dart';
-import 'package:treasureflow/features/posts/waste/domain/entities/waste_availability.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/available_slot.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
 import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post_repository.dart';
 
@@ -18,7 +18,6 @@ class WastePostRepositoryImpl implements WastePostRepository {
     required List<String> photoUrls,
     required String materialTypeId,
     required String deliveryMode,
-    required List<WasteAvailability> schedules,
   }) {
     final model = CreateWasteRequestModel(
       description: description,
@@ -28,7 +27,6 @@ class WastePostRepositoryImpl implements WastePostRepository {
       photoUrls: photoUrls,
       materialTypeId: materialTypeId,
       deliveryMode: deliveryMode,
-      schedules: schedules,
     );
     return _datasource.create(model);
   }
@@ -39,11 +37,18 @@ class WastePostRepositoryImpl implements WastePostRepository {
   }
 
   @override
-  Future<void> acceptOffer({
-    required String postId,
-    required String offerId,
-  }) {
+  Future<List<AvailableSlot>> getAvailableSlots(String establishmentId) {
+    return _datasource.getAvailableSlots(establishmentId);
+  }
+
+  @override
+  Future<void> acceptOffer({required String postId, required String offerId}) {
     return _datasource.acceptOffer(postId: postId, offerId: offerId);
+  }
+
+  @override
+  Future<void> rejectOffer({required String postId, required String offerId}) {
+    return _datasource.rejectOffer(postId: postId, offerId: offerId);
   }
 
   @override
@@ -51,11 +56,17 @@ class WastePostRepositoryImpl implements WastePostRepository {
     required String postId,
     required double pricePerUnit,
     required String unit,
+    required String proposedPickupDate,
+    required String proposedPickupStart,
+    required String proposedPickupEnd,
   }) {
     return _datasource.createOffer(
       postId: postId,
       pricePerUnit: pricePerUnit,
       unit: unit,
+      proposedPickupDate: proposedPickupDate,
+      proposedPickupStart: proposedPickupStart,
+      proposedPickupEnd: proposedPickupEnd,
     );
   }
 }
