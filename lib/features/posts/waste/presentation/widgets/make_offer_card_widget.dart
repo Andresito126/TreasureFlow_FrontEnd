@@ -21,6 +21,7 @@ class MakeOfferCardWidget extends StatelessWidget {
   final VoidCallback onPickStartTime;
   final VoidCallback onPickEndTime;
   final AvailableSlot? matchingSlot;
+  final bool slotsLoading;
 
   const MakeOfferCardWidget({
     super.key,
@@ -35,6 +36,7 @@ class MakeOfferCardWidget extends StatelessWidget {
     this.startTime,
     this.endTime,
     this.matchingSlot,
+    this.slotsLoading = false,
     this.isLoading = false,
     this.buttonLabel = 'Enviar oferta',
   });
@@ -58,13 +60,14 @@ class MakeOfferCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Precio, unidad y fecha en la que pasarías por el material',
+            'Precio, unidad y día de recolección',
             style: textTheme.bodySmall?.copyWith(
               color: colors.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 14),
 
+          // Unit selector
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -108,6 +111,8 @@ class MakeOfferCardWidget extends StatelessWidget {
           ),
 
           const SizedBox(height: 14),
+
+          // Price field
           TextField(
             controller: priceController,
             keyboardType:
@@ -134,7 +139,7 @@ class MakeOfferCardWidget extends StatelessWidget {
 
           const SizedBox(height: 18),
           Text(
-            'Fecha de recolección',
+            'Fecha y horario de recolección',
             style: textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 13,
@@ -142,7 +147,7 @@ class MakeOfferCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Propón el día y horario en que pasarías a recoger',
+            'Solo aparecen los días en que tu establecimiento trabaja',
             style: textTheme.bodySmall?.copyWith(
               fontSize: 11,
               color: colors.onSurface.withValues(alpha: 0.5),
@@ -150,48 +155,133 @@ class MakeOfferCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          _pickerChip(
-            context,
-            icon: Icons.calendar_today_outlined,
-            label: selectedDate != null
-                ? formatPickupLabel(_dateToIso(selectedDate!), '', '')
-                : 'Seleccionar fecha',
-            isSet: selectedDate != null,
-            onTap: onPickDate,
-            expand: true,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _pickerChip(
-                  context,
-                  icon: Icons.schedule,
-                  label: startTime != null
-                      ? 'Desde ${_formatTime(startTime!)}'
-                      : 'Hora inicio',
-                  isSet: startTime != null,
-                  onTap: onPickStartTime,
+          // Date selector chip
+          GestureDetector(
+            onTap: slotsLoading ? null : onPickDate,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              decoration: BoxDecoration(
+                color: selectedDate != null
+                    ? colors.primary.withValues(alpha: 0.06)
+                    : colors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selectedDate != null
+                      ? colors.primary.withValues(alpha: 0.5)
+                      : colors.outline,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _pickerChip(
-                  context,
-                  icon: Icons.schedule,
-                  label: endTime != null
-                      ? 'Hasta ${_formatTime(endTime!)}'
-                      : 'Hora fin',
-                  isSet: endTime != null,
-                  onTap: onPickEndTime,
-                ),
+              child: Row(
+                children: [
+                  if (slotsLoading)
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colors.onSurface.withValues(alpha: 0.4),
+                      ),
+                    )
+                  else
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 16,
+                      color: selectedDate != null
+                          ? colors.primary
+                          : colors.onSurface.withValues(alpha: 0.5),
+                    ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      slotsLoading
+                          ? 'Cargando días disponibles...'
+                          : selectedDate != null
+                              ? formatPickupLabel(
+                                  _dateToIso(selectedDate!), '', '')
+                              : 'Seleccionar día de recolección',
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontWeight: selectedDate != null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: slotsLoading || selectedDate == null
+                            ? colors.onSurface.withValues(alpha: 0.5)
+                            : colors.primary,
+                      ),
+                    ),
+                  ),
+                  if (!slotsLoading)
+                    Icon(
+                      Icons.expand_more,
+                      size: 18,
+                      color: colors.onSurface.withValues(alpha: 0.4),
+                    ),
+                ],
               ),
-            ],
+            ),
           ),
 
-          if (matchingSlot != null) ...[
+          // Time pickers — solo visibles cuando hay fecha seleccionada
+          if (selectedDate != null) ...[
             const SizedBox(height: 10),
-            _occupancyIndicator(matchingSlot!, colors, textTheme),
+
+            // Referencia del horario laboral del día
+            if (matchingSlot != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 13,
+                        color: colors.onSurface.withValues(alpha: 0.45)),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'Horario laboral ese día: ${matchingSlot!.start} – ${matchingSlot!.end}',
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: colors.onSurface.withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _pickerChip(
+                    context,
+                    icon: Icons.schedule,
+                    label: startTime != null
+                        ? 'Desde ${_formatTime(startTime!)}'
+                        : 'Hora inicio',
+                    isSet: startTime != null,
+                    onTap: onPickStartTime,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _pickerChip(
+                    context,
+                    icon: Icons.schedule,
+                    label: endTime != null
+                        ? 'Hasta ${_formatTime(endTime!)}'
+                        : 'Hora fin',
+                    isSet: endTime != null,
+                    onTap: onPickEndTime,
+                  ),
+                ),
+              ],
+            ),
+
+            // Indicador de ocupación
+            if (matchingSlot != null) ...[
+              const SizedBox(height: 10),
+              _occupancyIndicator(matchingSlot!, colors, textTheme),
+            ],
           ],
 
           const SizedBox(height: 16),
@@ -211,7 +301,6 @@ class MakeOfferCardWidget extends StatelessWidget {
     required String label,
     required bool isSet,
     required VoidCallback onTap,
-    bool expand = false,
   }) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -219,7 +308,6 @@ class MakeOfferCardWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: expand ? double.infinity : null,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
           color: isSet

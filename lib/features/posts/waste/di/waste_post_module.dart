@@ -2,6 +2,7 @@ import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/core/media/domain/usecases/upload_image_usecase.dart';
 import 'package:treasureflow/features/posts/waste/domain/usecases/create_offer_usecase.dart';
 import 'package:treasureflow/features/posts/waste/domain/usecases/create_waste_post_usecase.dart';
+import 'package:treasureflow/features/posts/waste/domain/usecases/delete_waste_post_usecase.dart';
 import 'package:treasureflow/features/posts/waste/domain/usecases/get_available_slots_usecase.dart';
 import 'package:treasureflow/features/posts/waste/domain/usecases/get_waste_post_detail_usecase.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/create_waste_provider.dart';
@@ -35,6 +36,9 @@ class WastePostModule {
       repository: _appContainer.wastePostRepository,
     );
   }
+
+  DeleteWastePostUseCase provideDeleteWastePostUseCase() =>
+      DeleteWastePostUseCase(_appContainer.wastePostRepository);
 
   WasteDetailLocalProvider provideDetailLocalProvider() {
     return WasteDetailLocalProvider(

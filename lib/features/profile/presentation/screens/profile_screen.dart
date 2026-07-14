@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/features/profile/presentation/providers/profile_posts_provider.dart';
 import 'package:treasureflow/shared/utils/post_status_translator.dart';
+import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 import 'package:treasureflow/shared/widgets/post_card_widget.dart';
 import 'package:treasureflow/shared/widgets/post_filter_bar_widget.dart';
@@ -119,6 +120,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  void _onMenuTap(String postId, String publicationType) {
+    final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: colors.outline.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline, color: colors.error),
+                title: Text(
+                  'Eliminar publicación',
+                  style: textTheme.bodyMedium?.copyWith(color: colors.error),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _confirmDelete(postId);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(String postId) async {
+    final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          '¿Eliminar publicación?',
+          style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Esta acción no se puede deshacer.',
+          style: textTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: colors.error),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final provider = context.read<ProfilePostsProvider>();
+    final success = await provider.deletePost(postId);
+
+    if (!mounted) return;
+    if (success) {
+      AppToast.show(context, 'Publicación eliminada', type: ToastType.success);
+    } else {
+      AppToast.show(
+        context,
+        provider.deleteError ?? 'Error al eliminar',
+        type: ToastType.error,
+      );
+      provider.resetDeleteStatus();
+    }
   }
 
   Widget _buildStats(ColorScheme colors, TextTheme textTheme) {
@@ -351,7 +442,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: post.publicationType == 'waste'
                       ? () => context.push('/wasteDetail/${post.id}')
                       : null,
-                  onMenuTap: () {},
+                  onMenuTap: () => _onMenuTap(post.id, post.publicationType),
                 );
               },
             ),

@@ -25,7 +25,15 @@ abstract class WastePostRepository {
     required String proposedPickupEnd,
   });
 
-  Future<void> acceptOffer({required String postId, required String offerId});
+  Future<void> acceptOffer({
+    required String postId,
+    required String offerId,
+  });
 
-  Future<void> rejectOffer({required String postId, required String offerId});
+  Future<void> rejectOffer({
+    required String postId,
+    required String offerId,
+  });
+
+  Future<void> deletePost(String postId);
 }
