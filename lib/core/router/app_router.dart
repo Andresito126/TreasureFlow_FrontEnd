@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:treasureflow/core/router/onboarding_routes.dart';
 import 'package:treasureflow/core/router/auth_routes.dart';
@@ -41,6 +42,15 @@ GoRouter createRouter({
       }
 
       return null;
+    },
+    errorBuilder: (context, state) {
+      final isAuthenticated = authProvider.isAuthenticated;
+      final userType = authProvider.userType;
+      final home = userType == 'establishment' ? '/homeLocal' : '/homeCitizen';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (isAuthenticated) context.go(home);
+      });
+      return const SizedBox.shrink();
     },
     routes: [
       ...onboardingRoutes,

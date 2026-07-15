@@ -35,5 +35,16 @@ abstract class WastePostRepository {
     required String offerId,
   });
 
+  Future<void> updatePost({
+    required String postId,
+    required String description,
+    required double latitude,
+    required double longitude,
+    required String addressText,
+    required List<String> photoUrls,
+    required String materialTypeId,
+    required String deliveryMode,
+  });
+
   Future<void> deletePost(String postId);
 }

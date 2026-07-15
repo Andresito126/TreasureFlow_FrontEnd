@@ -5,7 +5,9 @@ import 'package:treasureflow/features/posts/waste/domain/usecases/create_waste_p
 import 'package:treasureflow/features/posts/waste/domain/usecases/delete_waste_post_usecase.dart';
 import 'package:treasureflow/features/posts/waste/domain/usecases/get_available_slots_usecase.dart';
 import 'package:treasureflow/features/posts/waste/domain/usecases/get_waste_post_detail_usecase.dart';
+import 'package:treasureflow/features/posts/waste/domain/usecases/update_waste_post_usecase.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/create_waste_provider.dart';
+import 'package:treasureflow/features/posts/waste/presentation/providers/edit_waste_provider.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/waste_detail_local_provider.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/waste_detail_provider.dart';
 
@@ -17,7 +19,7 @@ class WastePostModule {
   CreateWastePostUseCase _provideCreateUseCase() =>
       CreateWastePostUseCase(_appContainer.wastePostRepository);
 
-  GetWastePostDetailUseCase _provideGetDetailUseCase() =>
+  GetWastePostDetailUseCase provideGetDetailUseCase() =>
       GetWastePostDetailUseCase(_appContainer.wastePostRepository);
 
   UploadImageUseCase _provideUploadImageUseCase() =>
@@ -32,7 +34,7 @@ class WastePostModule {
 
   WasteDetailProvider provideDetailProvider() {
     return WasteDetailProvider(
-      getWastePostDetailUseCase: _provideGetDetailUseCase(),
+      getWastePostDetailUseCase: provideGetDetailUseCase(),
       repository: _appContainer.wastePostRepository,
     );
   }
@@ -40,9 +42,16 @@ class WastePostModule {
   DeleteWastePostUseCase provideDeleteWastePostUseCase() =>
       DeleteWastePostUseCase(_appContainer.wastePostRepository);
 
+  EditWasteProvider provideEditWasteProvider() {
+    return EditWasteProvider(
+      updateUseCase: UpdateWastePostUseCase(_appContainer.wastePostRepository),
+      uploadImageUseCase: _provideUploadImageUseCase(),
+    );
+  }
+
   WasteDetailLocalProvider provideDetailLocalProvider() {
     return WasteDetailLocalProvider(
-      getDetailUseCase: _provideGetDetailUseCase(),
+      getDetailUseCase: provideGetDetailUseCase(),
       createOfferUseCase: CreateOfferUseCase(_appContainer.wastePostRepository),
       getAvailableSlotsUseCase:
           GetAvailableSlotsUseCase(_appContainer.wastePostRepository),

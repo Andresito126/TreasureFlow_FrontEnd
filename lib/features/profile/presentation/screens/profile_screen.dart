@@ -122,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _onMenuTap(String postId, String publicationType) {
+  void _onMenuTap(String postId, String publicationType, String status) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -146,6 +146,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
+              if (publicationType == 'waste' && status == 'active')
+                ListTile(
+                  leading: Icon(Icons.edit_outlined, color: colors.primary),
+                  title: Text(
+                    'Editar publicación',
+                    style: textTheme.bodyMedium,
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    context.push('/editWaste/$postId');
+                  },
+                ),
               ListTile(
                 leading: Icon(Icons.delete_outline, color: colors.error),
                 title: Text(
@@ -442,7 +454,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: post.publicationType == 'waste'
                       ? () => context.push('/wasteDetail/${post.id}')
                       : null,
-                  onMenuTap: () => _onMenuTap(post.id, post.publicationType),
+                  onMenuTap: () => _onMenuTap(post.id, post.publicationType, post.status),
                 );
               },
             ),

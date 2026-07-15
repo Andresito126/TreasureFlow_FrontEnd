@@ -82,6 +82,30 @@ class WastePostRemoteDatasource {
         .toList();
   }
 
+  Future<void> updatePost({
+    required String postId,
+    required String description,
+    required double latitude,
+    required double longitude,
+    required String addressText,
+    required List<String> photoUrls,
+    required String materialTypeId,
+    required String deliveryMode,
+  }) async {
+    await _apiClient.put(
+      '/posts/waste/$postId',
+      body: {
+        'description': description,
+        'latitude': latitude,
+        'longitude': longitude,
+        'addressText': addressText,
+        'photoUrls': photoUrls,
+        'materialTypeId': materialTypeId,
+        'deliveryMode': deliveryMode,
+      },
+    );
+  }
+
   Future<void> deletePost(String postId) async {
     await _apiClient.delete('/posts/waste/$postId');
   }
@@ -97,7 +121,11 @@ class WastePostRemoteDatasource {
       publishedAt: response['publishedAt'] as String,
       status: response['status'] as String,
       materialTypeName: response['materialTypeName'] as String,
+      materialTypeId: response['materialTypeId'] as String?,
       deliveryMode: response['deliveryMode'] as String,
+      addressText: response['addressText'] as String?,
+      latitude: response['latitude'] != null ? (response['latitude'] as num).toDouble() : null,
+      longitude: response['longitude'] != null ? (response['longitude'] as num).toDouble() : null,
       offers: (response['offers'] as List)
           .map((o) => OfferSummary(
                 offerId: o['offerId'] as String,

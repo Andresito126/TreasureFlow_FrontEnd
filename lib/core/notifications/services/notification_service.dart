@@ -89,13 +89,17 @@ class NotificationService {
 
   void _onLocalNotificationTap(NotificationResponse response) {
     final raw = response.payload;
+    debugPrint('[notif] tap — raw: $raw');
     if (raw == null || raw.isEmpty) return;
 
     try {
       final data = json.decode(raw) as Map<String, dynamic>;
       final payload = NotificationPayload.fromMap(data);
+      debugPrint('[notif] tap — screenRoute: ${payload.screenRoute} router: ${_router == null ? "NULL" : "OK"}');
       _navigate(payload.screenRoute);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[notif] tap — ERROR: $e');
+    }
   }
 
   // ── FCM handlers ──────────────────────────────────────────────────────────
@@ -158,6 +162,7 @@ class NotificationService {
   // ── Navigation ───────────────────────────────────────────────────────────
 
   void _navigate(String route) {
+    debugPrint('[notif] _navigate → "$route" (router ${_router == null ? "NULL" : "OK"})');
     if (route.isEmpty) return;
     _router?.go(route);
   }

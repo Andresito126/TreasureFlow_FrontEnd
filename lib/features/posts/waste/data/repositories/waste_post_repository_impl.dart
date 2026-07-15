@@ -58,6 +58,29 @@ class WastePostRepositoryImpl implements WastePostRepository {
   }
 
   @override
+  Future<void> updatePost({
+    required String postId,
+    required String description,
+    required double latitude,
+    required double longitude,
+    required String addressText,
+    required List<String> photoUrls,
+    required String materialTypeId,
+    required String deliveryMode,
+  }) {
+    return _datasource.updatePost(
+      postId: postId,
+      description: description,
+      latitude: latitude,
+      longitude: longitude,
+      addressText: addressText,
+      photoUrls: photoUrls,
+      materialTypeId: materialTypeId,
+      deliveryMode: deliveryMode,
+    );
+  }
+
+  @override
   Future<void> deletePost(String postId) {
     return _datasource.deletePost(postId);
   }
