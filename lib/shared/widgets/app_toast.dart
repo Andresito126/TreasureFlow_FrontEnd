@@ -134,10 +134,11 @@ class _ToastOverlayState extends State<_ToastOverlay>
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: const Color(0xE6111111),
-                    borderRadius: BorderRadius.circular(100),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(_icon(), color: _iconColor(), size: 17),
                       const SizedBox(width: 8),
@@ -148,9 +149,9 @@ class _ToastOverlayState extends State<_ToastOverlay>
                             color: Colors.white,
                             fontSize: 13.5,
                             fontWeight: FontWeight.w500,
-                            height: 1.3,
+                            height: 1.4,
                           ),
-                          maxLines: 2,
+                          maxLines: 4,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
