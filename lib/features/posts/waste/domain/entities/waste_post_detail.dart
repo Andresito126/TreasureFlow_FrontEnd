@@ -9,7 +9,11 @@ class WastePostDetail {
   final String publishedAt;
   final String status;
   final String materialTypeName;
+  final String? materialTypeId;
   final String deliveryMode;
+  final String? addressText;
+  final double? latitude;
+  final double? longitude;
   final List<OfferSummary> offers;
   final MyOffer? myOffer;
   final int viewsCount;
@@ -23,7 +27,11 @@ class WastePostDetail {
     required this.publishedAt,
     required this.status,
     required this.materialTypeName,
+    this.materialTypeId,
     required this.deliveryMode,
+    this.addressText,
+    this.latitude,
+    this.longitude,
     required this.offers,
     this.myOffer,
     required this.viewsCount,

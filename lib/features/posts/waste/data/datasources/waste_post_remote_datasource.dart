@@ -59,29 +59,55 @@ class WastePostRemoteDatasource {
     return response['offerId'] as String;
   }
 
-  Future<List<AvailableSlot>> getAvailableSlots(String establishmentId) async {
+  Future<List<AvailableSlot>> getAvailableSlots(
+      String establishmentId) async {
     final now = DateTime.now();
-    final from =
-        '${now.year.toString().padLeft(4, '0')}-'
+    final from = '${now.year.toString().padLeft(4, '0')}-'
         '${now.month.toString().padLeft(2, '0')}-'
         '${now.day.toString().padLeft(2, '0')}';
 
     final response = await _apiClient.getList(
-      '/establishments/$establishmentId/available-slots?from=$from&days=30',
+      '/establishments/$establishmentId/available-slots?from=$from&days=14',
     );
 
     return response
-        .map(
-          (s) => AvailableSlot(
-            date: s['date'] as String,
-            dayLabel: s['dayLabel'] as String,
-            start: s['start'] as String,
-            end: s['end'] as String,
-            slotsUsed: s['slotsUsed'] as int,
-            maxSlots: s['maxSlots'] as int,
-          ),
-        )
+        .map((s) => AvailableSlot(
+              date: s['date'] as String,
+              dayLabel: s['dayLabel'] as String,
+              start: s['start'] as String,
+              end: s['end'] as String,
+              slotsUsed: s['slotsUsed'] as int,
+              maxSlots: s['maxSlots'] as int,
+            ))
         .toList();
+  }
+
+  Future<void> updatePost({
+    required String postId,
+    required String description,
+    required double latitude,
+    required double longitude,
+    required String addressText,
+    required List<String> photoUrls,
+    required String materialTypeId,
+    required String deliveryMode,
+  }) async {
+    await _apiClient.put(
+      '/posts/waste/$postId',
+      body: {
+        'description': description,
+        'latitude': latitude,
+        'longitude': longitude,
+        'addressText': addressText,
+        'photoUrls': photoUrls,
+        'materialTypeId': materialTypeId,
+        'deliveryMode': deliveryMode,
+      },
+    );
+  }
+
+  Future<void> deletePost(String postId) async {
+    await _apiClient.delete('/posts/waste/$postId');
   }
 
   Future<WastePostDetail> getDetail(String id) async {
@@ -95,27 +121,32 @@ class WastePostRemoteDatasource {
       publishedAt: response['publishedAt'] as String,
       status: response['status'] as String,
       materialTypeName: response['materialTypeName'] as String,
+      materialTypeId: response['materialTypeId'] as String?,
       deliveryMode: response['deliveryMode'] as String,
+      addressText: response['addressText'] as String?,
+      latitude: response['latitude'] != null ? (response['latitude'] as num).toDouble() : null,
+      longitude: response['longitude'] != null ? (response['longitude'] as num).toDouble() : null,
       offers: (response['offers'] as List)
-          .map(
-            (o) => OfferSummary(
-              offerId: o['offerId'] as String,
-              establishmentName: o['establishmentName'] as String,
-              pricePerUnit: (o['pricePerUnit'] as num).toDouble(),
-              unit: o['unit'] as String,
-              status: o['status'] as String,
-              distance: o['distance'] as String,
-              proposedPickupDate: o['proposedPickupDate'] as String? ?? '',
-              proposedPickupStart: o['proposedPickupStart'] as String? ?? '',
-              proposedPickupEnd: o['proposedPickupEnd'] as String? ?? '',
-            ),
-          )
+          .map((o) => OfferSummary(
+                offerId: o['offerId'] as String,
+                establishmentName: o['establishmentName'] as String,
+                pricePerUnit: (o['pricePerUnit'] as num).toDouble(),
+                unit: o['unit'] as String,
+                status: o['status'] as String,
+                distance: o['distance'] as String,
+                proposedPickupDate:
+                    o['proposedPickupDate'] as String? ?? '',
+                proposedPickupStart:
+                    o['proposedPickupStart'] as String? ?? '',
+                proposedPickupEnd:
+                    o['proposedPickupEnd'] as String? ?? '',
+              ))
           .toList(),
       myOffer: response['myOffer'] != null
           ? MyOffer(
               offerId: response['myOffer']['offerId'] as String,
-              pricePerUnit: (response['myOffer']['pricePerUnit'] as num)
-                  .toDouble(),
+              pricePerUnit:
+                  (response['myOffer']['pricePerUnit'] as num).toDouble(),
               unit: response['myOffer']['unit'] as String,
               status: response['myOffer']['status'] as String,
               proposedPickupDate:

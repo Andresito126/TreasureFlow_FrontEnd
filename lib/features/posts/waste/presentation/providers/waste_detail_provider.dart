@@ -5,9 +5,7 @@ import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post
 import 'package:treasureflow/features/posts/waste/domain/usecases/get_waste_post_detail_usecase.dart';
 
 enum WasteDetailStatus { idle, loading, success, error }
-
 enum AcceptOfferStatus { idle, accepting, done, error }
-
 enum RejectOfferStatus { idle, rejecting, done, error }
 
 class WasteDetailProvider extends ChangeNotifier {
@@ -17,8 +15,8 @@ class WasteDetailProvider extends ChangeNotifier {
   WasteDetailProvider({
     required GetWastePostDetailUseCase getWastePostDetailUseCase,
     required WastePostRepository repository,
-  }) : _getWastePostDetailUseCase = getWastePostDetailUseCase,
-       _repository = repository;
+  })  : _getWastePostDetailUseCase = getWastePostDetailUseCase,
+        _repository = repository;
 
   WasteDetailStatus _status = WasteDetailStatus.idle;
   String? _errorMessage;
@@ -63,10 +61,16 @@ class WasteDetailProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> acceptOffer({
-    required String postId,
-    required String offerId,
-  }) async {
+  Future<void> _silentReload(String id) async {
+    try {
+      _post = await _getWastePostDetailUseCase(id);
+      notifyListeners();
+    } catch (_) {
+      // no altera el estado visible si falla
+    }
+  }
+
+  Future<bool> acceptOffer({required String postId, required String offerId}) async {
     _acceptStatus = AcceptOfferStatus.accepting;
     _acceptingOfferId = offerId;
     _acceptError = null;
@@ -76,7 +80,7 @@ class WasteDetailProvider extends ChangeNotifier {
       await _repository.acceptOffer(postId: postId, offerId: offerId);
       _acceptStatus = AcceptOfferStatus.done;
       notifyListeners();
-      await load(postId);
+      await _silentReload(postId);
       return true;
     } on ApiException catch (e) {
       _acceptError = e.message;
@@ -90,13 +94,11 @@ class WasteDetailProvider extends ChangeNotifier {
       return false;
     } finally {
       _acceptingOfferId = null;
+      notifyListeners();
     }
   }
 
-  Future<bool> rejectOffer({
-    required String postId,
-    required String offerId,
-  }) async {
+  Future<bool> rejectOffer({required String postId, required String offerId}) async {
     _rejectStatus = RejectOfferStatus.rejecting;
     _rejectingOfferId = offerId;
     _rejectError = null;
@@ -106,7 +108,7 @@ class WasteDetailProvider extends ChangeNotifier {
       await _repository.rejectOffer(postId: postId, offerId: offerId);
       _rejectStatus = RejectOfferStatus.done;
       notifyListeners();
-      await load(postId);
+      await _silentReload(postId);
       return true;
     } on ApiException catch (e) {
       _rejectError = e.message;
@@ -120,6 +122,7 @@ class WasteDetailProvider extends ChangeNotifier {
       return false;
     } finally {
       _rejectingOfferId = null;
+      notifyListeners();
     }
   }
 

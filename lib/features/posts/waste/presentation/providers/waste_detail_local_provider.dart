@@ -104,7 +104,9 @@ class WasteDetailLocalProvider extends ChangeNotifier {
       await load(postId);
       return true;
     } on ApiException catch (e) {
-      _offerError = e.message;
+      _offerError = e.statusCode == 422
+          ? 'El horario seleccionado no está dentro del horario laboral del establecimiento'
+          : e.message;
       _offerStatus = OfferStatus.error;
       notifyListeners();
       return false;

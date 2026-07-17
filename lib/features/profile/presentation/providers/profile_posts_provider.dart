@@ -1,18 +1,24 @@
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
+import 'package:treasureflow/features/posts/waste/domain/usecases/delete_waste_post_usecase.dart';
 import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
 import 'package:treasureflow/features/profile/domain/usecases/get_my_posts_usecase.dart';
 
 enum MyPostsStatus { idle, loading, success, error }
+enum DeletePostStatus { idle, deleting, done, error }
 
 class ProfilePostsProvider extends ChangeNotifier {
   final GetMyPostsUseCase _getMyPostsUseCase;
+  final DeleteWastePostUseCase _deleteWastePostUseCase;
 
   static const filterLabels = ['Todas', 'En revisión', 'Activas', 'Con ofertas', 'Apartadas', 'Finalizadas', 'Rechazadas'];
   static const _filterValues = ['all', 'pending_moderation', 'active', 'with_offers', 'reserved', 'completed', 'rejected'];
 
-  ProfilePostsProvider({required GetMyPostsUseCase getMyPostsUseCase})
-      : _getMyPostsUseCase = getMyPostsUseCase;
+  ProfilePostsProvider({
+    required GetMyPostsUseCase getMyPostsUseCase,
+    required DeleteWastePostUseCase deleteWastePostUseCase,
+  })  : _getMyPostsUseCase = getMyPostsUseCase,
+        _deleteWastePostUseCase = deleteWastePostUseCase;
 
   MyPostsStatus _status = MyPostsStatus.idle;
   String? _errorMessage;
@@ -22,6 +28,10 @@ class ProfilePostsProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
   CitizenProfile? _profile;
 
+  DeletePostStatus _deleteStatus = DeletePostStatus.idle;
+  String? _deletingPostId;
+  String? _deleteError;
+
   MyPostsStatus get status => _status;
   String? get errorMessage => _errorMessage;
   int get selectedFilterIndex => _selectedFilterIndex;
@@ -29,6 +39,12 @@ class ProfilePostsProvider extends ChangeNotifier {
   bool get hasMore => _nextCursor != null;
   bool get isLoadingMore => _isLoadingMore;
   CitizenProfile? get profile => _profile;
+
+  DeletePostStatus get deleteStatus => _deleteStatus;
+  String? get deletingPostId => _deletingPostId;
+  String? get deleteError => _deleteError;
+  bool isDeletingPost(String postId) =>
+      _deleteStatus == DeletePostStatus.deleting && _deletingPostId == postId;
 
   Future<void> loadPosts({bool reset = true}) async {
     if (reset) {
@@ -85,5 +101,39 @@ class ProfilePostsProvider extends ChangeNotifier {
     if (_selectedFilterIndex == index) return;
     _selectedFilterIndex = index;
     loadPosts(reset: true);
+  }
+
+  Future<bool> deletePost(String postId) async {
+    _deleteStatus = DeletePostStatus.deleting;
+    _deletingPostId = postId;
+    _deleteError = null;
+    notifyListeners();
+
+    try {
+      await _deleteWastePostUseCase(postId);
+      _posts = _posts.where((p) => p.id != postId).toList();
+      _deleteStatus = DeletePostStatus.done;
+      _deletingPostId = null;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _deleteError = e.message;
+      _deleteStatus = DeletePostStatus.error;
+      _deletingPostId = null;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _deleteError = 'Ocurrió un error al eliminar la publicación';
+      _deleteStatus = DeletePostStatus.error;
+      _deletingPostId = null;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  void resetDeleteStatus() {
+    _deleteStatus = DeletePostStatus.idle;
+    _deleteError = null;
+    notifyListeners();
   }
 }

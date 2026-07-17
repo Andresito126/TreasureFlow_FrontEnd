@@ -4,14 +4,17 @@ import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/posts/object/presentation/widgets/image_gallery_widget.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/available_slot.dart';
-import 'package:treasureflow/features/posts/waste/domain/entities/my_offer.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/waste_detail_local_provider.dart';
+import 'package:treasureflow/features/posts/waste/presentation/widgets/delivery_mode_banner_widget.dart';
+import 'package:treasureflow/features/posts/waste/presentation/widgets/existing_offer_banner_widget.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/info_banner_widget.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/make_offer_card_widget.dart';
+import 'package:treasureflow/features/posts/waste/presentation/widgets/waste_detail_local_bottom_bar_widget.dart';
+import 'package:treasureflow/features/posts/waste/presentation/widgets/waste_info_chip_widget.dart';
+import 'package:treasureflow/features/posts/waste/presentation/widgets/waste_status_badge_widget.dart';
 import 'package:treasureflow/shared/utils/material_type_translator.dart';
 import 'package:treasureflow/shared/utils/pickup_label_formatter.dart';
-import 'package:treasureflow/shared/utils/post_status_translator.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/image_viewer_screen.dart';
 
@@ -21,8 +24,7 @@ class WasteDetailLocalScreen extends StatefulWidget {
   const WasteDetailLocalScreen({super.key, required this.postId});
 
   @override
-  State<WasteDetailLocalScreen> createState() =>
-      _WasteDetailLocalScreenState();
+  State<WasteDetailLocalScreen> createState() => _WasteDetailLocalScreenState();
 }
 
 class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
@@ -38,8 +40,9 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
   @override
   void initState() {
     super.initState();
-    _provider =
-        WastePostModule(context.read<AppContainer>()).provideDetailLocalProvider();
+    _provider = WastePostModule(
+      context.read<AppContainer>(),
+    ).provideDetailLocalProvider();
     _provider.addListener(_prefillOfferOnce);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _provider.load(widget.postId);
@@ -98,72 +101,110 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
     return null;
   }
 
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? now,
-      firstDate: DateTime(now.year, now.month, now.day),
-      lastDate: now.add(const Duration(days: 60)),
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
-
   Future<void> _pickStartTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _startTime ?? const TimeOfDay(hour: 9, minute: 0),
-    );
-    if (picked != null) {
-      setState(() => _startTime = picked);
-    }
+    final slot = _matchingSlot;
+    final initial =
+        _startTime ??
+        (slot != null ? _parseTime(slot.start) : null) ??
+        const TimeOfDay(hour: 9, minute: 0);
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked != null && mounted) setState(() => _startTime = picked);
   }
 
   Future<void> _pickEndTime() async {
-    final picked = await showTimePicker(
+    final slot = _matchingSlot;
+    final initial =
+        _endTime ??
+        (slot != null ? _parseTime(slot.end) : null) ??
+        const TimeOfDay(hour: 18, minute: 0);
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked != null && mounted) setState(() => _endTime = picked);
+  }
+
+  Future<void> _showSlotPicker() async {
+    if (_provider.slotsLoading) {
+      AppToast.show(
+        context,
+        'Cargando días disponibles, espera un momento',
+        type: ToastType.info,
+      );
+      return;
+    }
+
+    if (_provider.slots.isEmpty) {
+      AppToast.show(
+        context,
+        'No tienes días laborales registrados en las próximas 2 semanas',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    final selected = await showModalBottomSheet<AvailableSlot>(
       context: context,
-      initialTime: _endTime ?? const TimeOfDay(hour: 18, minute: 0),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _SlotPickerSheet(slots: _provider.slots),
     );
-    if (picked != null) {
-      setState(() => _endTime = picked);
+
+    if (selected != null && mounted) {
+      setState(() {
+        _selectedDate = DateTime.parse(selected.date);
+        _startTime = null;
+        _endTime = null;
+      });
     }
   }
 
   Future<void> _onSendOffer() async {
     final priceText = _priceController.text.trim();
     if (priceText.isEmpty) {
-      AppToast.show(context, 'Ingresa el precio que ofreces',
-          type: ToastType.warning);
+      AppToast.show(context, 'Ingresa el precio que ofreces', type: ToastType.warning);
       return;
     }
 
     final price = double.tryParse(priceText);
     if (price == null || price <= 0) {
-      AppToast.show(context, 'Ingresa un precio válido',
-          type: ToastType.warning);
+      AppToast.show(context, 'Ingresa un precio válido', type: ToastType.warning);
       return;
     }
 
     if (_selectedDate == null) {
-      AppToast.show(context, 'Selecciona la fecha de recolección',
-          type: ToastType.warning);
+      AppToast.show(context, 'Selecciona el día de recolección', type: ToastType.warning);
       return;
     }
 
     if (_startTime == null || _endTime == null) {
-      AppToast.show(context, 'Selecciona el horario de recolección',
-          type: ToastType.warning);
+      AppToast.show(context, 'Selecciona el horario de recolección', type: ToastType.warning);
       return;
     }
 
-    final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
-    final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
-    if (endMinutes <= startMinutes) {
-      AppToast.show(context, 'La hora de fin debe ser mayor a la de inicio',
-          type: ToastType.warning);
+    final startMin = _startTime!.hour * 60 + _startTime!.minute;
+    final endMin = _endTime!.hour * 60 + _endTime!.minute;
+
+    if (endMin <= startMin) {
+      AppToast.show(context, 'La hora de fin debe ser mayor a la de inicio', type: ToastType.warning);
       return;
+    }
+
+    final slot = _matchingSlot;
+    if (slot != null) {
+      final slotStart = _parseTime(slot.start);
+      final slotEnd = _parseTime(slot.end);
+      if (slotStart != null && slotEnd != null) {
+        final slotStartMin = slotStart.hour * 60 + slotStart.minute;
+        final slotEndMin = slotEnd.hour * 60 + slotEnd.minute;
+        if (startMin < slotStartMin || endMin > slotEndMin) {
+          AppToast.show(
+            context,
+            'El horario debe estar dentro de tu jornada laboral: ${slot.start} – ${slot.end}',
+            type: ToastType.warning,
+          );
+          return;
+        }
+      }
     }
 
     final confirmed = await _showConfirmDialog(priceText);
@@ -187,8 +228,7 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
         _startTime = null;
         _endTime = null;
       });
-      AppToast.show(context, 'Oferta enviada correctamente',
-          type: ToastType.success);
+      AppToast.show(context, 'Oferta enviada correctamente', type: ToastType.success);
     } else {
       AppToast.show(
         context,
@@ -211,12 +251,10 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Confirmar oferta',
-          style:
-              textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -228,16 +266,14 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
             ),
             const SizedBox(height: 10),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: colors.primary.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today_outlined,
-                      size: 14, color: colors.primary),
+                  Icon(Icons.calendar_today_outlined, size: 14, color: colors.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -275,24 +311,18 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
       child: Consumer<WasteDetailLocalProvider>(
         builder: (context, provider, _) {
           if (provider.status == WasteDetailLocalStatus.loading) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
+            return const Scaffold(body: Center(child: CircularProgressIndicator()));
           }
 
           if (provider.status == WasteDetailLocalStatus.error) {
             return Scaffold(
               appBar: AppBar(),
-              body: Center(
-                child: Text(provider.errorMessage ?? 'Error al cargar'),
-              ),
+              body: Center(child: Text(provider.errorMessage ?? 'Error al cargar')),
             );
           }
 
           final post = provider.post;
-          if (post == null) {
-            return const Scaffold(body: SizedBox.shrink());
-          }
+          if (post == null) return const Scaffold(body: SizedBox.shrink());
 
           return _buildContent(context, post, provider);
         },
@@ -300,8 +330,11 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext context, WastePostDetail post,
-      WasteDetailLocalProvider provider) {
+  Widget _buildContent(
+    BuildContext context,
+    WastePostDetail post,
+    WasteDetailLocalProvider provider,
+  ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
@@ -312,11 +345,9 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                final userStorage =
-                    context.read<AppContainer>().userStorage;
+                final userStorage = context.read<AppContainer>().userStorage;
                 await _provider.load(widget.postId);
-                final establishmentId =
-                    await userStorage.getUserId() ?? '';
+                final establishmentId = await userStorage.getUserId() ?? '';
                 await _provider.loadSlots(establishmentId);
               },
               child: SingleChildScrollView(
@@ -345,15 +376,14 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  MaterialTypeTranslator.translate(
-                                      post.materialTypeName),
+                                  MaterialTypeTranslator.translate(post.materialTypeName),
                                   style: textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              _statusBadge(post.status, textTheme),
+                              WasteStatusBadge(status: post.status),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -361,28 +391,27 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              _infoChip(
-                                  Icons.recycling,
-                                  MaterialTypeTranslator.translate(
-                                      post.materialTypeName),
-                                  colors,
-                                  textTheme),
+                              WasteInfoChip(
+                                icon: Icons.recycling,
+                                label: MaterialTypeTranslator.translate(post.materialTypeName),
+                              ),
                               if (post.distance != null)
-                                _infoChip(Icons.location_on_outlined,
-                                    post.distance!, colors, textTheme),
-                              _infoChip(Icons.access_time,
-                                  post.publishedAt, colors, textTheme),
+                                WasteInfoChip(
+                                  icon: Icons.location_on_outlined,
+                                  label: post.distance!,
+                                ),
+                              WasteInfoChip(
+                                icon: Icons.access_time,
+                                label: post.publishedAt,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 14),
-                          _deliveryModeBanner(
-                              post.deliveryMode, textTheme, colors),
+                          DeliveryModeBanner(deliveryMode: post.deliveryMode),
                           const SizedBox(height: 20),
                           Text(
                             'Descripción',
-                            style: textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -391,20 +420,16 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                               color: colors.onSurface.withValues(alpha: 0.7),
                             ),
                             maxLines: _descriptionExpanded ? null : 3,
-                            overflow: _descriptionExpanded
-                                ? null
-                                : TextOverflow.ellipsis,
+                            overflow: _descriptionExpanded ? null : TextOverflow.ellipsis,
                           ),
                           GestureDetector(
-                            onTap: () => setState(() =>
-                                _descriptionExpanded =
-                                    !_descriptionExpanded),
+                            onTap: () => setState(
+                              () => _descriptionExpanded = !_descriptionExpanded,
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                _descriptionExpanded
-                                    ? 'Leer menos'
-                                    : 'Leer más',
+                                _descriptionExpanded ? 'Leer menos' : 'Leer más',
                                 style: textTheme.bodySmall?.copyWith(
                                   color: colors.primary,
                                   fontWeight: FontWeight.w600,
@@ -420,25 +445,24 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                                 'El monto final se confirma al pesar el material en la recolección.',
                           ),
                           const SizedBox(height: 20),
-                          if (post.myOffer != null)
-                            _existingOfferBanner(
-                                post.myOffer!, colors, textTheme),
-                          if (post.myOffer != null)
+                          if (post.myOffer != null) ...[
+                            ExistingOfferBanner(offer: post.myOffer!),
                             const SizedBox(height: 16),
+                          ],
                           MakeOfferCardWidget(
                             priceController: _priceController,
                             isLoading: provider.isSubmitting,
                             onSubmit: _onSendOffer,
                             selectedUnit: _selectedUnit,
-                            onUnitChanged: (unit) =>
-                                setState(() => _selectedUnit = unit),
+                            onUnitChanged: (unit) => setState(() => _selectedUnit = unit),
                             selectedDate: _selectedDate,
                             startTime: _startTime,
                             endTime: _endTime,
-                            onPickDate: _pickDate,
+                            onPickDate: _showSlotPicker,
                             onPickStartTime: _pickStartTime,
                             onPickEndTime: _pickEndTime,
                             matchingSlot: _matchingSlot,
+                            slotsLoading: provider.slotsLoading,
                             buttonLabel: post.myOffer != null
                                 ? 'Actualizar oferta'
                                 : 'Enviar oferta',
@@ -452,255 +476,189 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
               ),
             ),
           ),
-          _buildBottomBar(post, colors, textTheme, provider),
+          WasteDetailLocalBottomBar(
+            post: post,
+            isSubmitting: provider.isSubmitting,
+            onConfirm: _onSendOffer,
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildBottomBar(WastePostDetail post, ColorScheme colors,
-      TextTheme textTheme, WasteDetailLocalProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
+class _SlotPickerSheet extends StatelessWidget {
+  final List<AvailableSlot> slots;
+
+  const _SlotPickerSheet({required this.slots});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.55,
+      minChildSize: 0.35,
+      maxChildSize: 0.85,
+      expand: false,
+      builder: (context, scrollController) {
+        return Column(
           children: [
-            if (post.distance != null)
-              Expanded(
-                flex: 2,
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on,
-                        size: 14, color: colors.primary),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        'Distancia: ${post.distance}',
-                        style: textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
               ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 3,
-              child: GestureDetector(
-                onTap: provider.isSubmitting ? null : _onSendOffer,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: provider.isSubmitting
-                        ? colors.primary.withValues(alpha: 0.5)
-                        : colors.primary,
-                    borderRadius: BorderRadius.circular(12),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Selecciona un día',
+                      style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (provider.isSubmitting)
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      else ...[
-                        Text(
-                          post.myOffer != null
-                              ? 'Actualizar oferta'
-                              : 'Confirmar oferta',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.arrow_forward,
-                            size: 16, color: Colors.white),
-                      ],
-                    ],
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                    visualDensity: VisualDensity.compact,
                   ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text(
+                'Solo aparecen los días en que tu establecimiento trabaja',
+                style: textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontSize: 12,
                 ),
               ),
             ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView.separated(
+                controller: scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: slots.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) => _SlotCard(slot: slots[index]),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SlotCard extends StatelessWidget {
+  final AvailableSlot slot;
+
+  const _SlotCard({required this.slot});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isFull = slot.isFull;
+
+    return InkWell(
+      onTap: () => Navigator.of(context).pop(slot),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.outline.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.calendar_today_outlined,
+                size: 20,
+                color: colors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${slot.dayLabel} · ${_displayDate(slot.date)}',
+                    style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Icon(Icons.schedule, size: 12, color: colors.onSurface.withValues(alpha: 0.5)),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${slot.start} – ${slot.end}',
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: colors.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (isFull)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8930C).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE8930C).withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  'Lleno',
+                  style: textTheme.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: const Color(0xFFE8930C),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            else
+              Text(
+                '${slot.slotsUsed}/${slot.maxSlots}',
+                style: textTheme.bodySmall?.copyWith(
+                  fontSize: 12,
+                  color: colors.onSurface.withValues(alpha: 0.45),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _existingOfferBanner(
-      MyOffer offer, ColorScheme colors, TextTheme textTheme) {
-    final isAccepted = offer.status == 'accepted';
-    final color = isAccepted ? Colors.green : colors.primary;
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-              isAccepted
-                  ? Icons.check_circle_outline
-                  : Icons.local_offer_outlined,
-              size: 20,
-              color: color),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isAccepted
-                      ? 'Tu oferta fue aceptada'
-                      : 'Ya enviaste una oferta',
-                  style: textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '\$${offer.pricePerUnit.toStringAsFixed(2)} / ${offer.unit}',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-                if (offer.pickupLabel.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    offer.pickupLabel,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statusBadge(String status, TextTheme textTheme) {
-    final info = PostStatusTranslator.translate(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: info.color,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        info.label,
-        style: textTheme.bodySmall?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-        ),
-      ),
-    );
-  }
-
-  Widget _deliveryModeBanner(
-      String deliveryMode, TextTheme textTheme, ColorScheme colors) {
-    final (icon, label, color) = switch (deliveryMode) {
-      'home_delivery' => (
-          Icons.local_shipping_outlined,
-          'Disponible para recolección a domicilio',
-          colors.primary,
-        ),
-      'drop_off' => (
-          Icons.storefront_outlined,
-          'Debes llevarlo a un punto de acopio',
-          const Color(0xFF30A3F3),
-        ),
-      _ => (
-          Icons.swap_horiz_rounded,
-          'Recolección a domicilio o entrega en punto',
-          const Color(0xFF6D53ED),
-        ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: textTheme.bodySmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoChip(IconData icon, String label, ColorScheme colors,
-      TextTheme textTheme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border:
-            Border.all(color: colors.outline.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.06),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon,
-              size: 14,
-              color: colors.onSurface.withValues(alpha: 0.6)),
-          const SizedBox(width: 6),
-          Text(label,
-              style: textTheme.bodySmall?.copyWith(fontSize: 11)),
-        ],
-      ),
-    );
+  String _displayDate(String isoDate) {
+    final parts = isoDate.split('-');
+    if (parts.length < 3) return isoDate;
+    final day = int.tryParse(parts[2]) ?? 0;
+    final monthNum = int.tryParse(parts[1]) ?? 1;
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    return '$day ${months[monthNum - 1]}';
   }
 }
