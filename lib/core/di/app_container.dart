@@ -16,6 +16,12 @@ import 'package:treasureflow/features/auth/data/datasources/auth_remote_datasour
 import 'package:treasureflow/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:treasureflow/features/auth/domain/repositories/auth_repository.dart';
 import 'package:treasureflow/features/auth/local/data/datasources/local_auth_remote_datasource.dart';
+import 'package:treasureflow/features/collections/citizen/data/datasources/citizen_collections_remote_datasource.dart';
+import 'package:treasureflow/features/collections/citizen/data/repositories/citizen_collections_repository_impl.dart';
+import 'package:treasureflow/features/collections/citizen/domain/repositories/citizen_collections_repository.dart';
+import 'package:treasureflow/features/collections/local/data/datasources/local_collections_remote_datasource.dart';
+import 'package:treasureflow/features/collections/local/data/repositories/local_collections_repository_impl.dart';
+import 'package:treasureflow/features/collections/local/domain/repositories/local_collections_repository.dart';
 import 'package:treasureflow/features/auth/local/data/repositories/local_auth_repository_impl.dart';
 import 'package:treasureflow/features/auth/local/domain/repositories/local_auth_repository.dart';
 import 'package:treasureflow/features/feed/data/datasources/feed_remote_datasource.dart';
@@ -32,6 +38,9 @@ class AppContainer {
   late final TokenStorage tokenStorage;
   late final UserStorage userStorage;
   late final ApiClient apiClient;
+  late final ApiClient collectionsApiClient;
+  late final CitizenCollectionsRepository citizenCollectionsRepository;
+  late final LocalCollectionsRepository localCollectionsRepository;
   late final AuthRepository authRepository;
   late final MediaRepository mediaRepository;
   late final CitizenAuthRepository citizenAuthRepository;
@@ -56,6 +65,18 @@ class AppContainer {
     tokenStorage = TokenStorage();
     userStorage = UserStorage(tokenStorage);
     apiClient = ApiClient(tokenStorage: tokenStorage);
+
+    // Cliente hacia tf_backend_payments (:3003) — mismo JWT, otra baseUrl
+    collectionsApiClient = ApiClient(
+      tokenStorage: tokenStorage,
+      baseUrl: dotenv.env['COLLECTIONS_API_URL'],
+    );
+    citizenCollectionsRepository = CitizenCollectionsRepositoryImpl(
+      CitizenCollectionsRemoteDatasource(collectionsApiClient),
+    );
+    localCollectionsRepository = LocalCollectionsRepositoryImpl(
+      LocalCollectionsRemoteDatasource(collectionsApiClient),
+    );
 
     final authDatasource = AuthRemoteDatasource(apiClient, tokenStorage, userStorage);
     authRepository = AuthRepositoryImpl(authDatasource);

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:treasureflow/features/sales/local/presentation/models/purchase_ui_model.dart';
-import 'package:treasureflow/features/sales/local/presentation/ui_states/purchase_status.dart';
-import 'package:treasureflow/features/sales/local/presentation/widgets/purchase_card_widget.dart';
-import 'package:treasureflow/shared/widgets/app_toast.dart';
+import 'package:provider/provider.dart';
+import 'package:treasureflow/core/di/app_container.dart';
+import 'package:treasureflow/features/collections/local/di/local_collections_module.dart';
+import 'package:treasureflow/features/collections/local/presentation/providers/local_collections_list_provider.dart';
+import 'package:treasureflow/features/collections/shared/widgets/collection_card_widget.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
-import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
+import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/screen_header_widget.dart';
 
 // compras apartadas del establecimiento
@@ -20,90 +21,26 @@ class MyPurchasesScreen extends StatefulWidget {
 }
 
 class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
-  late List<PurchaseUiModel> _purchases;
-
-  static const _availableDates = [
-    ('Hoy', true),
-    ('Sáb 12 jul', false),
-    ('Dom 13 jul', false),
-    ('Lun 14 jul', false),
-  ];
+  late final LocalCollectionsListProvider _provider;
 
   @override
   void initState() {
     super.initState();
-    _purchases = mockPurchases
-        .where((p) => p.status != PurchaseStatus.completed)
-        .toList();
+    final container = context.read<AppContainer>();
+    _provider = LocalCollectionsModule(container).provideListProvider();
+    _provider.addListener(_onProviderChanged);
+    _provider.load();
   }
 
-  Future<void> _onMoveDate(PurchaseUiModel purchase) async {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+  @override
+  void dispose() {
+    _provider.removeListener(_onProviderChanged);
+    _provider.dispose();
+    super.dispose();
+  }
 
-    final selected = await showDialog<(String, bool)>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Mover entrega',
-          style:
-              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Elige la nueva fecha. Se notificará al ciudadano y deberá aceptar el cambio.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: 12),
-            for (final date in _availableDates)
-              if (date.$1 != purchase.dateLabel)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  leading: Icon(
-                    date.$2
-                        ? Icons.today_rounded
-                        : Icons.calendar_month_outlined,
-                    size: 20,
-                    color: colors.primary,
-                  ),
-                  title: Text(date.$1, style: theme.textTheme.bodyMedium),
-                  onTap: () => Navigator.of(context).pop(date),
-                ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-        ],
-      ),
-    );
-
-    if (selected == null || !mounted) return;
-
-    setState(() {
-      final index = _purchases.indexWhere((p) => p.id == purchase.id);
-      if (index != -1) {
-        _purchases[index] = _purchases[index].copyWith(
-          dateLabel: selected.$1,
-          isToday: selected.$2,
-        );
-      }
-    });
-
-    AppToast.show(
-      context,
-      'Se notificará al ciudadano para que acepte el cambio',
-      type: ToastType.info,
-    );
+  void _onProviderChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -111,17 +48,6 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
-
-    // Agrupar por fecha respetando el orden del catálogo de fechas
-    final grouped = <String, List<PurchaseUiModel>>{};
-    for (final date in _availableDates) {
-      final items = _purchases.where((p) => p.dateLabel == date.$1).toList();
-      if (items.isNotEmpty) grouped[date.$1] = items;
-    }
-
-    final hasTodayPurchases =
-        _purchases.any((p) => p.isToday && p.status != PurchaseStatus.completed);
-    final showRouteButton = mockLocalHasVehicle && hasTodayPurchases;
 
     return Scaffold(
       appBar: AppBar(
@@ -136,60 +62,7 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
       ),
       body: Stack(
         children: [
-          _purchases.isEmpty
-              ? _emptyState(colors, textTheme)
-              : SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    8,
-                    16,
-                    showRouteButton ? 180 : 110,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Materiales con oferta aceptada, listos para recolectar.',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colors.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      for (final entry in grouped.entries) ...[
-                        _dateHeader(
-                          context,
-                          label: entry.key,
-                          isToday: entry.value.first.isToday,
-                          count: entry.value.length,
-                        ),
-                        const SizedBox(height: 10),
-                        for (final purchase in entry.value)
-                          PurchaseCardWidget(
-                            purchase: purchase,
-                            onTap: () => context
-                                .push('/purchaseDetail/${purchase.id}'),
-                            onMoveDate: mockLocalHasVehicle
-                                ? () => _onMoveDate(purchase)
-                                : null,
-                          ),
-                        const SizedBox(height: 14),
-                      ],
-                    ],
-                  ),
-                ),
-
-          // Botón principal de ruta — solo locales con vehículo
-          if (showRouteButton)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 100,
-              child: PrimaryButtonGreenWidget(
-                text: 'Generar ruta de hoy',
-                onPressed: () => context.push('/collectionRoute'),
-              ),
-            ),
-
+          _buildBody(colors, textTheme),
           const Positioned(
             bottom: 0,
             left: 0,
@@ -201,32 +74,82 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
     );
   }
 
-  Widget _dateHeader(
-    BuildContext context, {
-    required String label,
-    required bool isToday,
-    required int count,
-  }) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final textTheme = theme.textTheme;
+  Widget _buildBody(ColorScheme colors, TextTheme textTheme) {
+    switch (_provider.status) {
+      case LocalListStatus.idle:
+      case LocalListStatus.loading:
+        return const Center(child: CircularProgressIndicator());
+      case LocalListStatus.error:
+        return _errorState(colors, textTheme);
+      case LocalListStatus.success:
+        final items = _provider.activeItems;
+        if (items.isEmpty) return _emptyState(colors, textTheme);
 
-    return Row(
-      children: [
-        Icon(
-          isToday ? Icons.today_rounded : Icons.calendar_month_outlined,
-          size: 18,
-          color: colors.primary,
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            '$label · $count ${count == 1 ? 'recolección' : 'recolecciones'}',
-            overflow: TextOverflow.ellipsis,
-            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+        return RefreshIndicator(
+          onRefresh: _provider.load,
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
+            itemCount: items.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Materiales con oferta aceptada. Pesa, espera la confirmación y paga.',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                );
+              }
+              final item = items[index - 1];
+              final collection = item.collection;
+              final offer = item.offer;
+              return CollectionCardWidget(
+                title: offer?.wastePublicationTitle ?? 'Residuo',
+                subtitle: offer?.citizenName ?? 'Ciudadano',
+                photoUrl: offer?.wastePublicationPhotoUrl,
+                statusRaw: collection.statusRaw,
+                step: collection.status.stepNumber,
+                amountLabel: collection.finalAmount != null
+                    ? '\$${collection.finalAmount!.toStringAsFixed(2)}'
+                    : offer != null
+                        ? '\$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}'
+                        : '—',
+                onTap: () async {
+                  await context
+                      .push('/purchaseDetail/${collection.collectionId}');
+                  _provider.load();
+                },
+              );
+            },
           ),
+        );
+    }
+  }
+
+  Widget _errorState(ColorScheme colors, TextTheme textTheme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
+            const SizedBox(height: 16),
+            Text(
+              _provider.errorMessage ?? 'No se pudieron cargar tus compras',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+            PrimaryButtonBlueWidget(
+              text: 'Reintentar',
+              onPressed: _provider.load,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -254,7 +177,8 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
             Text(
               'No tienes compras en curso',
               textAlign: TextAlign.center,
-              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+              style:
+                  textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(

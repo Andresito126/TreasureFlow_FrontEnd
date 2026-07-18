@@ -6,15 +6,18 @@ import 'package:http/http.dart' as http;
 import 'package:treasureflow/core/storage/token_storage.dart';
 
 class ApiClient {
-  static String get baseUrl => dotenv.env['API_URL']!;
+  static String get _defaultBaseUrl => dotenv.env['API_URL']!;
+  final String? _baseUrlOverride;
+  String get baseUrl => _baseUrlOverride ?? _defaultBaseUrl;
 
   final http.Client _client;
   final TokenStorage _tokenStorage;
   bool _isRefreshing = false;
 
-  ApiClient({required TokenStorage tokenStorage})
-    : _client = http.Client(),
-      _tokenStorage = tokenStorage;
+  ApiClient({required TokenStorage tokenStorage, String? baseUrl})
+      : _client = http.Client(),
+        _tokenStorage = tokenStorage,
+        _baseUrlOverride = baseUrl;
 
   Future<Map<String, String>> _buildHeaders() async {
     final token = await _tokenStorage.getAccessToken();
@@ -54,14 +57,16 @@ class ApiClient {
       await _tokenStorage.deleteTokens();
     }
 
-    final errorBody = response.body.isNotEmpty
-        ? jsonDecode(response.body)
-        : null;
+    final errorBody =
+        response.body.isNotEmpty ? jsonDecode(response.body) : null;
     throw ApiException(
       statusCode: response.statusCode,
       message: errorBody is Map<String, dynamic>
           ? (errorBody['message']?.toString() ?? 'Error desconocido')
           : 'Error desconocido',
+      error: errorBody is Map<String, dynamic>
+          ? errorBody['error']?.toString()
+          : null,
     );
   }
 
@@ -138,6 +143,7 @@ class ApiClient {
     throw ApiException(
       statusCode: response.statusCode,
       message: responseBody['message']?.toString() ?? 'Error desconocido',
+      error: responseBody['error']?.toString(),
     );
   }
 
@@ -148,7 +154,7 @@ class ApiClient {
       if (refreshToken == null) return false;
 
       final response = await _client.post(
-        Uri.parse('$baseUrl/auth/refresh'),
+        Uri.parse('$_defaultBaseUrl/auth/refresh'),
         headers: {HttpHeaders.contentTypeHeader: 'application/json'},
         body: jsonEncode({'refreshToken': refreshToken}),
       );
@@ -195,8 +201,14 @@ class ApiClient {
 class ApiException implements Exception {
   final int statusCode;
   final String message;
+  
+  final String? error;
 
-  const ApiException({required this.statusCode, required this.message});
+  const ApiException({
+    required this.statusCode,
+    required this.message,
+    this.error,
+  });
 
   @override
   String toString() => 'ApiException($statusCode): $message';

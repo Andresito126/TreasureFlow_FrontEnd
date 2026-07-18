@@ -31,6 +31,14 @@ GoRouter createRouter({
     redirect: (context, state) {
       final isAuthenticated = authProvider.isAuthenticated;
       final location = state.matchedLocation;
+ 
+      final path = state.uri.path;
+      if (path.startsWith('/collectionDetail/')) {
+        final id = path.substring('/collectionDetail/'.length);
+        return authProvider.userType == 'establishment'
+            ? '/purchaseDetail/$id'
+            : '/saleDetail/$id';
+      }
 
       final isOnOnboarding = _onboardingPaths.contains(location);
       final isOnAuth = _authPaths.contains(location);
