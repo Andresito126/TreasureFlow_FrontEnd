@@ -7,11 +7,9 @@ import 'package:treasureflow/features/collections/local/presentation/providers/l
 import 'package:treasureflow/features/collections/shared/widgets/collection_card_widget.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
+import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 import 'package:treasureflow/shared/widgets/screen_header_widget.dart';
 
-// compras apartadas del establecimiento
-//  los locales con vehículo pueden generar la ruta de recolección de hoy solo elllos 
-//  reprogramar entregas a otra fecha (el ciudadano deberá aceptar).
 
 class MyPurchasesScreen extends StatefulWidget {
   const MyPurchasesScreen({super.key});
@@ -63,6 +61,15 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
       body: Stack(
         children: [
           _buildBody(colors, textTheme),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 100,
+            child: PrimaryButtonGreenWidget(
+              text: 'Planificar rutas',
+              onPressed: () => context.push('/routePlanning'),
+            ),
+          ),
           const Positioned(
             bottom: 0,
             left: 0,

@@ -33,6 +33,9 @@ import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post
 import 'package:treasureflow/features/profile/data/datasources/my_posts_remote_datasource.dart';
 import 'package:treasureflow/features/profile/data/repositories/my_posts_repository_impl.dart';
 import 'package:treasureflow/features/profile/domain/repositories/my_posts_repository.dart';
+import 'package:treasureflow/features/routes/local/data/datasources/routes_remote_datasource.dart';
+import 'package:treasureflow/features/routes/local/data/repositories/routes_repository_impl.dart';
+import 'package:treasureflow/features/routes/local/domain/repositories/routes_repository.dart';
 
 class AppContainer {
   late final TokenStorage tokenStorage;
@@ -41,6 +44,8 @@ class AppContainer {
   late final ApiClient collectionsApiClient;
   late final CitizenCollectionsRepository citizenCollectionsRepository;
   late final LocalCollectionsRepository localCollectionsRepository;
+  late final ApiClient routesApiClient;
+  late final RoutesRepository routesRepository;
   late final AuthRepository authRepository;
   late final MediaRepository mediaRepository;
   late final CitizenAuthRepository citizenAuthRepository;
@@ -76,6 +81,24 @@ class AppContainer {
     );
     localCollectionsRepository = LocalCollectionsRepositoryImpl(
       LocalCollectionsRemoteDatasource(collectionsApiClient),
+    );
+
+    // Cliente hacia tf_backend_routes (:3004) — sin JWT, usa headers
+    // x-user-id/x-user-type que espera su GatewayAuthGuard.
+    routesApiClient = ApiClient(
+      tokenStorage: tokenStorage,
+      baseUrl: dotenv.env['ROUTES_API_URL'],
+      extraHeadersBuilder: () async {
+        final userId = await userStorage.getUserId();
+        final userType = await userStorage.getUserType();
+        return {
+          if (userId != null) 'x-user-id': userId,
+          if (userType != null) 'x-user-type': userType,
+        };
+      },
+    );
+    routesRepository = RoutesRepositoryImpl(
+      RoutesRemoteDatasource(routesApiClient),
     );
 
     final authDatasource = AuthRemoteDatasource(apiClient, tokenStorage, userStorage);
