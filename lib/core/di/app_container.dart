@@ -3,6 +3,9 @@ import 'package:treasureflow/core/media/data/datasources/media_remote_datasource
 import 'package:treasureflow/core/media/data/repositories/media_repository_impl.dart';
 import 'package:treasureflow/core/media/domain/repositories/media_repository.dart';
 import 'package:treasureflow/core/network/api_client.dart';
+import 'package:treasureflow/core/network/main_api_client_factory.dart';
+import 'package:treasureflow/core/network/payments_api_client_factory.dart';
+import 'package:treasureflow/core/network/routes_api_client_factory.dart';
 import 'package:treasureflow/core/notifications/data/datasources/device_token_remote_datasource.dart';
 import 'package:treasureflow/core/notifications/data/repositories/device_token_repository_impl.dart';
 import 'package:treasureflow/core/notifications/domain/repositories/device_token_repository.dart';
@@ -42,9 +45,9 @@ class AppContainer {
   late final UserStorage userStorage;
   late final ApiClient apiClient;
   late final ApiClient collectionsApiClient;
+  late final ApiClient routesApiClient;
   late final CitizenCollectionsRepository citizenCollectionsRepository;
   late final LocalCollectionsRepository localCollectionsRepository;
-  late final ApiClient routesApiClient;
   late final RoutesRepository routesRepository;
   late final AuthRepository authRepository;
   late final MediaRepository mediaRepository;
@@ -69,38 +72,17 @@ class AppContainer {
   Future<void> _init() async {
     tokenStorage = TokenStorage();
     userStorage = UserStorage(tokenStorage);
-    apiClient = ApiClient(tokenStorage: tokenStorage);
 
-    // Cliente hacia tf_backend_payments (:3003) — mismo JWT, otra baseUrl
-    collectionsApiClient = ApiClient(
+    
+    apiClient = MainApiClientFactory.create(tokenStorage);
+    
+    collectionsApiClient = PaymentsApiClientFactory.create(tokenStorage);
+    routesApiClient = RoutesApiClientFactory.create(
       tokenStorage: tokenStorage,
-      baseUrl: dotenv.env['COLLECTIONS_API_URL'],
-    );
-    citizenCollectionsRepository = CitizenCollectionsRepositoryImpl(
-      CitizenCollectionsRemoteDatasource(collectionsApiClient),
-    );
-    localCollectionsRepository = LocalCollectionsRepositoryImpl(
-      LocalCollectionsRemoteDatasource(collectionsApiClient),
+      userStorage: userStorage,
     );
 
-    // Cliente hacia tf_backend_routes (:3004) — sin JWT, usa headers
-    // x-user-id/x-user-type que espera su GatewayAuthGuard.
-    routesApiClient = ApiClient(
-      tokenStorage: tokenStorage,
-      baseUrl: dotenv.env['ROUTES_API_URL'],
-      extraHeadersBuilder: () async {
-        final userId = await userStorage.getUserId();
-        final userType = await userStorage.getUserType();
-        return {
-          if (userId != null) 'x-user-id': userId,
-          if (userType != null) 'x-user-type': userType,
-        };
-      },
-    );
-    routesRepository = RoutesRepositoryImpl(
-      RoutesRemoteDatasource(routesApiClient),
-    );
-
+    // tf_backend_main 
     final authDatasource = AuthRemoteDatasource(apiClient, tokenStorage, userStorage);
     authRepository = AuthRepositoryImpl(authDatasource);
 
@@ -125,5 +107,16 @@ class AppContainer {
     notificationService = NotificationService();
     final deviceTokenDatasource = DeviceTokenRemoteDatasource(apiClient);
     deviceTokenRepository = DeviceTokenRepositoryImpl(deviceTokenDatasource);
+
+    // tf_backend_payments
+    final citizenCollectionsDatasource = CitizenCollectionsRemoteDatasource(collectionsApiClient);
+    citizenCollectionsRepository = CitizenCollectionsRepositoryImpl(citizenCollectionsDatasource);
+
+    final localCollectionsDatasource = LocalCollectionsRemoteDatasource(collectionsApiClient);
+    localCollectionsRepository = LocalCollectionsRepositoryImpl(localCollectionsDatasource);
+
+    // tf_backend_routes 
+    final routesDatasource = RoutesRemoteDatasource(routesApiClient);
+    routesRepository = RoutesRepositoryImpl(routesDatasource);
   }
 }
