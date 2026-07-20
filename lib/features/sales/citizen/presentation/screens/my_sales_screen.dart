@@ -1,23 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:treasureflow/features/sales/citizen/presentation/models/sale_ui_model.dart';
-import 'package:treasureflow/features/sales/citizen/presentation/ui_states/sale_status.dart';
-import 'package:treasureflow/features/sales/citizen/presentation/widgets/sale_card_widget.dart';
+import 'package:provider/provider.dart';
+import 'package:treasureflow/core/di/app_container.dart';
+import 'package:treasureflow/features/collections/citizen/di/citizen_collections_module.dart';
+import 'package:treasureflow/features/collections/citizen/presentation/providers/citizen_collections_list_provider.dart';
+import 'package:treasureflow/features/collections/shared/widgets/collection_card_widget.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
+import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/screen_header_widget.dart';
 
-class MySalesScreen extends StatelessWidget {
+class MySalesScreen extends StatefulWidget {
   const MySalesScreen({super.key});
+
+  @override
+  State<MySalesScreen> createState() => _MySalesScreenState();
+}
+
+class _MySalesScreenState extends State<MySalesScreen> {
+  late final CitizenCollectionsListProvider _provider;
+
+  @override
+  void initState() {
+    super.initState();
+    final container = context.read<AppContainer>();
+    _provider = CitizenCollectionsModule(container).provideListProvider();
+    _provider.addListener(_onProviderChanged);
+    _provider.load();
+  }
+
+  @override
+  void dispose() {
+    _provider.removeListener(_onProviderChanged);
+    _provider.dispose();
+    super.dispose();
+  }
+
+  void _onProviderChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
-
-    final inProgress = mockSales
-        .where((s) => s.status != SaleStatus.completed)
-        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -32,30 +58,7 @@ class MySalesScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          inProgress.isEmpty
-              ? _emptyState(colors, textTheme)
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
-                  itemCount: inProgress.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          'Continúa el proceso de entrega y pago de tus materiales.',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colors.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      );
-                    }
-                    final sale = inProgress[index - 1];
-                    return SaleCardWidget(
-                      sale: sale,
-                      onTap: () => context.push('/saleDetail/${sale.id}'),
-                    );
-                  },
-                ),
+          _buildBody(colors, textTheme),
           const Positioned(
             bottom: 0,
             left: 0,
@@ -63,6 +66,85 @@ class MySalesScreen extends StatelessWidget {
             child: FloatingNavBarWidget(currentIndex: 2),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBody(ColorScheme colors, TextTheme textTheme) {
+    switch (_provider.status) {
+      case CitizenListStatus.idle:
+      case CitizenListStatus.loading:
+        return const Center(child: CircularProgressIndicator());
+      case CitizenListStatus.error:
+        return _errorState(colors, textTheme);
+      case CitizenListStatus.success:
+        final items = _provider.activeItems;
+        if (items.isEmpty) return _emptyState(colors, textTheme);
+
+        return RefreshIndicator(
+          onRefresh: _provider.load,
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
+            itemCount: items.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Continúa el proceso de entrega y pago de tus materiales.',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                );
+              }
+              final item = items[index - 1];
+              final collection = item.collection;
+              final offer = item.offer;
+              return CollectionCardWidget(
+                title: offer?.wastePublicationTitle ?? 'Residuo',
+                subtitle: offer?.establishmentName ?? 'Establecimiento',
+                photoUrl: offer?.wastePublicationPhotoUrl,
+                statusRaw: collection.statusRaw,
+                step: collection.status.stepNumber,
+                amountLabel: collection.finalAmount != null
+                    ? '\$${collection.finalAmount!.toStringAsFixed(2)}'
+                    : offer != null
+                        ? '\$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}'
+                        : '—',
+                onTap: () async {
+                  await context
+                      .push('/saleDetail/${collection.collectionId}');
+                  _provider.load();
+                },
+              );
+            },
+          ),
+        );
+    }
+  }
+
+  Widget _errorState(ColorScheme colors, TextTheme textTheme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
+            const SizedBox(height: 16),
+            Text(
+              _provider.errorMessage ?? 'No se pudieron cargar tus ventas',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+            PrimaryButtonBlueWidget(
+              text: 'Reintentar',
+              onPressed: _provider.load,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -81,13 +163,15 @@ class MySalesScreen extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: colors.primary.withValues(alpha: 0.1),
               ),
-              child: Icon(Icons.sell_outlined, size: 40, color: colors.primary),
+              child:
+                  Icon(Icons.sell_outlined, size: 40, color: colors.primary),
             ),
             const SizedBox(height: 20),
             Text(
               'No tienes ventas en curso',
               textAlign: TextAlign.center,
-              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+              style:
+                  textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(

@@ -4,6 +4,7 @@ import 'package:treasureflow/core/router/onboarding_routes.dart';
 import 'package:treasureflow/core/router/auth_routes.dart';
 import 'package:treasureflow/core/router/home_routes.dart';
 import 'package:treasureflow/core/router/posts_routes.dart';
+import 'package:treasureflow/core/router/routes_routes.dart';
 import 'package:treasureflow/core/router/sales_routes.dart';
 import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
 
@@ -32,6 +33,16 @@ GoRouter createRouter({
       final isAuthenticated = authProvider.isAuthenticated;
       final location = state.matchedLocation;
 
+      // Las notificaciones push mandan /collectionDetail/:id para ambos roles;
+      // se reescribe a la pantalla concreta según el tipo de usuario.
+      final path = state.uri.path;
+      if (path.startsWith('/collectionDetail/')) {
+        final id = path.substring('/collectionDetail/'.length);
+        return authProvider.userType == 'establishment'
+            ? '/purchaseDetail/$id'
+            : '/saleDetail/$id';
+      }
+
       final isOnOnboarding = _onboardingPaths.contains(location);
       final isOnAuth = _authPaths.contains(location);
 
@@ -58,6 +69,7 @@ GoRouter createRouter({
       ...homeRoutes,
       ...postsRoutes,
       ...salesRoutes,
+      ...routesRoutes,
     ],
   );
 }

@@ -24,5 +24,5 @@ String formatPickupLabel(String date, String start, String end) {
   final dateLabel = '$day ${parsed.day} $month';
 
   if (start.isEmpty || end.isEmpty) return dateLabel;
-  return '$dateLabel · $start – $end';
+  return '$dateLabel · $start - $end';
 }

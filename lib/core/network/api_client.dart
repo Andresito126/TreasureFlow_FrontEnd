@@ -6,21 +6,34 @@ import 'package:http/http.dart' as http;
 import 'package:treasureflow/core/storage/token_storage.dart';
 
 class ApiClient {
-  static String get baseUrl => dotenv.env['API_URL']!;
+  static String get _defaultBaseUrl => dotenv.env['API_URL']!;
+  final String? _baseUrlOverride;
+  String get baseUrl => _baseUrlOverride ?? _defaultBaseUrl;
 
   final http.Client _client;
   final TokenStorage _tokenStorage;
+
+  /// Headers adicionales por request (ej. `x-user-id`/`x-user-type` para
+  /// backends detrás de un gateway que no validan JWT directamente).
+  final Future<Map<String, String>> Function()? _extraHeadersBuilder;
   bool _isRefreshing = false;
 
-  ApiClient({required TokenStorage tokenStorage})
-    : _client = http.Client(),
-      _tokenStorage = tokenStorage;
+  ApiClient({
+    required TokenStorage tokenStorage,
+    String? baseUrl,
+    Future<Map<String, String>> Function()? extraHeadersBuilder,
+  })  : _client = http.Client(),
+        _tokenStorage = tokenStorage,
+        _baseUrlOverride = baseUrl,
+        _extraHeadersBuilder = extraHeadersBuilder;
 
   Future<Map<String, String>> _buildHeaders() async {
     final token = await _tokenStorage.getAccessToken();
+    final extra = await _extraHeadersBuilder?.call();
     return {
       HttpHeaders.contentTypeHeader: 'application/json',
       if (token != null) HttpHeaders.authorizationHeader: 'Bearer $token',
+      if (extra != null) ...extra,
     };
   }
 
@@ -33,6 +46,44 @@ class ApiClient {
     return _handleResponse(response, 'GET', path);
   }
 
+  /// GET para endpoints cuya respuesta puede ser `null` (200 con body
+  /// literal `null`) en vez de siempre un objeto.
+  Future<Map<String, dynamic>?> getNullable(String path) async {
+    final headers = await _buildHeaders();
+    final response = await _client.get(
+      Uri.parse('$baseUrl$path'),
+      headers: headers,
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.isEmpty) return null;
+      final decoded = jsonDecode(response.body);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    }
+
+    if (response.statusCode == 401 && !_isRefreshing) {
+      final refreshed = await _tryRefreshToken();
+      if (refreshed) {
+        return getNullable(path);
+      }
+      await _tokenStorage.deleteTokens();
+    }
+
+    final errorBody =
+        response.body.isNotEmpty ? jsonDecode(response.body) : null;
+    throw ApiException(
+      statusCode: response.statusCode,
+      message: errorBody is Map<String, dynamic>
+          ? (errorBody['message']?.toString() ?? 'Error desconocido')
+          : 'Error desconocido',
+      error: errorBody is Map<String, dynamic>
+          ? errorBody['error']?.toString()
+          : null,
+    );
+  }
+
+  /// GET para endpoints cuya respuesta es un array JSON (`[...]`)
+  /// en lugar de un objeto.
   Future<List<dynamic>> getList(String path) async {
     final headers = await _buildHeaders();
     final response = await _client.get(
@@ -54,14 +105,16 @@ class ApiClient {
       await _tokenStorage.deleteTokens();
     }
 
-    final errorBody = response.body.isNotEmpty
-        ? jsonDecode(response.body)
-        : null;
+    final errorBody =
+        response.body.isNotEmpty ? jsonDecode(response.body) : null;
     throw ApiException(
       statusCode: response.statusCode,
       message: errorBody is Map<String, dynamic>
           ? (errorBody['message']?.toString() ?? 'Error desconocido')
           : 'Error desconocido',
+      error: errorBody is Map<String, dynamic>
+          ? errorBody['error']?.toString()
+          : null,
     );
   }
 
@@ -138,6 +191,7 @@ class ApiClient {
     throw ApiException(
       statusCode: response.statusCode,
       message: responseBody['message']?.toString() ?? 'Error desconocido',
+      error: responseBody['error']?.toString(),
     );
   }
 
@@ -147,8 +201,10 @@ class ApiClient {
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken == null) return false;
 
+      // El refresh SIEMPRE va contra el backend principal (tf_backend_main),
+      // aunque esta instancia apunte a otro servicio.
       final response = await _client.post(
-        Uri.parse('$baseUrl/auth/refresh'),
+        Uri.parse('$_defaultBaseUrl/auth/refresh'),
         headers: {HttpHeaders.contentTypeHeader: 'application/json'},
         body: jsonEncode({'refreshToken': refreshToken}),
       );
@@ -196,7 +252,15 @@ class ApiException implements Exception {
   final int statusCode;
   final String message;
 
-  const ApiException({required this.statusCode, required this.message});
+  /// Nombre de la excepción del backend (ej. 'PaymentCaptureFailedException'),
+  /// útil para distinguir tipos de error en la UI.
+  final String? error;
+
+  const ApiException({
+    required this.statusCode,
+    required this.message,
+    this.error,
+  });
 
   @override
   String toString() => 'ApiException($statusCode): $message';

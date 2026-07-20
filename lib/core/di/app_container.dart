@@ -3,6 +3,9 @@ import 'package:treasureflow/core/media/data/datasources/media_remote_datasource
 import 'package:treasureflow/core/media/data/repositories/media_repository_impl.dart';
 import 'package:treasureflow/core/media/domain/repositories/media_repository.dart';
 import 'package:treasureflow/core/network/api_client.dart';
+import 'package:treasureflow/core/network/main_api_client_factory.dart';
+import 'package:treasureflow/core/network/payments_api_client_factory.dart';
+import 'package:treasureflow/core/network/routes_api_client_factory.dart';
 import 'package:treasureflow/core/notifications/data/datasources/device_token_remote_datasource.dart';
 import 'package:treasureflow/core/notifications/data/repositories/device_token_repository_impl.dart';
 import 'package:treasureflow/core/notifications/domain/repositories/device_token_repository.dart';
@@ -16,6 +19,12 @@ import 'package:treasureflow/features/auth/data/datasources/auth_remote_datasour
 import 'package:treasureflow/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:treasureflow/features/auth/domain/repositories/auth_repository.dart';
 import 'package:treasureflow/features/auth/local/data/datasources/local_auth_remote_datasource.dart';
+import 'package:treasureflow/features/collections/citizen/data/datasources/citizen_collections_remote_datasource.dart';
+import 'package:treasureflow/features/collections/citizen/data/repositories/citizen_collections_repository_impl.dart';
+import 'package:treasureflow/features/collections/citizen/domain/repositories/citizen_collections_repository.dart';
+import 'package:treasureflow/features/collections/local/data/datasources/local_collections_remote_datasource.dart';
+import 'package:treasureflow/features/collections/local/data/repositories/local_collections_repository_impl.dart';
+import 'package:treasureflow/features/collections/local/domain/repositories/local_collections_repository.dart';
 import 'package:treasureflow/features/auth/local/data/repositories/local_auth_repository_impl.dart';
 import 'package:treasureflow/features/auth/local/domain/repositories/local_auth_repository.dart';
 import 'package:treasureflow/features/feed/data/datasources/feed_remote_datasource.dart';
@@ -27,11 +36,19 @@ import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post
 import 'package:treasureflow/features/profile/data/datasources/my_posts_remote_datasource.dart';
 import 'package:treasureflow/features/profile/data/repositories/my_posts_repository_impl.dart';
 import 'package:treasureflow/features/profile/domain/repositories/my_posts_repository.dart';
+import 'package:treasureflow/features/routes/local/data/datasources/routes_remote_datasource.dart';
+import 'package:treasureflow/features/routes/local/data/repositories/routes_repository_impl.dart';
+import 'package:treasureflow/features/routes/local/domain/repositories/routes_repository.dart';
 
 class AppContainer {
   late final TokenStorage tokenStorage;
   late final UserStorage userStorage;
   late final ApiClient apiClient;
+  late final ApiClient collectionsApiClient;
+  late final ApiClient routesApiClient;
+  late final CitizenCollectionsRepository citizenCollectionsRepository;
+  late final LocalCollectionsRepository localCollectionsRepository;
+  late final RoutesRepository routesRepository;
   late final AuthRepository authRepository;
   late final MediaRepository mediaRepository;
   late final CitizenAuthRepository citizenAuthRepository;
@@ -55,8 +72,17 @@ class AppContainer {
   Future<void> _init() async {
     tokenStorage = TokenStorage();
     userStorage = UserStorage(tokenStorage);
-    apiClient = ApiClient(tokenStorage: tokenStorage);
 
+    
+    apiClient = MainApiClientFactory.create(tokenStorage);
+    
+    collectionsApiClient = PaymentsApiClientFactory.create(tokenStorage);
+    routesApiClient = RoutesApiClientFactory.create(
+      tokenStorage: tokenStorage,
+      userStorage: userStorage,
+    );
+
+    // tf_backend_main 
     final authDatasource = AuthRemoteDatasource(apiClient, tokenStorage, userStorage);
     authRepository = AuthRepositoryImpl(authDatasource);
 
@@ -81,5 +107,16 @@ class AppContainer {
     notificationService = NotificationService();
     final deviceTokenDatasource = DeviceTokenRemoteDatasource(apiClient);
     deviceTokenRepository = DeviceTokenRepositoryImpl(deviceTokenDatasource);
+
+    // tf_backend_payments
+    final citizenCollectionsDatasource = CitizenCollectionsRemoteDatasource(collectionsApiClient);
+    citizenCollectionsRepository = CitizenCollectionsRepositoryImpl(citizenCollectionsDatasource);
+
+    final localCollectionsDatasource = LocalCollectionsRemoteDatasource(collectionsApiClient);
+    localCollectionsRepository = LocalCollectionsRepositoryImpl(localCollectionsDatasource);
+
+    // tf_backend_routes 
+    final routesDatasource = RoutesRemoteDatasource(routesApiClient);
+    routesRepository = RoutesRepositoryImpl(routesDatasource);
   }
 }

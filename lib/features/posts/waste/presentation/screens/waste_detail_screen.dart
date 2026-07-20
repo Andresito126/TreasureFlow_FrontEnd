@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
+import 'package:treasureflow/features/collections/citizen/domain/entities/collection.dart';
 import 'package:treasureflow/features/posts/object/presentation/widgets/image_gallery_widget.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/offer_summary.dart';
@@ -43,6 +44,51 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
   }
 
   void _onProviderChanged() => setState(() {});
+
+  /// La collection se crea de forma asíncrona (RabbitMQ) al aceptar la oferta;
+  /// se busca por offerId con reintentos cortos antes de navegar al detalle.
+  Future<void> _onContinueToCollection(WastePostDetail post) async {
+    final acceptedOffer = post.offers
+        .where((o) => o.status == 'accepted')
+        .toList();
+    if (acceptedOffer.isEmpty) return;
+    final offerId = acceptedOffer.first.offerId;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final container = context.read<AppContainer>();
+    final repository = container.citizenCollectionsRepository;
+
+    Collection? collection;
+    try {
+      for (var attempt = 0; attempt < 6 && collection == null; attempt++) {
+        if (attempt > 0) {
+          await Future.delayed(const Duration(milliseconds: 700));
+        }
+        collection = await repository.findByOfferId(offerId);
+      }
+    } catch (_) {
+      // se maneja abajo con collection == null
+    }
+
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+
+    if (collection != null) {
+      context.push('/saleDetail/${collection.collectionId}');
+    } else {
+      AppToast.show(
+        context,
+        'Tu recolección se está preparando, aparecerá en tus ventas en un momento.',
+        type: ToastType.info,
+      );
+      context.push('/mySales');
+    }
+  }
 
   Future<void> _confirmAccept({
     required String postId,
@@ -404,7 +450,7 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
               flex: 3,
               child: GestureDetector(
                 onTap: isReserved
-                    ? () => context.push('/saleDetail/${post.id}')
+                    ? () => _onContinueToCollection(post)
                     : () {},
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),

@@ -5,7 +5,9 @@ import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post
 import 'package:treasureflow/features/posts/waste/domain/usecases/get_waste_post_detail_usecase.dart';
 
 enum WasteDetailStatus { idle, loading, success, error }
+
 enum AcceptOfferStatus { idle, accepting, done, error }
+
 enum RejectOfferStatus { idle, rejecting, done, error }
 
 class WasteDetailProvider extends ChangeNotifier {
@@ -15,8 +17,8 @@ class WasteDetailProvider extends ChangeNotifier {
   WasteDetailProvider({
     required GetWastePostDetailUseCase getWastePostDetailUseCase,
     required WastePostRepository repository,
-  })  : _getWastePostDetailUseCase = getWastePostDetailUseCase,
-        _repository = repository;
+  }) : _getWastePostDetailUseCase = getWastePostDetailUseCase,
+       _repository = repository;
 
   WasteDetailStatus _status = WasteDetailStatus.idle;
   String? _errorMessage;
@@ -65,12 +67,13 @@ class WasteDetailProvider extends ChangeNotifier {
     try {
       _post = await _getWastePostDetailUseCase(id);
       notifyListeners();
-    } catch (_) {
-      // no altera el estado visible si falla
-    }
+    } catch (_) {}
   }
 
-  Future<bool> acceptOffer({required String postId, required String offerId}) async {
+  Future<bool> acceptOffer({
+    required String postId,
+    required String offerId,
+  }) async {
     _acceptStatus = AcceptOfferStatus.accepting;
     _acceptingOfferId = offerId;
     _acceptError = null;
@@ -98,7 +101,10 @@ class WasteDetailProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> rejectOffer({required String postId, required String offerId}) async {
+  Future<bool> rejectOffer({
+    required String postId,
+    required String offerId,
+  }) async {
     _rejectStatus = RejectOfferStatus.rejecting;
     _rejectingOfferId = offerId;
     _rejectError = null;
