@@ -1,31 +1,26 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
-/// Datos de tarjeta validados, listos para tokenizar.
-class CardFormData {
-  final String cardNumber;
-  final String holderName;
-  final String expMonth;
-  final String expYear;
-  final String cvc;
+class ConektaTokenException implements Exception {
+  final String message;
+  const ConektaTokenException(this.message);
 
-  const CardFormData({
-    required this.cardNumber,
-    required this.holderName,
-    required this.expMonth,
-    required this.expYear,
-    required this.cvc,
-  });
+  @override
+  String toString() => 'ConektaTokenException: $message';
 }
 
-/// Formulario de tarjeta. Los datos se tokenizan directo contra Conekta —
-/// nunca pasan por el backend de TreasureFlow.
 class CardPaymentFormWidget extends StatefulWidget {
   final double amount;
   final bool isLoading;
-  final ValueChanged<CardFormData> onSubmit;
+
+  final ValueChanged<String> onSubmit;
 
   const CardPaymentFormWidget({
     super.key,
@@ -48,6 +43,42 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
   String? _nameError;
   String? _expiryError;
   String? _cvcError;
+  String? _tokenizeError;
+  bool _tokenizing = false;
+
+  late final WebViewController _webViewController;
+  Completer<String>? _pendingTokenization;
+  final _pageLoaded = Completer<void>();
+  bool _webViewReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pageLoaded.future.then((_) {
+      if (mounted) setState(() => _webViewReady = true);
+    });
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel('TokenResult', onMessageReceived: _onTokenResult)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) {
+            if (!_pageLoaded.isCompleted) _pageLoaded.complete();
+          },
+          onWebResourceError: (error) {
+            if (error.isForMainFrame == true && !_pageLoaded.isCompleted) {
+              _pageLoaded.completeError(
+                ConektaTokenException(
+                  'No se pudo abrir la pasarela de pago (${error.description}).',
+                ),
+              );
+            }
+          },
+        ),
+      )
+      ..loadFlutterAsset('assets/conekta/tokenizer.html');
+  }
 
   @override
   void dispose() {
@@ -58,9 +89,20 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
     super.dispose();
   }
 
-  /// Limpia campos sensibles (llamado por el padre tras un intento fallido).
-  void clearSensitiveFields() {
-    _cvcController.clear();
+  void _onTokenResult(JavaScriptMessage message) {
+    final completer = _pendingTokenization;
+    if (completer == null || completer.isCompleted) return;
+
+    final data = jsonDecode(message.message) as Map<String, dynamic>;
+    if (data['id'] != null) {
+      completer.complete(data['id'] as String);
+    } else {
+      completer.completeError(
+        ConektaTokenException(
+          data['error'] as String? ?? 'No se pudo procesar la tarjeta',
+        ),
+      );
+    }
   }
 
   bool _luhnValid(String digits) {
@@ -78,7 +120,7 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
     return sum % 10 == 0;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final number = _numberController.text.replaceAll(' ', '');
     final name = _nameController.text.trim();
     final expiry = _expiryController.text.trim();
@@ -89,6 +131,7 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
       _nameError = null;
       _expiryError = null;
       _cvcError = null;
+      _tokenizeError = null;
     });
 
     var valid = true;
@@ -110,8 +153,8 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
       expYear = expiryParts[1];
       final month = int.tryParse(expMonth) ?? 0;
       final year = int.tryParse(expYear) ?? -1;
-      final notExpired = year >= 0 &&
-          DateTime(2000 + year, month + 1).isAfter(DateTime.now());
+      final notExpired =
+          year >= 0 && DateTime(2000 + year, month + 1).isAfter(DateTime.now());
       if (month < 1 || month > 12 || !notExpired) {
         setState(() => _expiryError = 'Fecha inválida o vencida');
         valid = false;
@@ -128,13 +171,56 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
 
     if (!valid) return;
 
-    widget.onSubmit(CardFormData(
-      cardNumber: number,
-      holderName: name,
-      expMonth: expMonth.padLeft(2, '0'),
-      expYear: expYear,
-      cvc: cvc,
-    ));
+    setState(() => _tokenizing = true);
+
+    try {
+      await _pageLoaded.future.timeout(
+        const Duration(seconds: 45),
+        onTimeout: () => throw const ConektaTokenException(
+          'No se pudo cargar la pasarela de pago. Revisa tu conexión e intenta de nuevo.',
+        ),
+      );
+
+      final publicKey = dotenv.env['CONEKTA_PUBLIC_KEY'] ?? '';
+      final completer = Completer<String>();
+      _pendingTokenization = completer;
+
+      await _webViewController.runJavaScript(
+        'tokenize('
+        '${jsonEncode(publicKey)},'
+        '${jsonEncode(number)},'
+        '${jsonEncode(name)},'
+        '${jsonEncode(expMonth.padLeft(2, '0'))},'
+        '${jsonEncode(expYear)},'
+        '${jsonEncode(cvc)}'
+        ')',
+      );
+
+      final tokenId = await completer.future.timeout(
+        const Duration(seconds: 20),
+        onTimeout: () => throw const ConektaTokenException(
+          'La pasarela de pago tardó demasiado en responder. Intenta de nuevo.',
+        ),
+      );
+
+      if (!mounted) return;
+      widget.onSubmit(tokenId);
+    } on ConektaTokenException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _tokenizeError = e.message;
+        _cvcController.clear();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _tokenizeError = 'No se pudo procesar la tarjeta';
+        _cvcController.clear();
+      });
+    } finally {
+      _pendingTokenization = null;
+      if (mounted) setState(() => _tokenizing = false);
+    }
   }
 
   @override
@@ -142,6 +228,7 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final isBusy = widget.isLoading || _tokenizing;
 
     return AppCardContainer(
       child: Column(
@@ -174,6 +261,31 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
               color: colors.onSurface.withValues(alpha: 0.5),
             ),
           ),
+          if (!_webViewReady) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colors.primary.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Preparando pasarela de pago…',
+                    style: textTheme.bodySmall?.copyWith(
+                      fontSize: 11,
+                      color: colors.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           _fieldLabel('Número de tarjeta'),
           TextFormField(
@@ -254,11 +366,24 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
               ),
             ],
           ),
+          if (_tokenizeError != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _tokenizeError!,
+              style: textTheme.bodySmall?.copyWith(color: colors.error),
+            ),
+          ],
           const SizedBox(height: 20),
           PrimaryButtonGreenWidget(
             text: 'Pagar \$${widget.amount.toStringAsFixed(2)}',
-            isLoading: widget.isLoading,
+            isLoading: isBusy,
             onPressed: _submit,
+          ),
+
+          SizedBox(
+            width: 1,
+            height: 1,
+            child: WebViewWidget(controller: _webViewController),
           ),
         ],
       ),
@@ -290,7 +415,11 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
       errorText: errorText,
       isDense: true,
       prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, size: 20, color: colors.onSurface.withValues(alpha: 0.4))
+          ? Icon(
+              prefixIcon,
+              size: 20,
+              color: colors.onSurface.withValues(alpha: 0.4),
+            )
           : null,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -312,7 +441,6 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
   }
 }
 
-/// Agrupa el número en bloques de 4: `4242 4242 4242 4242`
 class _CardNumberInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -333,7 +461,6 @@ class _CardNumberInputFormatter extends TextInputFormatter {
   }
 }
 
-/// Fuerza el formato `MM/AA` mientras se escribe.
 class _ExpiryDateInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

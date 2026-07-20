@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/collections/citizen/di/citizen_collections_module.dart';
 import 'package:treasureflow/features/collections/citizen/domain/entities/collection.dart';
+import 'package:treasureflow/features/collections/citizen/domain/entities/collection_offer_info.dart';
+import 'package:treasureflow/features/collections/citizen/domain/entities/payment.dart';
 import 'package:treasureflow/features/collections/citizen/presentation/providers/citizen_collection_detail_provider.dart';
+import 'package:treasureflow/features/collections/shared/utils/collection_receipt_pdf.dart';
 import 'package:treasureflow/features/collections/shared/widgets/collection_stepper_widget.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
@@ -558,12 +561,39 @@ class _CollectionDetailCitizenScreenState
           ],
         ),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 14),
+      OutlinedButton.icon(
+        onPressed: () => _onShareReceipt(collection, offer, payment),
+        icon: const Icon(Icons.share_outlined, size: 18),
+        label: const Text('Compartir comprobante'),
+      ),
+      const SizedBox(height: 10),
       PrimaryButtonBlueWidget(
         text: 'Volver a mis ventas',
         onPressed: () => context.go('/mySales'),
       ),
     ];
+  }
+
+  Future<void> _onShareReceipt(
+    Collection collection,
+    CollectionOfferInfo offer,
+    Payment? payment,
+  ) async {
+    await shareCollectionReceipt(CollectionReceiptData(
+      collectionId: collection.collectionId,
+      materialTitle: offer.wastePublicationTitle ?? 'Residuo',
+      counterpartLabel: 'Establecimiento',
+      counterpartName: offer.establishmentName ?? 'Establecimiento',
+      actualQuantity: collection.actualQuantity ?? 0,
+      unit: offer.unit,
+      pricePerUnit: offer.pricePerUnit,
+      finalAmount: payment?.grossAmount ?? collection.finalAmount ?? 0,
+      treasureflowFee: payment?.treasureflowFee,
+      netAmount: payment?.receiverNetAmount ?? collection.finalAmount ?? 0,
+      paymentMethodLabel: payment?.method.label,
+      date: payment?.paymentDate ?? DateTime.now(),
+    ));
   }
 
   // ── Cancelada ──────────────────────────────────────────────────────────────

@@ -6,8 +6,6 @@ import 'package:treasureflow/features/collections/local/presentation/providers/l
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 
-/// Voucher de pago OXXO (referencia + código de barras) o SPEI (CLABE),
-/// con indicador del polling que verifica el pago contra Conekta.
 class PaymentVoucherWidget extends StatelessWidget {
   final CreatePaymentResult result;
   final PaymentPollingStatus pollingStatus;
@@ -49,7 +47,9 @@ class PaymentVoucherWidget extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _isCash ? 'Paga en cualquier OXXO' : 'Transfiere por SPEI',
+                      _isCash
+                          ? 'Paga en cualquier OXXO'
+                          : 'Transfiere por SPEI',
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
@@ -61,12 +61,14 @@ class PaymentVoucherWidget extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 _isCash
-                    ? 'Muestra esta referencia en caja y paga el monto exacto.'
-                    : 'Transfiere el monto exacto a esta CLABE desde tu banca.',
+                    ? 'Muestra esta referencia en caja y paga el monto exacto en efectivo.'
+                    : 'Transfiere el monto exacto a esta CLABE desde tu banca en línea o app.',
                 style: textTheme.bodySmall?.copyWith(
                   color: colors.onSurface.withValues(alpha: 0.6),
                 ),
               ),
+              const SizedBox(height: 12),
+              _instructionsList(context),
               const SizedBox(height: 16),
               if (_isCash && result.barcodeUrl != null) ...[
                 ClipRRect(
@@ -84,6 +86,50 @@ class PaymentVoucherWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
+              ],
+              if (!_isCash) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Banco receptor',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colors.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'STP',
+                      style: textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Concepto de pago',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colors.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        'TreasureFlow',
+                        textAlign: TextAlign.right,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
               ],
               if (result.reference != null)
                 Container(
@@ -103,7 +149,7 @@ class PaymentVoucherWidget extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _isCash ? 'Referencia' : 'CLABE',
+                              _isCash ? 'Referencia' : 'CLABE interbancaria',
                               style: textTheme.bodySmall?.copyWith(
                                 fontSize: 11,
                                 color: colors.onSurface.withValues(alpha: 0.5),
@@ -111,7 +157,7 @@ class PaymentVoucherWidget extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              result.reference!,
+                              _formatReference(result.reference!),
                               style: textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.1,
@@ -223,14 +269,16 @@ class PaymentVoucherWidget extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.error_outline_rounded,
-                      size: 18, color: colors.error),
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 18,
+                    color: colors.error,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'El pago fue rechazado o el voucher venció.',
-                      style:
-                          textTheme.bodySmall?.copyWith(color: colors.error),
+                      style: textTheme.bodySmall?.copyWith(color: colors.error),
                     ),
                   ),
                 ],
@@ -274,5 +322,62 @@ class PaymentVoucherWidget extends StatelessWidget {
     final hh = local.hour.toString().padLeft(2, '0');
     final min = local.minute.toString().padLeft(2, '0');
     return '$dd/$mm ${'$hh:$min'}';
+  }
+
+  String _formatReference(String reference) {
+    final buffer = StringBuffer();
+    for (var i = 0; i < reference.length; i++) {
+      if (i > 0 && i % 4 == 0) buffer.write(' ');
+      buffer.write(reference[i]);
+    }
+    return buffer.toString();
+  }
+
+  Widget _instructionsList(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    final steps = _isCash
+        ? const [
+            'Acude a cualquier tienda OXXO.',
+            'Dile al cajero que quieres hacer un pago de servicio con esta referencia.',
+            'Paga en efectivo el monto exacto y conserva tu ticket.',
+          ]
+        : const [
+            'Abre la app o banca en línea de tu banco.',
+            'Registra la CLABE como beneficiario nuevo.',
+            'Transfiere el monto exacto — la confirmación puede tardar unos minutos.',
+          ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final step in steps)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 14,
+                  color: colors.primary.withValues(alpha: 0.7),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    step,
+                    style: textTheme.bodySmall?.copyWith(
+                      fontSize: 11.5,
+                      color: colors.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 }

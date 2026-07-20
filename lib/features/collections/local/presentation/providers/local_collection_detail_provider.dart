@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
-import 'package:treasureflow/features/collections/local/data/datasources/conekta_tokens_remote_datasource.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/collection.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/collection_detail.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/create_payment_result.dart';
@@ -13,17 +12,20 @@ enum LocalDetailStatus { idle, loading, success, error }
 
 enum LocalActionStatus { idle, working, done, error }
 
-enum PaymentPollingStatus { idle, polling, succeeded, failedOrExpired, timedOut }
+enum PaymentPollingStatus {
+  idle,
+  polling,
+  succeeded,
+  failedOrExpired,
+  timedOut,
+}
 
 class LocalCollectionDetailProvider extends ChangeNotifier {
   final LocalCollectionsRepository _repository;
-  final ConektaTokensRemoteDatasource _conektaTokensDatasource;
 
   LocalCollectionDetailProvider({
     required LocalCollectionsRepository repository,
-    required ConektaTokensRemoteDatasource conektaTokensDatasource,
-  })  : _repository = repository,
-        _conektaTokensDatasource = conektaTokensDatasource;
+  }) : _repository = repository;
 
   LocalDetailStatus _status = LocalDetailStatus.idle;
   String? _errorMessage;
@@ -36,7 +38,7 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
   PaymentPollingStatus _pollingStatus = PaymentPollingStatus.idle;
   Timer? _pollingTimer;
   int _pollingAttempts = 0;
-  static const _maxPollingAttempts = 90; // ~6 min a 4s por intento
+  static const _maxPollingAttempts = 90;
 
   Timer? _passiveRefreshTimer;
 
@@ -78,15 +80,12 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     try {
       _detail = await _repository.getCollectionDetail(id);
       _safeNotify();
-    } catch (_) {
-      // no altera el estado visible si falla
-    }
+    } catch (_) {}
   }
 
-  // ── Acciones del ciclo ──────────────────────────────────────────────────────
-
-  Future<bool> registerWeighing(double actualQuantity) =>
-      _runAction(() => _repository.registerWeighing(_collectionId!, actualQuantity));
+  Future<bool> registerWeighing(double actualQuantity) => _runAction(
+    () => _repository.registerWeighing(_collectionId!, actualQuantity),
+  );
 
   Future<bool> cancelCollection() =>
       _runAction(() => _repository.cancelCollection(_collectionId!));
@@ -116,30 +115,13 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     }
   }
 
-  // ── Pago ────────────────────────────────────────────────────────────────────
-
-  /// Pago con tarjeta: tokeniza contra Conekta y luego crea el cargo.
-  Future<bool> payWithCard({
-    required String cardNumber,
-    required String holderName,
-    required String expMonth,
-    required String expYear,
-    required String cvc,
-  }) async {
+  Future<bool> payWithCard({required String tokenId}) async {
     if (_collectionId == null) return false;
     _actionStatus = LocalActionStatus.working;
     _actionError = null;
     _safeNotify();
 
     try {
-      final tokenId = await _conektaTokensDatasource.createCardToken(
-        cardNumber: cardNumber,
-        holderName: holderName,
-        expMonth: expMonth,
-        expYear: expYear,
-        cvc: cvc,
-      );
-
       _paymentResult = await _repository.createPayment(
         _collectionId!,
         method: PaymentMethodType.card,
@@ -150,11 +132,6 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
       await silentReload();
       _safeNotify();
       return true;
-    } on ConektaTokenException catch (e) {
-      _actionError = e.message;
-      _actionStatus = LocalActionStatus.error;
-      _safeNotify();
-      return false;
     } on ApiException catch (e) {
       _actionError = e.message;
       _actionStatus = LocalActionStatus.error;
@@ -169,7 +146,6 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     }
   }
 
-  /// Pago OXXO/SPEI: crea la orden, guarda el voucher y arranca el polling.
   Future<bool> payWithVoucher(PaymentMethodType method) async {
     if (_collectionId == null) return false;
     _actionStatus = LocalActionStatus.working;
@@ -206,8 +182,6 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     _actionError = null;
     _safeNotify();
   }
-
-  // ── Polling del pago (OXXO/SPEI) ───────────────────────────────────────────
 
   void _resumePendingPaymentPollingIfNeeded() {
     final payment = _detail?.payment;
@@ -253,12 +227,9 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
         await silentReload();
         _safeNotify();
       }
-    } catch (_) {
-      // errores transitorios de red no detienen el polling
-    }
+    } catch (_) {}
   }
 
-  /// Verificación manual bajo demanda (tras un timeout).
   Future<void> checkPaymentNow() async {
     final id = _collectionId;
     if (id == null) return;
@@ -269,9 +240,7 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
         await silentReload();
       }
       _safeNotify();
-    } catch (_) {
-      // silencioso
-    }
+    } catch (_) {}
   }
 
   void pausePolling() {
@@ -280,8 +249,12 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
   }
 
   void resumePolling() {
-    if (_pollingStatus == PaymentPollingStatus.polling && _pollingTimer == null) {
-      _pollingTimer = Timer.periodic(const Duration(seconds: 4), (_) => _poll());
+    if (_pollingStatus == PaymentPollingStatus.polling &&
+        _pollingTimer == null) {
+      _pollingTimer = Timer.periodic(
+        const Duration(seconds: 4),
+        (_) => _poll(),
+      );
     }
   }
 
@@ -290,10 +263,6 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     _pollingTimer = null;
   }
 
-  // ── Refresco pasivo (para pantallas de espera) ─────────────────────────────
-
-  /// Recarga el detalle cada [seconds] mientras esté activo — usado por las
-  /// pantallas de "esperando a la contraparte".
   void startPassiveRefresh({int seconds = 5}) {
     if (_passiveRefreshTimer != null) return;
     _passiveRefreshTimer = Timer.periodic(

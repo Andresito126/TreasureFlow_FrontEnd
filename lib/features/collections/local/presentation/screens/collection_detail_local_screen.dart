@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/collections/local/di/local_collections_module.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/collection.dart';
+import 'package:treasureflow/features/collections/local/domain/entities/collection_offer_info.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/payment.dart';
 import 'package:treasureflow/features/collections/local/presentation/widgets/card_payment_form_widget.dart';
 import 'package:treasureflow/features/collections/local/presentation/widgets/payment_voucher_widget.dart';
 import 'package:treasureflow/features/collections/local/presentation/providers/local_collection_detail_provider.dart';
+import 'package:treasureflow/features/collections/shared/utils/collection_receipt_pdf.dart';
 import 'package:treasureflow/features/collections/shared/widgets/collection_stepper_widget.dart';
 import 'package:treasureflow/features/collections/local/presentation/widgets/conekta_method_selector_widget.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
@@ -16,15 +18,10 @@ import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
-/// Detalle de una recolección — vista del ESTABLECIMIENTO.
-/// Pasos: registrar pesaje → espera de confirmación → pagar (Conekta) → completada.
 class CollectionDetailLocalScreen extends StatefulWidget {
   final String collectionId;
 
-  const CollectionDetailLocalScreen({
-    super.key,
-    required this.collectionId,
-  });
+  const CollectionDetailLocalScreen({super.key, required this.collectionId});
 
   @override
   State<CollectionDetailLocalScreen> createState() =>
@@ -106,14 +103,8 @@ class _CollectionDetailLocalScreenState
     }
   }
 
-  Future<void> _onPayWithCard(CardFormData data) async {
-    final ok = await _provider.payWithCard(
-      cardNumber: data.cardNumber,
-      holderName: data.holderName,
-      expMonth: data.expMonth,
-      expYear: data.expYear,
-      cvc: data.cvc,
-    );
+  Future<void> _onPayWithCard(String tokenId) async {
+    final ok = await _provider.payWithCard(tokenId: tokenId);
     if (!mounted) return;
     if (ok) {
       AppToast.show(context, '¡Pago realizado!', type: ToastType.success);
@@ -210,8 +201,8 @@ class _CollectionDetailLocalScreenState
           isCompleted
               ? 'Compra completada'
               : isCancelled
-                  ? 'Recolección cancelada'
-                  : 'Detalle de compra',
+              ? 'Recolección cancelada'
+              : 'Detalle de compra',
         ),
       ),
       body: SafeArea(
@@ -269,8 +260,7 @@ class _CollectionDetailLocalScreenState
     final collection = _provider.detail!.collection;
     return switch (collection.status) {
       CollectionStatus.pendingDelivery ||
-      CollectionStatus.pendingWeighing =>
-        _buildWeighingStep(),
+      CollectionStatus.pendingWeighing => _buildWeighingStep(),
       CollectionStatus.pendingConfirmation => _buildAwaitingStep(),
       CollectionStatus.pendingPayment => _buildPaymentStep(),
       CollectionStatus.completed => _buildCompletedStep(),
@@ -278,7 +268,6 @@ class _CollectionDetailLocalScreenState
     };
   }
 
-  // ── Info del material y el ciudadano ────────────────────────────────────────
   Widget _buildInfoCard() {
     final offer = _provider.detail!.offer;
 
@@ -299,7 +288,6 @@ class _CollectionDetailLocalScreenState
     );
   }
 
-  // ── Paso 1: recepción + pesaje ─────────────────────────────────────────────
   List<Widget> _buildWeighingStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -334,8 +322,9 @@ class _CollectionDetailLocalScreenState
             const SizedBox(height: 8),
             TextFormField(
               controller: _weightController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
               ],
@@ -357,10 +346,7 @@ class _CollectionDetailLocalScreenState
             const SizedBox(height: 12),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: colors.onSurface.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(10),
@@ -406,7 +392,6 @@ class _CollectionDetailLocalScreenState
     ];
   }
 
-  // ── Paso 2: esperando confirmación del ciudadano ────────────────────────────
   List<Widget> _buildAwaitingStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -453,7 +438,6 @@ class _CollectionDetailLocalScreenState
     ];
   }
 
-  // ── Paso 3: pago ────────────────────────────────────────────────────────────
   List<Widget> _buildPaymentStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -463,9 +447,9 @@ class _CollectionDetailLocalScreenState
     final finalAmount = collection.finalAmount ?? 0;
     final isWorking = _provider.actionStatus == LocalActionStatus.working;
 
-    // Si ya hay un voucher generado (OXXO/SPEI), mostrarlo con su polling
     final voucher = _provider.paymentResult;
-    final hasActiveVoucher = voucher != null &&
+    final hasActiveVoucher =
+        voucher != null &&
         voucher.method != PaymentMethodType.card &&
         _provider.pollingStatus != PaymentPollingStatus.idle;
 
@@ -521,9 +505,9 @@ class _CollectionDetailLocalScreenState
         onChanged: isWorking
             ? (_) {}
             : (method) => setState(() {
-                  _selectedMethod = method;
-                  _showCardForm = method == PaymentMethodType.card;
-                }),
+                _selectedMethod = method;
+                _showCardForm = method == PaymentMethodType.card;
+              }),
       ),
       const SizedBox(height: 20),
       if (_showCardForm)
@@ -552,7 +536,6 @@ class _CollectionDetailLocalScreenState
     ];
   }
 
-  // ── Completada ─────────────────────────────────────────────────────────────
   List<Widget> _buildCompletedStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -632,7 +615,13 @@ class _CollectionDetailLocalScreenState
           ],
         ),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 14),
+      OutlinedButton.icon(
+        onPressed: () => _onShareReceipt(collection, offer, payment),
+        icon: const Icon(Icons.share_outlined, size: 18),
+        label: const Text('Compartir comprobante'),
+      ),
+      const SizedBox(height: 10),
       PrimaryButtonBlueWidget(
         text: 'Volver a mis compras',
         onPressed: () => context.go('/myPurchases'),
@@ -640,7 +629,28 @@ class _CollectionDetailLocalScreenState
     ];
   }
 
-  // ── Cancelada ──────────────────────────────────────────────────────────────
+  Future<void> _onShareReceipt(
+    Collection collection,
+    CollectionOfferInfo offer,
+    Payment? payment,
+  ) async {
+    await shareCollectionReceipt(
+      CollectionReceiptData(
+        collectionId: collection.collectionId,
+        materialTitle: offer.wastePublicationTitle ?? 'Residuo',
+        counterpartLabel: 'Ciudadano',
+        counterpartName: offer.citizenName ?? 'Ciudadano',
+        actualQuantity: collection.actualQuantity ?? 0,
+        unit: offer.unit,
+        pricePerUnit: offer.pricePerUnit,
+        finalAmount: payment?.grossAmount ?? collection.finalAmount ?? 0,
+        netAmount: payment?.grossAmount ?? collection.finalAmount ?? 0,
+        paymentMethodLabel: payment?.method.label,
+        date: payment?.paymentDate ?? DateTime.now(),
+      ),
+    );
+  }
+
   List<Widget> _buildCancelledStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -685,7 +695,6 @@ class _CollectionDetailLocalScreenState
     ];
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   Widget _sectionTitle(IconData icon, String title) {
     final theme = Theme.of(context);
     return Row(
