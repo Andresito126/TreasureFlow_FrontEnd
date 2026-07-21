@@ -23,6 +23,7 @@ class RecommendedFeedProvider extends ChangeNotifier {
   RecommendedFeedStatus get status => _status;
   String? get errorMessage => _errorMessage;
   List<RecommendedPost> get posts => List.unmodifiable(_posts);
+  int get total => _total;
   bool get hasMore => _posts.length < _total;
   bool get isLoadingMore => _isLoadingMore;
 
