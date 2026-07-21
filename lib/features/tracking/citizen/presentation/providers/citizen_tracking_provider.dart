@@ -1,20 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:treasureflow/core/network/tracking_socket_client_factory.dart';
+import 'package:treasureflow/features/routes/local/domain/repositories/routes_repository.dart';
 import 'package:treasureflow/features/tracking/citizen/presentation/state/tracking_ui_state.dart';
 
 export 'package:treasureflow/features/tracking/citizen/presentation/state/tracking_ui_state.dart'
     show TrackingConnStatus;
 
 class CitizenTrackingProvider extends ChangeNotifier {
-  final TrackingSocketClientFactory _socketFactory;
+  static const _pollInterval = Duration(seconds: 60);
 
-  CitizenTrackingProvider({required TrackingSocketClientFactory socketFactory})
-    : _socketFactory = socketFactory;
+  final TrackingSocketClientFactory _socketFactory;
+  final RoutesRepository _repository;
+
+  CitizenTrackingProvider({
+    required TrackingSocketClientFactory socketFactory,
+    required RoutesRepository repository,
+  }) : _socketFactory = socketFactory,
+       _repository = repository;
 
   io.Socket? _socket;
   String? _routeId;
+  Timer? _pollTimer;
 
   TrackingConnStatus _status = TrackingConnStatus.idle;
   String? _errorMessage;
@@ -23,6 +33,7 @@ class CitizenTrackingProvider extends ChangeNotifier {
   double? _truckLng;
   double? _selfLat;
   double? _selfLng;
+  bool _driverInactive = false;
 
   TrackingConnStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -32,6 +43,7 @@ class CitizenTrackingProvider extends ChangeNotifier {
   double? get selfLng => _selfLng;
   bool get hasTruck => _truckLat != null && _truckLng != null;
   bool get hasSelf => _selfLat != null && _selfLng != null;
+  bool get driverInactive => _driverInactive;
 
   Future<void> connect(String routeId) async {
     _routeId = routeId;
@@ -40,6 +52,8 @@ class CitizenTrackingProvider extends ChangeNotifier {
     notifyListeners();
 
     await _resolveSelfLocation();
+
+    await _refreshSnapshot();
 
     final socket = await _socketFactory.create();
     _socket = socket;
@@ -58,6 +72,8 @@ class CitizenTrackingProvider extends ChangeNotifier {
         if (lat is num && lng is num) {
           _truckLat = lat.toDouble();
           _truckLng = lng.toDouble();
+
+          _driverInactive = false;
           notifyListeners();
         }
       }
@@ -77,6 +93,23 @@ class CitizenTrackingProvider extends ChangeNotifier {
     });
 
     socket.connect();
+
+    _pollTimer = Timer.periodic(_pollInterval, (_) => _refreshSnapshot());
+  }
+
+  Future<void> _refreshSnapshot() async {
+    try {
+      final info = await _repository.getActiveTrackingInfo();
+      if (info == null || info.routeId != _routeId) return;
+
+      _driverInactive = info.driverInactive;
+
+      if (!hasTruck && info.lastLat != null && info.lastLng != null) {
+        _truckLat = info.lastLat;
+        _truckLng = info.lastLng;
+      }
+      notifyListeners();
+    } catch (_) {}
   }
 
   Future<void> _resolveSelfLocation() async {
@@ -99,6 +132,8 @@ class CitizenTrackingProvider extends ChangeNotifier {
   }
 
   void disconnectSocket() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
     _socket?.dispose();
     _socket = null;
   }

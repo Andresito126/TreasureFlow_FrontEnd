@@ -33,10 +33,16 @@ class FinishedStopTileWidget extends StatelessWidget {
         colors.error,
         Icons.cancel_outlined,
       ),
+
       StopStatus.pending => (
         'Pendiente',
         colors.primary,
         Icons.circle_outlined,
+      ),
+      StopStatus.inProgress => (
+        'En el domicilio',
+        colors.primary,
+        Icons.location_on_rounded,
       ),
     };
 

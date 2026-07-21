@@ -15,6 +15,9 @@ class TodayRouteStop {
   final double longitude;
   final String? addressText;
 
+  final bool paymentCompleted;
+  final String? collectionId;
+
   const TodayRouteStop({
     required this.stopId,
     required this.scheduledPickupId,
@@ -26,9 +29,11 @@ class TodayRouteStop {
     required this.citizenName,
     required this.latitude,
     required this.longitude,
+    required this.paymentCompleted,
     this.estimatedArrival,
     this.citizenPhone,
     this.addressText,
+    this.collectionId,
   });
 
   factory TodayRouteStop.fromJson(Map<String, dynamic> json) {
@@ -48,6 +53,8 @@ class TodayRouteStop {
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       addressText: json['addressText'] as String?,
+      paymentCompleted: json['paymentCompleted'] as bool? ?? false,
+      collectionId: json['collectionId'] as String?,
     );
   }
 }

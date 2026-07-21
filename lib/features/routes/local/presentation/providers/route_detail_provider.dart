@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:treasureflow/core/network/api_client.dart';
+import 'package:treasureflow/features/routes/local/domain/entities/confirmed_pickup.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/today_route.dart';
 import 'package:treasureflow/features/routes/local/domain/policies/route_schedule_policy.dart';
 import 'package:treasureflow/features/routes/local/domain/repositories/routes_repository.dart';
@@ -27,6 +28,7 @@ class RouteDetailProvider extends ChangeNotifier {
   String? _errorMessage;
   TodayRoute? _route;
   String? _date;
+  List<ConfirmedPickup> _confirmedPickups = [];
 
   GenerateRouteStatus _generateStatus = GenerateRouteStatus.idle;
   String? _generateError;
@@ -41,6 +43,8 @@ class RouteDetailProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   TodayRoute? get route => _route;
   String? get date => _date;
+
+  List<ConfirmedPickup> get confirmedPickups => _confirmedPickups;
 
   GenerateRouteStatus get generateStatus => _generateStatus;
   String? get generateError => _generateError;
@@ -65,6 +69,10 @@ class RouteDetailProvider extends ChangeNotifier {
 
     try {
       _route = await _repository.getRouteForDate(date);
+
+      _confirmedPickups = _route == null
+          ? await _repository.getConfirmedPickupsForDay(date)
+          : [];
       _status = RouteDetailStatus.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -104,6 +112,12 @@ class RouteDetailProvider extends ChangeNotifier {
       await load(_date!);
       return true;
     } on ApiException catch (e) {
+      if (e.error == 'RouteAlreadyExistsException') {
+        _generateStatus = GenerateRouteStatus.idle;
+        notifyListeners();
+        await load(_date!);
+        return true;
+      }
       _generateError = e.message;
       _generateStatus = GenerateRouteStatus.error;
       notifyListeners();
@@ -189,6 +203,39 @@ class RouteDetailProvider extends ChangeNotifier {
       return false;
     } catch (_) {
       _stopActionError = 'Ocurrió un error inesperado al iniciar el recorrido';
+      _stopActionStatus = StopActionStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> arriveAtStop(String stopId) async {
+    final route = _route;
+    if (route == null) return false;
+    _stopActionStatus = StopActionStatus.working;
+    _stopActionError = null;
+    notifyListeners();
+
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      await _repository.arriveStop(
+        routeId: route.routeId,
+        stopId: stopId,
+        lat: position.latitude,
+        lng: position.longitude,
+      );
+      _stopActionStatus = StopActionStatus.idle;
+      notifyListeners();
+      if (_date != null) await load(_date!);
+      return true;
+    } on ApiException catch (e) {
+      _stopActionError = e.message;
+      _stopActionStatus = StopActionStatus.error;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _stopActionError =
+          'No se pudo confirmar tu llegada (revisa tu ubicación)';
       _stopActionStatus = StopActionStatus.error;
       notifyListeners();
       return false;

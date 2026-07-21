@@ -4,6 +4,7 @@ import 'package:treasureflow/features/tracking/citizen/presentation/state/tracki
 class TrackingStatusBarWidget extends StatelessWidget {
   final TrackingConnStatus status;
   final bool hasTruck;
+  final bool driverInactive;
   final String etaText;
   final String? errorMessage;
 
@@ -11,6 +12,7 @@ class TrackingStatusBarWidget extends StatelessWidget {
     super.key,
     required this.status,
     required this.hasTruck,
+    required this.driverInactive,
     required this.etaText,
     this.errorMessage,
   });
@@ -20,6 +22,37 @@ class TrackingStatusBarWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+
+    if (status == TrackingConnStatus.connected && hasTruck && driverInactive) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colors.tertiary.withValues(alpha: 0.12),
+          border: Border(
+            top: BorderSide(color: colors.onSurface.withValues(alpha: 0.08)),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.signal_wifi_bad_rounded,
+              size: 20,
+              color: colors.tertiary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Sin señal reciente del conductor. La posición mostrada es la última conocida.',
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     final (icon, text) = switch (status) {
       TrackingConnStatus.connected => (

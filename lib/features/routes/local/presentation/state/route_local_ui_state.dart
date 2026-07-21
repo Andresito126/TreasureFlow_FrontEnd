@@ -12,4 +12,10 @@ enum StopActionStatus { idle, working, error }
 
 enum RouteSummaryStatus { idle, loading, success, error }
 
-enum BroadcastStatus { idle, resolvingLocation, permissionDenied, broadcasting }
+enum BroadcastStatus {
+  idle,
+  resolvingLocation,
+  permissionDenied,
+  broadcasting,
+  routeClosed,
+}

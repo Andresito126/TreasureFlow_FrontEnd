@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:treasureflow/features/routes/local/domain/entities/confirmed_pickup.dart';
 import 'package:treasureflow/features/routes/local/presentation/utils/route_map_utils.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/confirmed_pickup_tile_widget.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
@@ -7,6 +9,8 @@ class RouteGenerateView extends StatelessWidget {
   final String date;
   final bool canGenerateToday;
   final bool isBusy;
+  final List<ConfirmedPickup> pickups;
+  final void Function(ConfirmedPickup pickup) onPickupTap;
   final VoidCallback onUseCurrentLocation;
   final VoidCallback onPickOnMap;
 
@@ -15,6 +19,8 @@ class RouteGenerateView extends StatelessWidget {
     required this.date,
     required this.canGenerateToday,
     required this.isBusy,
+    required this.pickups,
+    required this.onPickupTap,
     required this.onUseCurrentLocation,
     required this.onPickOnMap,
   });
@@ -73,6 +79,38 @@ class RouteGenerateView extends StatelessWidget {
               icon: const Icon(Icons.map_outlined, size: 18),
               label: const Text('Elegir ubicación en el mapa'),
             ),
+          ],
+          if (pickups.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Icon(Icons.checklist_rounded, size: 18, color: colors.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Recolecciones confirmadas (${pickups.length})',
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Toca una para moverla a otro día si hace falta.',
+              style: textTheme.bodySmall?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final pickup in pickups)
+              ConfirmedPickupTileWidget(
+                citizenName: pickup.citizenName,
+                addressLabel: pickup.addressText ?? 'Sin dirección',
+                onTap: () => onPickupTap(pickup),
+              ),
           ],
         ],
       ),

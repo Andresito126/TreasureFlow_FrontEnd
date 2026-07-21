@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/routes/local/di/routes_module.dart';
+import 'package:treasureflow/features/routes/local/domain/entities/route_status.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/route_summary.dart';
 import 'package:treasureflow/features/routes/local/presentation/providers/route_summary_provider.dart';
 import 'package:treasureflow/features/routes/local/presentation/widgets/route_summary_stat_card_widget.dart';
@@ -134,6 +135,7 @@ class _RouteSummaryScreenState extends State<RouteSummaryScreen> {
     TextTheme textTheme,
   ) {
     final km = (summary.totalDistanceMeters / 1000).toStringAsFixed(1);
+    final abandoned = summary.status == RouteExecutionStatus.abandoned;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -146,11 +148,19 @@ class _RouteSummaryScreenState extends State<RouteSummaryScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.flag_rounded, size: 20, color: colors.primary),
+                    Icon(
+                      abandoned
+                          ? Icons.warning_amber_rounded
+                          : Icons.flag_rounded,
+                      size: 20,
+                      color: abandoned ? colors.tertiary : colors.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Recorrido finalizado',
+                        abandoned
+                            ? 'Recorrido cerrado automáticamente'
+                            : 'Recorrido finalizado',
                         style: textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -160,7 +170,9 @@ class _RouteSummaryScreenState extends State<RouteSummaryScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Distancia total recorrida: $km km',
+                  abandoned
+                      ? 'No hubo señal del conductor por un tiempo prolongado. Distancia recorrida hasta el cierre: $km km.'
+                      : 'Distancia total recorrida: $km km',
                   style: textTheme.bodySmall?.copyWith(
                     color: colors.onSurface.withValues(alpha: 0.6),
                   ),

@@ -1,4 +1,6 @@
 import 'package:treasureflow/features/routes/local/data/datasources/routes_remote_datasource.dart';
+import 'package:treasureflow/features/routes/local/domain/entities/active_tracking_info.dart';
+import 'package:treasureflow/features/routes/local/domain/entities/confirmed_pickup.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/route_generated_result.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/route_summary.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/today_route.dart';
@@ -28,6 +30,10 @@ class RoutesRepositoryImpl implements RoutesRepository {
   @override
   Future<TodayRoute?> getRouteForDate(String date) =>
       _datasource.getRouteForDate(date);
+
+  @override
+  Future<List<ConfirmedPickup>> getConfirmedPickupsForDay(String date) =>
+      _datasource.getConfirmedPickupsForDay(date);
 
   @override
   Future<void> reschedulePickup({
@@ -62,6 +68,26 @@ class RoutesRepositoryImpl implements RoutesRepository {
       _datasource.getRouteSummary(routeId);
 
   @override
-  Future<String?> getActiveTrackingRouteId() =>
-      _datasource.getActiveTrackingRouteId();
+  Future<ActiveTrackingInfo?> getActiveTrackingInfo() =>
+      _datasource.getActiveTrackingInfo();
+
+  @override
+  Future<void> sendHeartbeat({
+    required String routeId,
+    required double lat,
+    required double lng,
+  }) => _datasource.sendHeartbeat(routeId: routeId, lat: lat, lng: lng);
+
+  @override
+  Future<void> arriveStop({
+    required String routeId,
+    required String stopId,
+    required double lat,
+    required double lng,
+  }) => _datasource.arriveStop(
+    routeId: routeId,
+    stopId: stopId,
+    lat: lat,
+    lng: lng,
+  );
 }

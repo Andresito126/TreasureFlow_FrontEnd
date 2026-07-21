@@ -56,13 +56,18 @@ class _CollectionDetailCitizenScreenState
   void _onProviderChanged() {
     if (!mounted) return;
 
-    // Refresco pasivo mientras se espera a la contraparte
     final status = _provider.detail?.collection.status;
     if (status == CollectionStatus.pendingDelivery ||
         status == CollectionStatus.pendingPayment) {
       _provider.startPassiveRefresh();
     } else {
       _provider.stopPassiveRefresh();
+    }
+
+    if (status == CollectionStatus.pendingDelivery) {
+      _trackingEntry.startPassiveRefresh();
+    } else {
+      _trackingEntry.stopPassiveRefresh();
     }
 
     setState(() {});
@@ -219,7 +224,6 @@ class _CollectionDetailCitizenScreenState
     };
   }
 
-  // ── Sección informativa (residuo + establecimiento + oferta) ────────────────
   Widget _buildInfoCard() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -293,7 +297,6 @@ class _CollectionDetailCitizenScreenState
     );
   }
 
-  // ── Paso 1: esperando pesaje ────────────────────────────────────────────────
   List<Widget> _buildWeighingWaitStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -402,7 +405,6 @@ class _CollectionDetailCitizenScreenState
     );
   }
 
-  // ── Paso 2: revisar y confirmar monto ───────────────────────────────────────
   List<Widget> _buildAmountReviewStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -493,7 +495,6 @@ class _CollectionDetailCitizenScreenState
     ];
   }
 
-  // ── Paso 3: esperando el pago ───────────────────────────────────────────────
   List<Widget> _buildPaymentWaitStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -539,7 +540,6 @@ class _CollectionDetailCitizenScreenState
     ];
   }
 
-  // ── Completada ─────────────────────────────────────────────────────────────
   List<Widget> _buildCompletedStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -659,7 +659,6 @@ class _CollectionDetailCitizenScreenState
     );
   }
 
-  // ── Cancelada ──────────────────────────────────────────────────────────────
   List<Widget> _buildCancelledStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -704,7 +703,6 @@ class _CollectionDetailCitizenScreenState
     ];
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   Widget _sectionTitle(IconData icon, String title) {
     final theme = Theme.of(context);
     return Row(

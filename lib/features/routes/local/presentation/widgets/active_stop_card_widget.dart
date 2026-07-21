@@ -6,11 +6,16 @@ class ActiveStopCardWidget extends StatelessWidget {
   final String addressLabel;
   final String? etaLabel;
   final bool hasPhone;
+  final bool isArrived;
+  final bool paymentCompleted;
+  final bool hasSale;
   final bool busy;
   final VoidCallback? onCall;
   final VoidCallback onOpenMaps;
+  final VoidCallback onArrive;
   final VoidCallback onComplete;
   final VoidCallback onPostpone;
+  final VoidCallback? onViewSale;
 
   const ActiveStopCardWidget({
     super.key,
@@ -18,12 +23,17 @@ class ActiveStopCardWidget extends StatelessWidget {
     required this.citizenName,
     required this.addressLabel,
     required this.hasPhone,
+    required this.isArrived,
+    required this.paymentCompleted,
+    required this.hasSale,
     required this.busy,
     required this.onOpenMaps,
+    required this.onArrive,
     required this.onComplete,
     required this.onPostpone,
     this.etaLabel,
     this.onCall,
+    this.onViewSale,
   });
 
   @override
@@ -98,6 +108,74 @@ class ActiveStopCardWidget extends StatelessWidget {
               ],
             ],
           ),
+          if (isArrived) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 13,
+                        color: colors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'En el domicilio',
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!paymentCompleted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.tertiary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.payments_outlined,
+                          size: 13,
+                          color: colors.tertiary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Pendiente de pago',
+                          style: textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: colors.tertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [
@@ -110,34 +188,56 @@ class ActiveStopCardWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: busy ? null : onOpenMaps,
-                  icon: const Icon(Icons.navigation_outlined, size: 16),
-                  label: const Text('Maps'),
-                ),
+                child: isArrived
+                    ? OutlinedButton.icon(
+                        onPressed: busy ? null : onPostpone,
+                        icon: const Icon(Icons.schedule_rounded, size: 16),
+                        label: const Text('Posponer'),
+                      )
+                    : OutlinedButton.icon(
+                        onPressed: busy ? null : onOpenMaps,
+                        icon: const Icon(Icons.navigation_outlined, size: 16),
+                        label: const Text('Maps'),
+                      ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: busy ? null : onPostpone,
-                  icon: const Icon(Icons.schedule_rounded, size: 16),
-                  label: const Text('Posponer'),
+          if (isArrived)
+            SizedBox(
+              width: double.infinity,
+              child: paymentCompleted
+                  ? FilledButton.icon(
+                      onPressed: busy ? null : onComplete,
+                      icon: const Icon(Icons.check_rounded, size: 16),
+                      label: const Text('Completar'),
+                    )
+                  : OutlinedButton.icon(
+                      onPressed: (busy || !hasSale) ? null : onViewSale,
+                      icon: const Icon(Icons.point_of_sale_rounded, size: 16),
+                      label: const Text('Ver venta'),
+                    ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: busy ? null : onPostpone,
+                    icon: const Icon(Icons.schedule_rounded, size: 16),
+                    label: const Text('Posponer'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: busy ? null : onComplete,
-                  icon: const Icon(Icons.check_rounded, size: 16),
-                  label: const Text('Completar'),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: busy ? null : onArrive,
+                    icon: const Icon(Icons.pin_drop_rounded, size: 16),
+                    label: const Text('Llegué'),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );

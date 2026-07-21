@@ -6,6 +6,7 @@ class TrackingMapView extends StatelessWidget {
   final double? truckLng;
   final double? selfLat;
   final double? selfLng;
+  final bool driverInactive;
   final BitmapDescriptor? truckIcon;
   final void Function(GoogleMapController controller) onMapCreated;
 
@@ -17,6 +18,7 @@ class TrackingMapView extends StatelessWidget {
     required this.truckLng,
     required this.selfLat,
     required this.selfLng,
+    required this.driverInactive,
     required this.truckIcon,
     required this.onMapCreated,
   });
@@ -51,9 +53,17 @@ class TrackingMapView extends StatelessWidget {
           position: LatLng(truckLat!, truckLng!),
           icon:
               truckIcon ??
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+              BitmapDescriptor.defaultMarkerWithHue(
+                driverInactive
+                    ? BitmapDescriptor.hueOrange
+                    : BitmapDescriptor.hueGreen,
+              ),
+          alpha: driverInactive ? 0.55 : 1.0,
           anchor: const Offset(0.5, 0.5),
-          infoWindow: const InfoWindow(title: 'Recolector'),
+          infoWindow: InfoWindow(
+            title: 'Recolector',
+            snippet: driverInactive ? 'Última posición conocida' : null,
+          ),
         ),
     };
   }

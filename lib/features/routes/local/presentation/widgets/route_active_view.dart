@@ -11,24 +11,26 @@ class RouteActiveView extends StatelessWidget {
   final TodayRoute route;
   final double selfLat;
   final double selfLng;
-  final bool socketConnected;
   final bool busy;
   final void Function(TodayRouteStop stop) onCall;
   final void Function(TodayRouteStop stop) onOpenMaps;
+  final void Function(TodayRouteStop stop) onArrive;
   final void Function(TodayRouteStop stop) onComplete;
   final void Function(TodayRouteStop stop) onPostpone;
+  final void Function(TodayRouteStop stop) onViewSale;
 
   const RouteActiveView({
     super.key,
     required this.route,
     required this.selfLat,
     required this.selfLng,
-    required this.socketConnected,
     required this.busy,
     required this.onCall,
     required this.onOpenMaps,
+    required this.onArrive,
     required this.onComplete,
     required this.onPostpone,
+    required this.onViewSale,
   });
 
   @override
@@ -73,18 +75,14 @@ class RouteActiveView extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(
-                        socketConnected
-                            ? Icons.podcasts_rounded
-                            : Icons.wifi_off_rounded,
+                        Icons.podcasts_rounded,
                         size: 16,
                         color: colors.primary,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          socketConnected
-                              ? 'Transmitiendo tu ubicación en vivo'
-                              : 'Conectando la transmisión…',
+                          'Transmitiendo tu ubicación en vivo',
                           style: textTheme.bodySmall?.copyWith(
                             color: colors.onSurface.withValues(alpha: 0.7),
                           ),
@@ -100,20 +98,27 @@ class RouteActiveView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 for (final stop in stops)
-                  if (stop.status.isPending)
+                  if (stop.status.isActionable)
                     ActiveStopCardWidget(
                       order: stop.stopOrder,
                       citizenName: stop.citizenName,
                       addressLabel: stop.addressText ?? 'Sin dirección',
                       etaLabel: RouteMapUtils.formatEta(stop.estimatedArrival),
                       hasPhone: stop.citizenPhone != null,
+                      isArrived: stop.status.isArrived,
+                      paymentCompleted: stop.paymentCompleted,
+                      hasSale: stop.collectionId != null,
                       busy: busy,
                       onCall: stop.citizenPhone != null
                           ? () => onCall(stop)
                           : null,
                       onOpenMaps: () => onOpenMaps(stop),
+                      onArrive: () => onArrive(stop),
                       onComplete: () => onComplete(stop),
                       onPostpone: () => onPostpone(stop),
+                      onViewSale: stop.collectionId != null
+                          ? () => onViewSale(stop)
+                          : null,
                     )
                   else
                     FinishedStopTileWidget(

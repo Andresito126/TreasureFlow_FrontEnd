@@ -1,7 +1,9 @@
 enum RouteExecutionStatus {
   draft,
   active,
-  completed;
+  completed,
+
+  abandoned;
 
   static RouteExecutionStatus fromApi(String? raw) {
     switch (raw) {
@@ -9,6 +11,8 @@ enum RouteExecutionStatus {
         return RouteExecutionStatus.active;
       case 'completed':
         return RouteExecutionStatus.completed;
+      case 'abandoned':
+        return RouteExecutionStatus.abandoned;
       case 'draft':
       default:
         return RouteExecutionStatus.draft;
@@ -18,12 +22,16 @@ enum RouteExecutionStatus {
 
 enum StopStatus {
   pending,
+
+  inProgress,
   completed,
   postponed,
   cancelled;
 
   static StopStatus fromApi(String? raw) {
     switch (raw) {
+      case 'in_progress':
+        return StopStatus.inProgress;
       case 'completed':
         return StopStatus.completed;
       case 'postponed':
@@ -37,4 +45,9 @@ enum StopStatus {
   }
 
   bool get isPending => this == StopStatus.pending;
+
+  bool get isActionable =>
+      this == StopStatus.pending || this == StopStatus.inProgress;
+
+  bool get isArrived => this == StopStatus.inProgress;
 }

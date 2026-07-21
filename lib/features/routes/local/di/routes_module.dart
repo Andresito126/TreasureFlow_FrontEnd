@@ -1,4 +1,5 @@
 import 'package:treasureflow/core/di/app_container.dart';
+import 'package:treasureflow/features/routes/local/presentation/providers/route_broadcast_provider.dart';
 import 'package:treasureflow/features/routes/local/presentation/providers/route_detail_provider.dart';
 import 'package:treasureflow/features/routes/local/presentation/providers/route_summary_provider.dart';
 import 'package:treasureflow/features/routes/local/presentation/providers/weekly_planning_provider.dart';
@@ -18,5 +19,9 @@ class RoutesModule {
 
   RouteSummaryProvider provideRouteSummaryProvider() {
     return RouteSummaryProvider(repository: _appContainer.routesRepository);
+  }
+
+  RouteBroadcastProvider provideRouteBroadcastProvider() {
+    return RouteBroadcastProvider(repository: _appContainer.routesRepository);
   }
 }

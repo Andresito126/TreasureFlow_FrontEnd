@@ -162,6 +162,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
             truckLng: _provider.truckLng,
             selfLat: _provider.selfLat,
             selfLng: _provider.selfLng,
+            driverInactive: _provider.driverInactive,
             truckIcon: _truckIcon,
             onMapCreated: (controller) => _mapController = controller,
           ),
@@ -169,6 +170,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
         TrackingStatusBarWidget(
           status: _provider.status,
           hasTruck: _provider.hasTruck,
+          driverInactive: _provider.driverInactive,
           etaText: _etaText,
           errorMessage: _provider.errorMessage,
         ),

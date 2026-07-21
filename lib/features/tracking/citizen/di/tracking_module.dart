@@ -10,6 +10,7 @@ class TrackingModule {
   CitizenTrackingProvider provideCitizenTrackingProvider() {
     return CitizenTrackingProvider(
       socketFactory: _appContainer.trackingSocketClientFactory,
+      repository: _appContainer.routesRepository,
     );
   }
 
