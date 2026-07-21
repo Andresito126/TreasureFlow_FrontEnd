@@ -1,5 +1,5 @@
 import 'package:treasureflow/features/feed/domain/repositories/feed_repository.dart';
-import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
+import 'package:treasureflow/features/profile/citizen/domain/entities/post_summary.dart';
 
 class GetFeedPostsUseCase {
   final FeedRepository _repository;

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/feed/domain/usecases/get_feed_posts_usecase.dart';
-import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
+import 'package:treasureflow/features/profile/citizen/domain/entities/post_summary.dart';
 
 enum FeedStatus { idle, loading, success, error }
 
@@ -9,7 +9,7 @@ class FeedProvider extends ChangeNotifier {
   final GetFeedPostsUseCase _getFeedPostsUseCase;
 
   FeedProvider({required GetFeedPostsUseCase getFeedPostsUseCase})
-      : _getFeedPostsUseCase = getFeedPostsUseCase;
+    : _getFeedPostsUseCase = getFeedPostsUseCase;
 
   FeedStatus _status = FeedStatus.idle;
   String? _errorMessage;

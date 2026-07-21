@@ -1,7 +1,8 @@
 import 'package:treasureflow/features/profile/citizen/domain/entities/post_summary.dart';
 
-abstract class FeedRepository {
-  Future<PaginatedPosts> getFeedPosts({
+abstract class MyPostsRepository {
+  Future<PaginatedPosts> getMyPosts({
+    required String filter,
     int limit = 10,
     String? cursor,
   });

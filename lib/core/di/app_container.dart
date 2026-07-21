@@ -34,9 +34,12 @@ import 'package:treasureflow/features/feed/domain/repositories/feed_repository.d
 import 'package:treasureflow/features/posts/waste/data/datasources/waste_post_remote_datasource.dart';
 import 'package:treasureflow/features/posts/waste/data/repositories/waste_post_repository_impl.dart';
 import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post_repository.dart';
-import 'package:treasureflow/features/profile/data/datasources/my_posts_remote_datasource.dart';
-import 'package:treasureflow/features/profile/data/repositories/my_posts_repository_impl.dart';
-import 'package:treasureflow/features/profile/domain/repositories/my_posts_repository.dart';
+import 'package:treasureflow/features/profile/citizen/data/datasources/my_posts_remote_datasource.dart';
+import 'package:treasureflow/features/profile/citizen/data/repositories/my_posts_repository_impl.dart';
+import 'package:treasureflow/features/profile/citizen/domain/repositories/my_posts_repository.dart';
+import 'package:treasureflow/features/profile/local/data/datasources/local_profile_remote_datasource.dart';
+import 'package:treasureflow/features/profile/local/data/repositories/local_profile_repository_impl.dart';
+import 'package:treasureflow/features/profile/local/domain/repositories/local_profile_repository.dart';
 import 'package:treasureflow/features/routes/local/data/datasources/routes_remote_datasource.dart';
 import 'package:treasureflow/features/routes/local/data/repositories/routes_repository_impl.dart';
 import 'package:treasureflow/features/routes/local/domain/repositories/routes_repository.dart';
@@ -57,6 +60,7 @@ class AppContainer {
   late final LocalAuthRepository localAuthRepository;
   late final WastePostRepository wastePostRepository;
   late final MyPostsRepository myPostsRepository;
+  late final LocalProfileRepository localProfileRepository;
   late final FeedRepository feedRepository;
   late final NotificationService notificationService;
   late final DeviceTokenRepository deviceTokenRepository;
@@ -101,6 +105,9 @@ class AppContainer {
 
     final myPostsDatasource = MyPostsRemoteDatasource(apiClient);
     myPostsRepository = MyPostsRepositoryImpl(myPostsDatasource);
+
+    final localProfileDatasource = LocalProfileRemoteDatasource(apiClient);
+    localProfileRepository = LocalProfileRepositoryImpl(localProfileDatasource);
 
     final feedDatasource = FeedRemoteDatasource(apiClient);
     feedRepository = FeedRepositoryImpl(feedDatasource);

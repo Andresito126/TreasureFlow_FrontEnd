@@ -37,10 +37,10 @@ class FloatingNavBarWidget extends StatelessWidget {
           label: 'Ventas',
           route: '/mySales',
         ),
-      const _NavItem(
+      _NavItem(
         icon: Icons.person_rounded,
         label: 'Perfil',
-        route: '/profile',
+        route: isEstablishment ? '/profileLocal' : '/profile',
       ),
     ];
   }

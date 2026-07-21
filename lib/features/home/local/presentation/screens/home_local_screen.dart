@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:treasureflow/features/home/local/domain/entities/local_home_feed_item.dart';
+import 'package:treasureflow/features/home/local/presentation/providers/local_home_feed_provider.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/accepted_offer_card_widget.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/local_action_card_widget.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/review_card_widget.dart';
@@ -16,10 +19,19 @@ class HomeLocalScreen extends StatefulWidget {
 
 class _HomeLocalScreenState extends State<HomeLocalScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LocalHomeFeedProvider>().load();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final feed = context.watch<LocalHomeFeedProvider>();
 
     return Scaffold(
       body: SafeArea(
@@ -41,20 +53,12 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
 
                   _buildSectionHeader(
                     'Solicitudes nuevas',
-                    '1',
+                    '${feed.total}',
                     colors,
                     textTheme,
                   ),
                   const SizedBox(height: 12),
-                  const SolicitudCardWidget(
-                    title: '50 botellas PET',
-                    date: '2 Jun 2026',
-                    views: '52',
-                    offersCount: '5 ofertas',
-                    address:
-                        'Olivo Sur 503-315, Patria Nueva, 29045 Tuxtla Gutiérrez, Chis.',
-                    actionLabel: 'Ofertar residuos',
-                  ),
+                  _buildFeedSection(feed, colors, textTheme),
                   const SizedBox(height: 24),
 
                   _buildSectionHeader(
@@ -98,6 +102,62 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFeedSection(
+    LocalHomeFeedProvider feed,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    if (feed.status == LocalHomeFeedStatus.loading || feed.status == LocalHomeFeedStatus.idle) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (feed.status == LocalHomeFeedStatus.error) {
+      return Text(
+        feed.errorMessage ?? 'No se pudo cargar el feed',
+        style: textTheme.bodySmall?.copyWith(color: colors.error),
+      );
+    }
+
+    if (feed.items.isEmpty) {
+      return Text(
+        'No hay solicitudes nuevas cerca de ti',
+        style: textTheme.bodySmall?.copyWith(
+          color: colors.onSurface.withValues(alpha: 0.6),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (final item in feed.items) ...[
+          _solicitudCard(item, colors, textTheme),
+          if (item != feed.items.last) const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+
+  Widget _solicitudCard(
+    LocalHomeFeedItem item,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    return SolicitudCardWidget(
+      title: item.materialTypeName,
+      date: item.publishedAt,
+      distanceLabel: '${item.distanceMeters} m',
+      publisherName: item.citizenName,
+      address: item.description ?? 'Sin descripción',
+      status: item.isFeatured ? 'Destacada' : 'Nueva',
+      actionLabel: 'Ofertar residuos',
+      onTap: () => context.push('/wasteDetailLocal/${item.id}'),
+      onAction: () => context.push('/wasteDetailLocal/${item.id}'),
     );
   }
 

@@ -16,10 +16,12 @@ import 'package:treasureflow/features/feed/di/feed_module.dart';
 import 'package:treasureflow/features/feed/presentation/providers/feed_provider.dart';
 import 'package:treasureflow/features/home/citizen/di/citizen_home_module.dart';
 import 'package:treasureflow/features/home/citizen/presentation/providers/citizen_home_provider.dart';
+import 'package:treasureflow/features/home/local/di/local_home_module.dart';
+import 'package:treasureflow/features/home/local/presentation/providers/local_home_feed_provider.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/create_waste_provider.dart';
-import 'package:treasureflow/features/profile/di/profile_module.dart';
-import 'package:treasureflow/features/profile/presentation/providers/profile_posts_provider.dart';
+import 'package:treasureflow/features/profile/citizen/di/profile_module.dart';
+import 'package:treasureflow/features/profile/citizen/presentation/providers/profile_posts_provider.dart';
 import 'package:treasureflow/shared/theme/dark_theme.dart';
 import 'package:treasureflow/shared/theme/light_theme.dart';
 
@@ -81,6 +83,9 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider<CitizenHomeProvider>(
           create: (_) => CitizenHomeModule(widget.container).provideProvider(),
+        ),
+        ChangeNotifierProvider<LocalHomeFeedProvider>(
+          create: (_) => LocalHomeModule(widget.container).provideProvider(),
         ),
       ],
       child: MaterialApp.router(
