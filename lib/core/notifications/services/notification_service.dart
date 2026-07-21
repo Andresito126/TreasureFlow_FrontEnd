@@ -89,17 +89,13 @@ class NotificationService {
 
   void _onLocalNotificationTap(NotificationResponse response) {
     final raw = response.payload;
-    debugPrint('[notif] tap — raw: $raw');
     if (raw == null || raw.isEmpty) return;
 
     try {
       final data = json.decode(raw) as Map<String, dynamic>;
       final payload = NotificationPayload.fromMap(data);
-      debugPrint('[notif] tap — screenRoute: ${payload.screenRoute} router: ${_router == null ? "NULL" : "OK"}');
-      _navigate(payload.screenRoute);
-    } catch (e) {
-      debugPrint('[notif] tap — ERROR: $e');
-    }
+      _navigate(payload);
+    } catch (_) {}
   }
 
   // ── FCM handlers ──────────────────────────────────────────────────────────
@@ -118,7 +114,7 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       if (message.data.isEmpty) return;
       final payload = NotificationPayload.fromMap(message.data);
-      _navigate(payload.screenRoute);
+      _navigate(payload);
     });
   }
 
@@ -132,7 +128,7 @@ class NotificationService {
 
     // Defer navigation until after the first frame so the router is ready.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navigate(payload.screenRoute);
+      _navigate(payload);
     });
   }
 
@@ -161,10 +157,13 @@ class NotificationService {
 
   // ── Navigation ───────────────────────────────────────────────────────────
 
-  void _navigate(String route) {
-    debugPrint('[notif] _navigate → "$route" (router ${_router == null ? "NULL" : "OK"})');
+  void _navigate(NotificationPayload payload) {
+    final route = payload.screenRoute;
     if (route.isEmpty) return;
-    _router?.go(route);
+    // Se pasa el payload completo como `extra`: las pantallas abiertas por push
+    // (p. ej. /tracking, /route-summary, /pickup-detail) leen el id de la ruta
+    // o parada desde `metadata`, ya que screenRoute nunca lleva path params.
+    _router?.go(route, extra: payload);
   }
 
   // ── Utilities ────────────────────────────────────────────────────────────

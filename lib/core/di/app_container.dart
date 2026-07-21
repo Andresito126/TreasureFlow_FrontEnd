@@ -6,6 +6,7 @@ import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/core/network/main_api_client_factory.dart';
 import 'package:treasureflow/core/network/payments_api_client_factory.dart';
 import 'package:treasureflow/core/network/routes_api_client_factory.dart';
+import 'package:treasureflow/core/network/tracking_socket_client_factory.dart';
 import 'package:treasureflow/core/notifications/data/datasources/device_token_remote_datasource.dart';
 import 'package:treasureflow/core/notifications/data/repositories/device_token_repository_impl.dart';
 import 'package:treasureflow/core/notifications/domain/repositories/device_token_repository.dart';
@@ -49,6 +50,7 @@ class AppContainer {
   late final CitizenCollectionsRepository citizenCollectionsRepository;
   late final LocalCollectionsRepository localCollectionsRepository;
   late final RoutesRepository routesRepository;
+  late final TrackingSocketClientFactory trackingSocketClientFactory;
   late final AuthRepository authRepository;
   late final MediaRepository mediaRepository;
   late final CitizenAuthRepository citizenAuthRepository;
@@ -75,7 +77,6 @@ class AppContainer {
 
     
     apiClient = MainApiClientFactory.create(tokenStorage);
-    
     collectionsApiClient = PaymentsApiClientFactory.create(tokenStorage);
     routesApiClient = RoutesApiClientFactory.create(
       tokenStorage: tokenStorage,
@@ -118,5 +119,6 @@ class AppContainer {
     // tf_backend_routes 
     final routesDatasource = RoutesRemoteDatasource(routesApiClient);
     routesRepository = RoutesRepositoryImpl(routesDatasource);
+    trackingSocketClientFactory = TrackingSocketClientFactory(userStorage);
   }
 }

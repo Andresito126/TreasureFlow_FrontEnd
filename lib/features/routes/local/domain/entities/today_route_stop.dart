@@ -1,8 +1,10 @@
+import 'package:treasureflow/features/routes/local/domain/entities/route_status.dart';
+
 class TodayRouteStop {
   final String stopId;
   final String scheduledPickupId;
   final int stopOrder;
-  final String status;
+  final StopStatus status;
   final DateTime? estimatedArrival;
   final int distanceFromPrevMeters;
   final int durationFromPrevSeconds;
@@ -34,13 +36,12 @@ class TodayRouteStop {
       stopId: json['stopId'] as String,
       scheduledPickupId: json['scheduledPickupId'] as String,
       stopOrder: (json['stopOrder'] as num).toInt(),
-      status: json['status'] as String,
+      status: StopStatus.fromApi(json['status'] as String?),
       estimatedArrival: json['estimatedArrival'] != null
           ? DateTime.tryParse(json['estimatedArrival'].toString())
           : null,
       distanceFromPrevMeters: (json['distanceFromPrevMeters'] as num).toInt(),
-      durationFromPrevSeconds:
-          (json['durationFromPrevSeconds'] as num).toInt(),
+      durationFromPrevSeconds: (json['durationFromPrevSeconds'] as num).toInt(),
       citizenId: json['citizenId'] as String,
       citizenName: json['citizenName'] as String,
       citizenPhone: json['citizenPhone'] as String?,

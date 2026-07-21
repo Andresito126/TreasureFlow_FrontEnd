@@ -1,17 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/core/maps/presentation/screens/location_picker_screen.dart';
 import 'package:treasureflow/features/routes/local/di/routes_module.dart';
+import 'package:treasureflow/features/routes/local/domain/entities/route_status.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/today_route_stop.dart';
 import 'package:treasureflow/features/routes/local/presentation/providers/route_detail_provider.dart';
-import 'package:treasureflow/features/routes/shared/widgets/route_stop_tile_widget.dart';
-import 'package:treasureflow/shared/layouts/app_card_container.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/postpone_reason_sheet.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/route_active_view.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/route_completed_view.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/route_draft_view.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/route_error_view.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/route_generate_view.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/route_gps_denied_view.dart';
+import 'package:treasureflow/features/routes/local/presentation/widgets/route_obtaining_location_view.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
-import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
-import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RouteDetailScreen extends StatefulWidget {
   final String date;
@@ -26,6 +35,17 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
   late final RouteDetailProvider _provider;
   bool _requestingGps = false;
 
+  bool _broadcastAttempted = false;
+  bool _gpsDenied = false;
+  double? _selfLat;
+  double? _selfLng;
+  io.Socket? _socket;
+  bool _socketConnected = false;
+  bool _liveGps = true;
+  Timer? _heartbeat;
+
+  bool get _hasSelfLocation => _selfLat != null && _selfLng != null;
+
   @override
   void initState() {
     super.initState();
@@ -37,47 +57,25 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
   @override
   void dispose() {
+    _stopBroadcast();
     _provider.removeListener(_onProviderChanged);
     _provider.dispose();
     super.dispose();
   }
 
   void _onProviderChanged() {
+    if (_socket != null &&
+        _provider.route?.status != RouteExecutionStatus.active) {
+      _stopBroadcast();
+    }
     if (mounted) setState(() {});
   }
 
   Future<void> _onUseCurrentLocation() async {
     setState(() => _requestingGps = true);
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (mounted) {
-          AppToast.show(
-            context,
-            'Activa la ubicación de tu dispositivo',
-            type: ToastType.warning,
-          );
-        }
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          AppToast.show(
-            context,
-            'Necesitamos permiso de ubicación para generar la ruta',
-            type: ToastType.warning,
-          );
-        }
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition();
+      final position = await _resolveGps();
+      if (position == null) return;
       await _generate(position.latitude, position.longitude);
     } finally {
       if (mounted) setState(() => _requestingGps = false);
@@ -103,6 +101,196 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         _provider.generateError ?? 'No se pudo generar la ruta',
         type: ToastType.error,
       );
+    }
+  }
+
+  Future<Position?> _resolveGps() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        AppToast.show(
+          context,
+          'Activa la ubicación de tu dispositivo',
+          type: ToastType.warning,
+        );
+      }
+      return null;
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        AppToast.show(
+          context,
+          'Necesitamos permiso de ubicación',
+          type: ToastType.warning,
+        );
+      }
+      return null;
+    }
+
+    return Geolocator.getCurrentPosition();
+  }
+
+  Future<void> _autoStartBroadcast() async {
+    if (_broadcastAttempted) return;
+    _broadcastAttempted = true;
+
+    final position = await _resolveGps();
+    if (!mounted) return;
+    if (position == null) {
+      setState(() => _gpsDenied = true);
+      return;
+    }
+    await _startBroadcast(position.latitude, position.longitude, live: true);
+  }
+
+  Future<void> _retryBroadcast() async {
+    setState(() {
+      _gpsDenied = false;
+      _broadcastAttempted = false;
+    });
+    await _autoStartBroadcast();
+  }
+
+  Future<void> _broadcastFromMap() async {
+    final result = await Navigator.of(context).push<LocationPickerResult>(
+      MaterialPageRoute(builder: (_) => const LocationPickerScreen()),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _gpsDenied = false);
+    await _startBroadcast(
+      result.latLng.latitude,
+      result.latLng.longitude,
+      live: false,
+    );
+  }
+
+  Future<void> _startBroadcast(
+    double lat,
+    double lng, {
+    required bool live,
+  }) async {
+    _liveGps = live;
+    setState(() {
+      _selfLat = lat;
+      _selfLng = lng;
+    });
+
+    final factory = context.read<AppContainer>().trackingSocketClientFactory;
+    final socket = await factory.create();
+    _socket = socket;
+    socket.onConnect((_) {
+      _socketConnected = true;
+      _emitLocation();
+    });
+    socket.onDisconnect((_) => _socketConnected = false);
+    socket.connect();
+
+    _heartbeat = Timer.periodic(
+      const Duration(seconds: 4),
+      (_) => _tickBroadcast(),
+    );
+  }
+
+  Future<void> _tickBroadcast() async {
+    if (_liveGps) {
+      try {
+        final position = await Geolocator.getCurrentPosition();
+        if (!mounted) return;
+        setState(() {
+          _selfLat = position.latitude;
+          _selfLng = position.longitude;
+        });
+      } catch (_) {}
+    }
+    _emitLocation();
+  }
+
+  void _emitLocation() {
+    final route = _provider.route;
+    if (route == null || !_socketConnected || !_hasSelfLocation) return;
+    _socket?.volatile.emit('driver:location', {
+      'routeId': route.routeId,
+      'lat': _selfLat,
+      'lng': _selfLng,
+    });
+  }
+
+  void _stopBroadcast() {
+    _heartbeat?.cancel();
+    _heartbeat = null;
+    _socket?.dispose();
+    _socket = null;
+    _socketConnected = false;
+  }
+
+  Future<void> _onStartRoute() async {
+    final ok = await _provider.startRoute();
+    if (!mounted) return;
+    AppToast.show(
+      context,
+      ok
+          ? 'Recorrido iniciado'
+          : (_provider.stopActionError ?? 'No se pudo iniciar'),
+      type: ok ? ToastType.success : ToastType.error,
+    );
+  }
+
+  Future<void> _onCompleteStop(TodayRouteStop stop) async {
+    final ok = await _provider.completeStop(stop.stopId);
+    if (!mounted) return;
+    AppToast.show(
+      context,
+      ok
+          ? 'Parada completada'
+          : (_provider.stopActionError ?? 'No se pudo completar'),
+      type: ok ? ToastType.success : ToastType.error,
+    );
+  }
+
+  Future<void> _onPostponeStop(TodayRouteStop stop) async {
+    final result = await showPostponeReasonSheet(context);
+    if (result == null || !mounted) return;
+    final newDate =
+        '${result.newDate.year.toString().padLeft(4, '0')}-${result.newDate.month.toString().padLeft(2, '0')}-${result.newDate.day.toString().padLeft(2, '0')}';
+    final ok = await _provider.postponeStop(
+      stop.stopId,
+      newDate,
+      result.reason,
+    );
+    if (!mounted) return;
+    AppToast.show(
+      context,
+      ok
+          ? 'Parada pospuesta'
+          : (_provider.stopActionError ?? 'No se pudo posponer'),
+      type: ok ? ToastType.success : ToastType.error,
+    );
+  }
+
+  Future<void> _callCitizen(String phone) async {
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (!await launchUrl(uri) && mounted) {
+      AppToast.show(
+        context,
+        'No se pudo abrir el teléfono',
+        type: ToastType.error,
+      );
+    }
+  }
+
+  Future<void> _openMaps(double lat, double lng) async {
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
+    );
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      AppToast.show(context, 'No se pudo abrir Maps', type: ToastType.error);
     }
   }
 
@@ -133,8 +321,11 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               if (stop.addressText != null)
                 Row(
                   children: [
-                    Icon(Icons.location_on_outlined,
-                        size: 16, color: colors.primary),
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: colors.primary,
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -215,7 +406,6 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final textTheme = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -223,210 +413,77 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         elevation: 0,
         title: Text('Ruta del ${widget.date}'),
       ),
-      body: SafeArea(child: _buildBody(colors, textTheme)),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
-  Widget _buildBody(ColorScheme colors, TextTheme textTheme) {
+  Widget _buildBody() {
     switch (_provider.status) {
       case RouteDetailStatus.idle:
       case RouteDetailStatus.loading:
         return const Center(child: CircularProgressIndicator());
       case RouteDetailStatus.error:
-        return _errorState(colors, textTheme);
+        return RouteErrorView(
+          message: _provider.errorMessage,
+          onRetry: () => _provider.load(widget.date),
+        );
       case RouteDetailStatus.success:
-        return _provider.route == null
-            ? _generateState(colors, textTheme)
-            : _routeState(colors, textTheme);
+        final route = _provider.route;
+        if (route == null) {
+          return RouteGenerateView(
+            date: widget.date,
+            canGenerateToday: _provider.canGenerateRoute,
+            isBusy:
+                _requestingGps ||
+                _provider.generateStatus == GenerateRouteStatus.generating,
+            onUseCurrentLocation: _onUseCurrentLocation,
+            onPickOnMap: _onPickOnMap,
+          );
+        }
+        switch (route.status) {
+          case RouteExecutionStatus.draft:
+            return RouteDraftView(
+              route: route,
+              canStartToday: _provider.canStartRoute,
+              isStarting:
+                  _provider.stopActionStatus == StopActionStatus.working,
+              onStopTap: _onStopTap,
+              onStartRoute: _onStartRoute,
+            );
+          case RouteExecutionStatus.active:
+            if (_gpsDenied) {
+              return RouteGpsDeniedView(
+                onRetryGps: _retryBroadcast,
+                onPickOnMap: _broadcastFromMap,
+              );
+            }
+            if (!_hasSelfLocation) {
+              if (!_broadcastAttempted) {
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _autoStartBroadcast(),
+                );
+              }
+              return const RouteObtainingLocationView();
+            }
+            return RouteActiveView(
+              route: route,
+              selfLat: _selfLat!,
+              selfLng: _selfLng!,
+              socketConnected: _socketConnected,
+              busy: _provider.stopActionStatus == StopActionStatus.working,
+              onCall: (stop) => _callCitizen(stop.citizenPhone!),
+              onOpenMaps: (stop) => _openMaps(stop.latitude, stop.longitude),
+              onComplete: _onCompleteStop,
+              onPostpone: _onPostponeStop,
+            );
+          case RouteExecutionStatus.completed:
+            return RouteCompletedView(
+              onViewSummary: () => context.push(
+                '/route-summary',
+                extra: {'routeId': route.routeId},
+              ),
+            );
+        }
     }
-  }
-
-  Widget _errorState(ColorScheme colors, TextTheme textTheme) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
-            const SizedBox(height: 16),
-            Text(
-              _provider.errorMessage ?? 'No se pudo cargar la ruta',
-              textAlign: TextAlign.center,
-              style: textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 20),
-            PrimaryButtonBlueWidget(
-              text: 'Reintentar',
-              onPressed: () => _provider.load(widget.date),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _generateState(ColorScheme colors, TextTheme textTheme) {
-    final isBusy =
-        _requestingGps || _provider.generateStatus == GenerateRouteStatus.generating;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppCardContainer(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.route_rounded, size: 18, color: colors.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Aún no hay ruta generada para este día',
-                        style: textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Indica desde dónde saldrá el conductor para calcular el orden óptimo de las paradas.',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          PrimaryButtonGreenWidget(
-            text: 'Usar mi ubicación',
-            isLoading: isBusy,
-            onPressed: _onUseCurrentLocation,
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: isBusy ? null : _onPickOnMap,
-            icon: const Icon(Icons.map_outlined, size: 18),
-            label: const Text('Elegir ubicación en el mapa'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _routeState(ColorScheme colors, TextTheme textTheme) {
-    final route = _provider.route!;
-    final stops = route.stops;
-    final screenHeight = MediaQuery.sizeOf(context).height;
-
-    return Column(
-      children: [
-        SizedBox(
-          height: screenHeight * 0.32,
-          child: GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: _centerOf(stops),
-              zoom: 13,
-            ),
-            markers: _markersOf(stops, colors),
-            polylines: _polylinesOf(stops, colors),
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.route_rounded, size: 18, color: colors.primary),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Paradas de la ruta (${stops.length})',
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${(route.totalDistanceMeters / 1000).toStringAsFixed(1)} km',
-                      style: textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                for (final stop in stops)
-                  RouteStopTileWidget(
-                    order: stop.stopOrder,
-                    citizenName: stop.citizenName,
-                    addressLabel: stop.addressText ?? 'Sin dirección',
-                    etaLabel: _formatEta(stop.estimatedArrival),
-                    distanceLabel:
-                        '${(stop.distanceFromPrevMeters / 1000).toStringAsFixed(1)} km',
-                    onTap: () => _onStopTap(stop),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String? _formatEta(DateTime? eta) {
-    if (eta == null) return null;
-    final local = eta.toLocal();
-    final hh = local.hour.toString().padLeft(2, '0');
-    final mm = local.minute.toString().padLeft(2, '0');
-    return '$hh:$mm';
-  }
-
-  Set<Marker> _markersOf(List<TodayRouteStop> stops, ColorScheme colors) {
-    return {
-      for (final stop in stops)
-        Marker(
-          markerId: MarkerId(stop.stopId),
-          position: LatLng(stop.latitude, stop.longitude),
-          infoWindow: InfoWindow(
-            title: 'Parada ${stop.stopOrder}',
-            snippet: stop.citizenName,
-          ),
-        ),
-    };
-  }
-
-  Set<Polyline> _polylinesOf(List<TodayRouteStop> stops, ColorScheme colors) {
-    if (stops.length < 2) return {};
-    return {
-      Polyline(
-        polylineId: const PolylineId('route'),
-        color: colors.primary,
-        width: 4,
-        points: [for (final s in stops) LatLng(s.latitude, s.longitude)],
-      ),
-    };
-  }
-
-  LatLng _centerOf(List<TodayRouteStop> stops) {
-    if (stops.isEmpty) return const LatLng(16.7569, -93.1292);
-    final lat = stops.map((s) => s.latitude).reduce((a, b) => a + b) /
-        stops.length;
-    final lng = stops.map((s) => s.longitude).reduce((a, b) => a + b) /
-        stops.length;
-    return LatLng(lat, lng);
   }
 }

@@ -2,14 +2,16 @@ import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/weekly_planning_day.dart';
 import 'package:treasureflow/features/routes/local/domain/repositories/routes_repository.dart';
+import 'package:treasureflow/features/routes/local/presentation/state/route_local_ui_state.dart';
 
-enum WeeklyPlanningStatus { idle, loading, success, error }
+export 'package:treasureflow/features/routes/local/presentation/state/route_local_ui_state.dart'
+    show WeeklyPlanningStatus;
 
 class WeeklyPlanningProvider extends ChangeNotifier {
   final RoutesRepository _repository;
 
   WeeklyPlanningProvider({required RoutesRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   WeeklyPlanningStatus _status = WeeklyPlanningStatus.idle;
   String? _errorMessage;

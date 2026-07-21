@@ -1,4 +1,5 @@
 import 'package:treasureflow/features/routes/local/domain/entities/route_generated_result.dart';
+import 'package:treasureflow/features/routes/local/domain/entities/route_summary.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/today_route.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/weekly_planning_day.dart';
 
@@ -14,4 +15,14 @@ abstract class RoutesRepository {
     required String pickupId,
     required String newDate,
   });
+  Future<void> startRoute(String routeId);
+  Future<void> completeStop({required String routeId, required String stopId});
+  Future<void> postponeStop({
+    required String routeId,
+    required String stopId,
+    required String newDate,
+    String? reason,
+  });
+  Future<RouteSummary> getRouteSummary(String routeId);
+  Future<String?> getActiveTrackingRouteId();
 }

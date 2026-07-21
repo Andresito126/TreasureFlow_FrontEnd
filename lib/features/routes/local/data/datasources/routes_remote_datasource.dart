@@ -1,5 +1,6 @@
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/route_generated_result.dart';
+import 'package:treasureflow/features/routes/local/domain/entities/route_summary.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/today_route.dart';
 import 'package:treasureflow/features/routes/local/domain/entities/weekly_planning_day.dart';
 
@@ -41,5 +42,41 @@ class RoutesRemoteDatasource {
       '/routes/pickups/$pickupId/reschedule',
       body: {'newDate': newDate},
     );
+  }
+
+  Future<void> startRoute(String routeId) async {
+    await _apiClient.patch('/routes/$routeId/start');
+  }
+
+  Future<void> completeStop({
+    required String routeId,
+    required String stopId,
+  }) async {
+    await _apiClient.patch('/routes/$routeId/stops/$stopId/complete');
+  }
+
+  Future<void> postponeStop({
+    required String routeId,
+    required String stopId,
+    required String newDate,
+    String? reason,
+  }) async {
+    await _apiClient.patch(
+      '/routes/$routeId/stops/$stopId/postpone',
+      body: {
+        'newDate': newDate,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      },
+    );
+  }
+
+  Future<RouteSummary> getRouteSummary(String routeId) async {
+    final data = await _apiClient.get('/routes/$routeId/summary');
+    return RouteSummary.fromJson(data);
+  }
+
+  Future<String?> getActiveTrackingRouteId() async {
+    final data = await _apiClient.get('/routes/tracking/active');
+    return data['routeId'] as String?;
   }
 }
