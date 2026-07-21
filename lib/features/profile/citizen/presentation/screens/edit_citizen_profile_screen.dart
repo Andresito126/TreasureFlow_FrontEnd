@@ -29,6 +29,7 @@ class _EditCitizenProfileScreenState extends State<EditCitizenProfileScreen> {
   final _phoneController = TextEditingController();
 
   bool _formPrefilled = false;
+  bool _popped = false;
 
   @override
   void initState() {
@@ -65,7 +66,8 @@ class _EditCitizenProfileScreenState extends State<EditCitizenProfileScreen> {
       }
     }
 
-    if (_provider.saveStatus == SaveCitizenProfileStatus.saved) {
+    if (_provider.saveStatus == SaveCitizenProfileStatus.saved && !_popped) {
+      _popped = true;
       AppToast.show(context, 'Perfil actualizado', type: ToastType.success);
       Navigator.of(context).pop(true);
     } else if (_provider.saveStatus == SaveCitizenProfileStatus.error) {

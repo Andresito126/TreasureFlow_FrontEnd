@@ -30,6 +30,7 @@ class _EditEstablishmentProfileScreenState
   bool _hasVehicle = false;
 
   bool _formPrefilled = false;
+  bool _popped = false;
 
   @override
   void initState() {
@@ -64,7 +65,8 @@ class _EditEstablishmentProfileScreenState
       }
     }
 
-    if (_provider.saveStatus == SaveLocalProfileStatus.saved) {
+    if (_provider.saveStatus == SaveLocalProfileStatus.saved && !_popped) {
+      _popped = true;
       AppToast.show(context, 'Perfil actualizado', type: ToastType.success);
       Navigator.of(context).pop(true);
     } else if (_provider.saveStatus == SaveLocalProfileStatus.error) {

@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/home/local/domain/entities/local_home_feed_item.dart';
-import 'package:treasureflow/features/home/local/domain/repositories/local_home_feed_repository.dart';
+import 'package:treasureflow/features/home/local/domain/usecases/get_local_home_feed_usecase.dart';
 
 enum LocalHomeFeedStatus { idle, loading, success, error }
 
 class LocalHomeFeedProvider extends ChangeNotifier {
-  final LocalHomeFeedRepository _repository;
+  final GetLocalHomeFeedUseCase _getLocalHomeFeedUseCase;
 
   LocalHomeFeedStatus _status = LocalHomeFeedStatus.idle;
   List<LocalHomeFeedItem> _items = [];
@@ -18,7 +18,7 @@ class LocalHomeFeedProvider extends ChangeNotifier {
   int get total => _total;
   String? get errorMessage => _errorMessage;
 
-  LocalHomeFeedProvider(this._repository);
+  LocalHomeFeedProvider(this._getLocalHomeFeedUseCase);
 
   Future<void> load() async {
     if (_status == LocalHomeFeedStatus.loading) return;
@@ -27,7 +27,7 @@ class LocalHomeFeedProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final page = await _repository.getFeed();
+      final page = await _getLocalHomeFeedUseCase();
       _items = page.results;
       _total = page.total;
       _status = LocalHomeFeedStatus.success;

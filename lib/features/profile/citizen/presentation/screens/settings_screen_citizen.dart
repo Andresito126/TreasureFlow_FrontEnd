@@ -1,20 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
+import 'package:treasureflow/features/profile/citizen/presentation/providers/profile_posts_provider.dart';
 import 'package:treasureflow/features/profile/shared/widgets/settings_group_card_widget.dart';
 import 'package:treasureflow/features/profile/shared/widgets/settings_logout_tile_widget.dart';
 import 'package:treasureflow/features/profile/shared/widgets/settings_profile_card_widget.dart';
 import 'package:treasureflow/features/profile/shared/widgets/settings_section_label_widget.dart';
 import 'package:treasureflow/features/profile/shared/widgets/settings_tile_widget.dart';
 
-class SettingsScreenCitizen extends StatelessWidget {
+class SettingsScreenCitizen extends StatefulWidget {
   const SettingsScreenCitizen({super.key});
+
+  @override
+  State<SettingsScreenCitizen> createState() => _SettingsScreenCitizenState();
+}
+
+class _SettingsScreenCitizenState extends State<SettingsScreenCitizen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<ProfilePostsProvider>();
+      if (provider.profile == null) provider.loadPosts();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final profile = context.watch<ProfilePostsProvider>().profile;
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLowest,
@@ -39,8 +56,9 @@ class SettingsScreenCitizen extends StatelessWidget {
               const SizedBox(height: 16),
 
               SettingsProfileCardWidget(
-                name: 'Kevin Jimmy',
-                email: 'kevin.jimmy@gmail.com',
+                name: profile?.fullName ?? '—',
+                email: profile?.email ?? '',
+                avatarUrl: profile?.profilePictureUrl,
                 onTap: () => context.push('/editCitizenProfile'),
               ),
               const SizedBox(height: 24),

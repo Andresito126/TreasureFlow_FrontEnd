@@ -4,20 +4,24 @@ import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/media/domain/usecases/upload_image_usecase.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/profile/citizen/domain/entities/citizen_full_profile.dart';
-import 'package:treasureflow/features/profile/citizen/domain/repositories/citizen_profile_repository.dart';
+import 'package:treasureflow/features/profile/citizen/domain/usecases/get_citizen_profile_usecase.dart';
+import 'package:treasureflow/features/profile/citizen/domain/usecases/update_citizen_profile_usecase.dart';
 import 'package:treasureflow/features/profile/citizen/presentation/state/profile_citizen_ui_state.dart';
 
 export 'package:treasureflow/features/profile/citizen/presentation/state/profile_citizen_ui_state.dart'
     show EditCitizenProfileStatus, SaveCitizenProfileStatus;
 
 class EditCitizenProfileProvider extends ChangeNotifier {
-  final CitizenProfileRepository _repository;
+  final GetCitizenProfileUseCase _getCitizenProfileUseCase;
+  final UpdateCitizenProfileUseCase _updateCitizenProfileUseCase;
   final UploadImageUseCase _uploadImageUseCase;
 
   EditCitizenProfileProvider({
-    required CitizenProfileRepository repository,
+    required GetCitizenProfileUseCase getCitizenProfileUseCase,
+    required UpdateCitizenProfileUseCase updateCitizenProfileUseCase,
     required UploadImageUseCase uploadImageUseCase,
-  }) : _repository = repository,
+  }) : _getCitizenProfileUseCase = getCitizenProfileUseCase,
+       _updateCitizenProfileUseCase = updateCitizenProfileUseCase,
        _uploadImageUseCase = uploadImageUseCase;
 
   EditCitizenProfileStatus _status = EditCitizenProfileStatus.idle;
@@ -42,7 +46,7 @@ class EditCitizenProfileProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _profile = await _repository.getProfile();
+      _profile = await _getCitizenProfileUseCase();
       _status = EditCitizenProfileStatus.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -79,7 +83,7 @@ class EditCitizenProfileProvider extends ChangeNotifier {
         );
       }
 
-      await _repository.updateProfile(
+      await _updateCitizenProfileUseCase(
         firstName: firstName,
         paternalLastName: paternalLastName,
         maternalLastName: maternalLastName,

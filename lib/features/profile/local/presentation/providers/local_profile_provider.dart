@@ -4,20 +4,25 @@ import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/media/domain/usecases/upload_image_usecase.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/profile/local/domain/entities/establishment_profile.dart';
-import 'package:treasureflow/features/profile/local/domain/repositories/local_profile_repository.dart';
+import 'package:treasureflow/features/profile/local/domain/usecases/get_establishment_profile_usecase.dart';
+import 'package:treasureflow/features/profile/local/domain/usecases/update_establishment_profile_usecase.dart';
 import 'package:treasureflow/features/profile/local/presentation/state/profile_local_ui_state.dart';
 
 export 'package:treasureflow/features/profile/local/presentation/state/profile_local_ui_state.dart'
     show LocalProfileStatus, SaveLocalProfileStatus;
 
 class LocalProfileProvider extends ChangeNotifier {
-  final LocalProfileRepository _repository;
+  final GetEstablishmentProfileUseCase _getEstablishmentProfileUseCase;
+  final UpdateEstablishmentProfileUseCase _updateEstablishmentProfileUseCase;
   final UploadImageUseCase _uploadImageUseCase;
 
   LocalProfileProvider({
-    required LocalProfileRepository repository,
+    required GetEstablishmentProfileUseCase getEstablishmentProfileUseCase,
+    required UpdateEstablishmentProfileUseCase
+    updateEstablishmentProfileUseCase,
     required UploadImageUseCase uploadImageUseCase,
-  }) : _repository = repository,
+  }) : _getEstablishmentProfileUseCase = getEstablishmentProfileUseCase,
+       _updateEstablishmentProfileUseCase = updateEstablishmentProfileUseCase,
        _uploadImageUseCase = uploadImageUseCase;
 
   LocalProfileStatus _status = LocalProfileStatus.idle;
@@ -42,7 +47,7 @@ class LocalProfileProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _profile = await _repository.getProfile();
+      _profile = await _getEstablishmentProfileUseCase();
       _status = LocalProfileStatus.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -79,7 +84,7 @@ class LocalProfileProvider extends ChangeNotifier {
         );
       }
 
-      await _repository.updateProfile(
+      await _updateEstablishmentProfileUseCase(
         storeName: storeName,
         phone: phone,
         addressText: addressText,
@@ -89,7 +94,6 @@ class LocalProfileProvider extends ChangeNotifier {
 
       _saveStatus = SaveLocalProfileStatus.saved;
       notifyListeners();
-      await load();
       return true;
     } on ApiException catch (e) {
       _saveError = e.message;
