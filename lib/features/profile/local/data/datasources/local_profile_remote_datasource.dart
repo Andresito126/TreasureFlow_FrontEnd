@@ -20,13 +20,34 @@ class LocalProfileRemoteDatasource {
       hasVehicle: response['hasVehicle'] as bool,
       materialTypeIds: (response['materialTypeIds'] as List).cast<String>(),
       schedules: (response['schedules'] as List)
-          .map((s) => EstablishmentSchedule(
-                dayOfWeek: (s['dayOfWeek'] as num).toInt(),
-                startTime: s['startTime'] as String,
-                endTime: s['endTime'] as String,
-              ))
+          .map(
+            (s) => EstablishmentSchedule(
+              dayOfWeek: (s['dayOfWeek'] as num).toInt(),
+              startTime: s['startTime'] as String,
+              endTime: s['endTime'] as String,
+            ),
+          )
           .toList(),
       photoUrls: (response['photoUrls'] as List).cast<String>(),
+    );
+  }
+
+  Future<void> updateProfile({
+    String? storeName,
+    String? phone,
+    String? addressText,
+    bool? hasVehicle,
+    String? profilePictureUrl,
+  }) {
+    return _apiClient.patch(
+      '/establishments/me',
+      body: {
+        if (storeName != null) 'storeName': storeName,
+        if (phone != null) 'phone': phone,
+        if (addressText != null) 'addressText': addressText,
+        if (hasVehicle != null) 'hasVehicle': hasVehicle,
+        if (profilePictureUrl != null) 'profilePictureUrl': profilePictureUrl,
+      },
     );
   }
 }

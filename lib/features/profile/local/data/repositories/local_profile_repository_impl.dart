@@ -9,4 +9,21 @@ class LocalProfileRepositoryImpl implements LocalProfileRepository {
 
   @override
   Future<EstablishmentProfile> getProfile() => _datasource.getProfile();
+
+  @override
+  Future<void> updateProfile({
+    String? storeName,
+    String? phone,
+    String? addressText,
+    bool? hasVehicle,
+    String? profilePictureUrl,
+  }) {
+    return _datasource.updateProfile(
+      storeName: storeName,
+      phone: phone,
+      addressText: addressText,
+      hasVehicle: hasVehicle,
+      profilePictureUrl: profilePictureUrl,
+    );
+  }
 }

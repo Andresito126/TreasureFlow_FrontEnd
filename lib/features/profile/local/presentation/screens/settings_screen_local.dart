@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
@@ -74,7 +75,7 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
                 email: profile?.email ?? '',
                 avatarUrl: profile?.profilePictureUrl,
                 fallbackIcon: Icons.storefront_rounded,
-                onTap: () => Navigator.of(context).maybePop(),
+                onTap: () => context.push('/editEstablishmentProfile'),
               ),
               const SizedBox(height: 24),
 
@@ -87,7 +88,7 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
                     title: 'Editar información del establecimiento',
                     subtitle:
                         'Actualiza nombre, contacto, dirección y materiales.',
-                    onTap: () {},
+                    onTap: () => context.push('/editEstablishmentProfile'),
                   ),
                   SettingsTileWidget(
                     icon: Icons.photo_outlined,

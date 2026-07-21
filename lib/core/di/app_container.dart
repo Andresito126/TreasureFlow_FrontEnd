@@ -34,8 +34,11 @@ import 'package:treasureflow/features/feed/domain/repositories/feed_repository.d
 import 'package:treasureflow/features/posts/waste/data/datasources/waste_post_remote_datasource.dart';
 import 'package:treasureflow/features/posts/waste/data/repositories/waste_post_repository_impl.dart';
 import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post_repository.dart';
+import 'package:treasureflow/features/profile/citizen/data/datasources/citizen_profile_remote_datasource.dart';
 import 'package:treasureflow/features/profile/citizen/data/datasources/my_posts_remote_datasource.dart';
+import 'package:treasureflow/features/profile/citizen/data/repositories/citizen_profile_repository_impl.dart';
 import 'package:treasureflow/features/profile/citizen/data/repositories/my_posts_repository_impl.dart';
+import 'package:treasureflow/features/profile/citizen/domain/repositories/citizen_profile_repository.dart';
 import 'package:treasureflow/features/profile/citizen/domain/repositories/my_posts_repository.dart';
 import 'package:treasureflow/features/profile/local/data/datasources/local_profile_remote_datasource.dart';
 import 'package:treasureflow/features/profile/local/data/repositories/local_profile_repository_impl.dart';
@@ -60,6 +63,7 @@ class AppContainer {
   late final LocalAuthRepository localAuthRepository;
   late final WastePostRepository wastePostRepository;
   late final MyPostsRepository myPostsRepository;
+  late final CitizenProfileRepository citizenProfileRepository;
   late final LocalProfileRepository localProfileRepository;
   late final FeedRepository feedRepository;
   late final NotificationService notificationService;
@@ -105,6 +109,9 @@ class AppContainer {
 
     final myPostsDatasource = MyPostsRemoteDatasource(apiClient);
     myPostsRepository = MyPostsRepositoryImpl(myPostsDatasource);
+
+    final citizenProfileDatasource = CitizenProfileRemoteDatasource(apiClient);
+    citizenProfileRepository = CitizenProfileRepositoryImpl(citizenProfileDatasource);
 
     final localProfileDatasource = LocalProfileRemoteDatasource(apiClient);
     localProfileRepository = LocalProfileRepositoryImpl(localProfileDatasource);
