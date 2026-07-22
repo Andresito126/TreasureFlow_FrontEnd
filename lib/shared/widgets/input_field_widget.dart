@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import 'package:treasureflow/shared/theme/app_theme_extension.dart';
 
-class InputFieldWidget extends StatelessWidget {
+class InputFieldWidget extends StatefulWidget {
   final String? textInput;
   final String hTPlaceHolder;
   final bool isPassword;
@@ -29,6 +29,19 @@ class InputFieldWidget extends StatelessWidget {
   });
 
   @override
+  State<InputFieldWidget> createState() => _InputFieldWidgetState();
+}
+
+class _InputFieldWidgetState extends State<InputFieldWidget> {
+  late bool _obscured;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscured = widget.isPassword;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // final extTheme = theme.extension<AppThemeExtension>()!;
@@ -36,18 +49,18 @@ class InputFieldWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (textInput != null && textInput!.isNotEmpty) ...[
-          Text(textInput!, style: theme.textTheme.bodySmall),
+        if (widget.textInput != null && widget.textInput!.isNotEmpty) ...[
+          Text(widget.textInput!, style: theme.textTheme.bodySmall),
           const SizedBox(height: 8),
         ],
 
         TextFormField(
-          controller: controller,
-          obscureText: isPassword,
-          keyboardType: keyboardType,
-          validator: validator,
-          maxLength: maxLength,
-          buildCounter: maxLength != null
+          controller: widget.controller,
+          obscureText: _obscured,
+          keyboardType: widget.keyboardType,
+          validator: widget.validator,
+          maxLength: widget.maxLength,
+          buildCounter: widget.maxLength != null
               ? (
                   context, {
                   required currentLength,
@@ -55,26 +68,26 @@ class InputFieldWidget extends StatelessWidget {
                   required maxLength,
                 }) => null
               : null,
-          inputFormatters: inputFormatters,
+          inputFormatters: widget.inputFormatters,
           style: theme.textTheme.bodyMedium,
           decoration: InputDecoration(
-            prefixIcon: (iconInput != null || prefixText != null)
+            prefixIcon: (widget.iconInput != null || widget.prefixText != null)
                 ? Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (iconInput != null)
+                      if (widget.iconInput != null)
                         Padding(
                           padding: const EdgeInsets.only(left: 12),
                           child: Icon(
-                            iconInput,
+                            widget.iconInput,
                             color: theme.colorScheme.primary,
                           ),
                         ),
-                      if (prefixText != null)
+                      if (widget.prefixText != null)
                         Padding(
                           padding: const EdgeInsets.only(left: 8, right: 4),
                           child: Text(
-                            prefixText!,
+                            widget.prefixText!,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -84,7 +97,22 @@ class InputFieldWidget extends StatelessWidget {
                   )
                 : null,
 
-            hintText: hTPlaceHolder,
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _obscured
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                    onPressed: () => setState(() => _obscured = !_obscured),
+                    tooltip: _obscured
+                        ? 'Mostrar contraseña'
+                        : 'Ocultar contraseña',
+                  )
+                : null,
+
+            hintText: widget.hTPlaceHolder,
             hintStyle: theme.textTheme.bodySmall,
             filled: true,
             fillColor: theme.colorScheme.surface,

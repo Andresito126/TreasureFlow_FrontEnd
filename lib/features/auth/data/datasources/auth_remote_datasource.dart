@@ -17,10 +17,7 @@ class AuthRemoteDatasource {
   );
 
   Future<void> login(LoginRequestModel model) async {
-    final response = await _apiClient.post(
-      '/auth/login',
-      body: model.toJson(),
-    );
+    final response = await _apiClient.post('/auth/login', body: model.toJson());
 
     final accessToken = response['accessToken'] as String;
     final refreshToken = response['refreshToken'] as String;
@@ -43,6 +40,24 @@ class AuthRemoteDatasource {
       );
     }
     await _userStorage.clearSession();
+  }
+
+  Future<void> requestForgotPasswordCode(String phone) async {
+    await _apiClient.post(
+      '/auth/forgot-password/request-code',
+      body: {'phone': phone},
+    );
+  }
+
+  Future<void> confirmForgotPassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  }) async {
+    await _apiClient.patch(
+      '/auth/forgot-password/confirm',
+      body: {'phone': phone, 'code': code, 'newPassword': newPassword},
+    );
   }
 
   Map<String, dynamic> _decodeJwtPayload(String token) {
