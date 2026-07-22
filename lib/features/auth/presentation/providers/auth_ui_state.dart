@@ -1,0 +1,1 @@
+enum AuthUiState { idle, loading, success, error }

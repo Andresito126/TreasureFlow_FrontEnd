@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
 
 class FloatingNavBarWidget extends StatelessWidget {
   final int currentIndex;
@@ -140,5 +140,9 @@ class _NavItem {
   final IconData icon;
   final String label;
   final String route;
-  const _NavItem({required this.icon, required this.label, required this.route});
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.route,
+  });
 }

@@ -5,8 +5,8 @@ import 'package:treasureflow/features/auth/domain/usecases/confirm_forgot_passwo
 import 'package:treasureflow/features/auth/domain/usecases/login_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/request_forgot_password_code_usecase.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/forgot_password_provider.dart';
+import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/auth/presentation/providers/forgot_password_provider.dart';
 
 class AuthModule {
   final AppContainer _appContainer;

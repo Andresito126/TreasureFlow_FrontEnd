@@ -1,14 +1,11 @@
 import 'package:go_router/go_router.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/screens/forgot_password_screen.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/screens/login_citizen_screen.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/screens/register_citizen_screen.dart';
-import 'package:treasureflow/features/auth/local/presentation/screens/register_local_screen.dart';
+import 'package:treasureflow/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:treasureflow/features/auth/presentation/screens/login_screen.dart';
+import 'package:treasureflow/features/auth/presentation/screens/register_citizen_screen.dart';
+import 'package:treasureflow/features/auth/presentation/screens/register_local_screen.dart';
 
 final List<GoRoute> authRoutes = [
-  GoRoute(
-    path: '/login',
-    builder: (context, state) => const LoginCitizenScreen(),
-  ),
+  GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
   GoRoute(
     path: '/forgotPassword',
     builder: (context, state) => const ForgotPasswordScreen(),

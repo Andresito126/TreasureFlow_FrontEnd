@@ -7,7 +7,7 @@ import 'package:treasureflow/core/router/posts_routes.dart';
 import 'package:treasureflow/core/router/routes_routes.dart';
 import 'package:treasureflow/core/router/sales_routes.dart';
 import 'package:treasureflow/core/router/tracking_routes.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
 
 const _onboardingPaths = {
   '/onboardingStep1',
@@ -17,11 +17,7 @@ const _onboardingPaths = {
   '/onboardingStep5',
 };
 
-const _authPaths = {
-  '/login',
-  '/registerCitizen',
-  '/registerLocalStep1',
-};
+const _authPaths = {'/login', '/registerCitizen', '/registerLocalStep1'};
 
 GoRouter createRouter({
   required String initialLocation,

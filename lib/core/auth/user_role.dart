@@ -1,13 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
 
 enum UserRole {
   citizen,
   establishment;
 
   static UserRole fromUserType(String? userType) {
-    return userType == 'establishment' ? UserRole.establishment : UserRole.citizen;
+    return userType == 'establishment'
+        ? UserRole.establishment
+        : UserRole.citizen;
   }
 }
 

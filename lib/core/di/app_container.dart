@@ -13,21 +13,21 @@ import 'package:treasureflow/core/notifications/domain/repositories/device_token
 import 'package:treasureflow/core/notifications/services/notification_service.dart';
 import 'package:treasureflow/core/storage/token_storage.dart';
 import 'package:treasureflow/core/storage/user_storage.dart';
-import 'package:treasureflow/features/auth/citizen/data/datasources/citizen_auth_remote_datasource.dart';
-import 'package:treasureflow/features/auth/citizen/data/repositories/citizen_auth_repository_impl.dart';
-import 'package:treasureflow/features/auth/citizen/domain/repositories/citizen_auth_repository.dart';
+import 'package:treasureflow/features/auth/data/datasources/citizen_auth_remote_datasource.dart';
+import 'package:treasureflow/features/auth/data/repositories/citizen_auth_repository_impl.dart';
+import 'package:treasureflow/features/auth/domain/repositories/citizen_auth_repository.dart';
 import 'package:treasureflow/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:treasureflow/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:treasureflow/features/auth/domain/repositories/auth_repository.dart';
-import 'package:treasureflow/features/auth/local/data/datasources/local_auth_remote_datasource.dart';
+import 'package:treasureflow/features/auth/data/datasources/local_auth_remote_datasource.dart';
 import 'package:treasureflow/features/collections/citizen/data/datasources/citizen_collections_remote_datasource.dart';
 import 'package:treasureflow/features/collections/citizen/data/repositories/citizen_collections_repository_impl.dart';
 import 'package:treasureflow/features/collections/citizen/domain/repositories/citizen_collections_repository.dart';
 import 'package:treasureflow/features/collections/local/data/datasources/local_collections_remote_datasource.dart';
 import 'package:treasureflow/features/collections/local/data/repositories/local_collections_repository_impl.dart';
 import 'package:treasureflow/features/collections/local/domain/repositories/local_collections_repository.dart';
-import 'package:treasureflow/features/auth/local/data/repositories/local_auth_repository_impl.dart';
-import 'package:treasureflow/features/auth/local/domain/repositories/local_auth_repository.dart';
+import 'package:treasureflow/features/auth/data/repositories/local_auth_repository_impl.dart';
+import 'package:treasureflow/features/auth/domain/repositories/local_auth_repository.dart';
 import 'package:treasureflow/features/feed/data/datasources/feed_remote_datasource.dart';
 import 'package:treasureflow/features/feed/data/repositories/feed_repository_impl.dart';
 import 'package:treasureflow/features/feed/domain/repositories/feed_repository.dart';
@@ -83,7 +83,6 @@ class AppContainer {
     tokenStorage = TokenStorage();
     userStorage = UserStorage(tokenStorage);
 
-    
     apiClient = MainApiClientFactory.create(tokenStorage);
     collectionsApiClient = PaymentsApiClientFactory.create(tokenStorage);
     routesApiClient = RoutesApiClientFactory.create(
@@ -91,8 +90,12 @@ class AppContainer {
       userStorage: userStorage,
     );
 
-    // tf_backend_main 
-    final authDatasource = AuthRemoteDatasource(apiClient, tokenStorage, userStorage);
+    // tf_backend_main
+    final authDatasource = AuthRemoteDatasource(
+      apiClient,
+      tokenStorage,
+      userStorage,
+    );
     authRepository = AuthRepositoryImpl(authDatasource);
 
     final mediaDatasource = MediaRemoteDatasource(apiClient);
@@ -111,7 +114,9 @@ class AppContainer {
     myPostsRepository = MyPostsRepositoryImpl(myPostsDatasource);
 
     final citizenProfileDatasource = CitizenProfileRemoteDatasource(apiClient);
-    citizenProfileRepository = CitizenProfileRepositoryImpl(citizenProfileDatasource);
+    citizenProfileRepository = CitizenProfileRepositoryImpl(
+      citizenProfileDatasource,
+    );
 
     final localProfileDatasource = LocalProfileRemoteDatasource(apiClient);
     localProfileRepository = LocalProfileRepositoryImpl(localProfileDatasource);
@@ -124,13 +129,21 @@ class AppContainer {
     deviceTokenRepository = DeviceTokenRepositoryImpl(deviceTokenDatasource);
 
     // tf_backend_payments
-    final citizenCollectionsDatasource = CitizenCollectionsRemoteDatasource(collectionsApiClient);
-    citizenCollectionsRepository = CitizenCollectionsRepositoryImpl(citizenCollectionsDatasource);
+    final citizenCollectionsDatasource = CitizenCollectionsRemoteDatasource(
+      collectionsApiClient,
+    );
+    citizenCollectionsRepository = CitizenCollectionsRepositoryImpl(
+      citizenCollectionsDatasource,
+    );
 
-    final localCollectionsDatasource = LocalCollectionsRemoteDatasource(collectionsApiClient);
-    localCollectionsRepository = LocalCollectionsRepositoryImpl(localCollectionsDatasource);
+    final localCollectionsDatasource = LocalCollectionsRemoteDatasource(
+      collectionsApiClient,
+    );
+    localCollectionsRepository = LocalCollectionsRepositoryImpl(
+      localCollectionsDatasource,
+    );
 
-    // tf_backend_routes 
+    // tf_backend_routes
     final routesDatasource = RoutesRemoteDatasource(routesApiClient);
     routesRepository = RoutesRepositoryImpl(routesDatasource);
     trackingSocketClientFactory = TrackingSocketClientFactory(userStorage);

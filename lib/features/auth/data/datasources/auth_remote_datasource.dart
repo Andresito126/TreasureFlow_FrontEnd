@@ -17,7 +17,10 @@ class AuthRemoteDatasource {
   );
 
   Future<void> login(LoginRequestModel model) async {
-    final response = await _apiClient.post('/auth/login', body: model.toJson());
+    final response = await _apiClient.post(
+      '/auth/login',
+      body: model.toJson(),
+    );
 
     final accessToken = response['accessToken'] as String;
     final refreshToken = response['refreshToken'] as String;

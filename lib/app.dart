@@ -6,12 +6,12 @@ import 'package:treasureflow/core/maps/presentation/providers/map_provider.dart'
 import 'package:treasureflow/core/router/app_router.dart';
 import 'package:treasureflow/core/notifications/services/notification_service.dart';
 import 'package:treasureflow/features/auth/di/auth_module.dart';
-import 'package:treasureflow/features/auth/citizen/di/citizen_auth_module.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/auth/di/citizen_auth_module.dart';
+import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/register_citizen_provider.dart';
-import 'package:treasureflow/features/auth/local/di/local_auth_module.dart';
-import 'package:treasureflow/features/auth/local/presentation/providers/register_local_provider.dart';
+import 'package:treasureflow/features/auth/presentation/providers/register_citizen_provider.dart';
+import 'package:treasureflow/features/auth/di/local_auth_module.dart';
+import 'package:treasureflow/features/auth/presentation/providers/register_local_provider.dart';
 import 'package:treasureflow/features/feed/di/feed_module.dart';
 import 'package:treasureflow/features/feed/presentation/providers/feed_provider.dart';
 import 'package:treasureflow/features/home/citizen/di/citizen_home_module.dart';

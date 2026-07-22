@@ -8,7 +8,10 @@ class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl(this._datasource);
 
   @override
-  Future<void> login({required String email, required String password}) {
+  Future<void> login({
+    required String email,
+    required String password,
+  }) {
     final model = LoginRequestModel(email: email, password: password);
     return _datasource.login(model);
   }

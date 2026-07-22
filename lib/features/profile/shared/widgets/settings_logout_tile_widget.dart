@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
 
 class SettingsLogoutTile extends StatelessWidget {
   const SettingsLogoutTile({super.key});
@@ -33,7 +33,10 @@ class SettingsLogoutTile extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: colors.error, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: colors.error,
+                  shape: BoxShape.circle,
+                ),
                 child: Icon(Icons.logout, size: 18, color: colors.onError),
               ),
               const SizedBox(width: 12),
@@ -59,7 +62,10 @@ class SettingsLogoutTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: colors.onSurface.withValues(alpha: 0.4)),
+              Icon(
+                Icons.chevron_right,
+                color: colors.onSurface.withValues(alpha: 0.4),
+              ),
             ],
           ),
         ),
