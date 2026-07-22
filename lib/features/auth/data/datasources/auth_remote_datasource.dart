@@ -17,10 +17,7 @@ class AuthRemoteDatasource {
   );
 
   Future<void> login(LoginRequestModel model) async {
-    final response = await _apiClient.post(
-      '/auth/login',
-      body: model.toJson(),
-    );
+    final response = await _apiClient.post('/auth/login', body: model.toJson());
 
     final accessToken = response['accessToken'] as String;
     final refreshToken = response['refreshToken'] as String;
@@ -60,6 +57,16 @@ class AuthRemoteDatasource {
     await _apiClient.patch(
       '/auth/forgot-password/confirm',
       body: {'phone': phone, 'code': code, 'newPassword': newPassword},
+    );
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _apiClient.patch(
+      '/auth/change-password',
+      body: {'currentPassword': currentPassword, 'newPassword': newPassword},
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:treasureflow/features/auth/presentation/screens/change_password_screen.dart';
 import 'package:treasureflow/features/feed/presentation/screens/feed_screen.dart';
 import 'package:treasureflow/features/home/citizen/presentation/screens/home_citizen_screen.dart';
 import 'package:treasureflow/features/home/local/presentation/screens/home_local_screen.dart';
@@ -41,6 +42,10 @@ final List<GoRoute> homeRoutes = [
   GoRoute(
     path: '/editEstablishmentProfile',
     builder: (context, state) => const EditEstablishmentProfileScreen(),
+  ),
+  GoRoute(
+    path: '/changePassword',
+    builder: (context, state) => const ChangePasswordScreen(),
   ),
   GoRoute(
     path: '/feed',

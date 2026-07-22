@@ -83,7 +83,7 @@ class _SettingsScreenCitizenState extends State<SettingsScreenCitizen> {
                     icon: Icons.shield_outlined,
                     title: 'Privacidad y seguridad',
                     subtitle: 'Configura tu contraseña y protege tu cuenta.',
-                    onTap: () {},
+                    onTap: () => context.push('/changePassword'),
                     showDivider: false,
                   ),
                 ],
