@@ -1,6 +1,6 @@
 import 'package:treasureflow/features/feed/data/datasources/feed_remote_datasource.dart';
 import 'package:treasureflow/features/feed/domain/repositories/feed_repository.dart';
-import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
+import 'package:treasureflow/features/profile/citizen/domain/entities/post_summary.dart';
 
 class FeedRepositoryImpl implements FeedRepository {
   final FeedRemoteDatasource _datasource;

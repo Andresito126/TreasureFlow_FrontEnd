@@ -59,10 +59,10 @@ class WastePostRemoteDatasource {
     return response['offerId'] as String;
   }
 
-  Future<List<AvailableSlot>> getAvailableSlots(
-      String establishmentId) async {
+  Future<List<AvailableSlot>> getAvailableSlots(String establishmentId) async {
     final now = DateTime.now();
-    final from = '${now.year.toString().padLeft(4, '0')}-'
+    final from =
+        '${now.year.toString().padLeft(4, '0')}-'
         '${now.month.toString().padLeft(2, '0')}-'
         '${now.day.toString().padLeft(2, '0')}';
 
@@ -71,14 +71,16 @@ class WastePostRemoteDatasource {
     );
 
     return response
-        .map((s) => AvailableSlot(
-              date: s['date'] as String,
-              dayLabel: s['dayLabel'] as String,
-              start: s['start'] as String,
-              end: s['end'] as String,
-              slotsUsed: s['slotsUsed'] as int,
-              maxSlots: s['maxSlots'] as int,
-            ))
+        .map(
+          (s) => AvailableSlot(
+            date: s['date'] as String,
+            dayLabel: s['dayLabel'] as String,
+            start: s['start'] as String,
+            end: s['end'] as String,
+            slotsUsed: s['slotsUsed'] as int,
+            maxSlots: s['maxSlots'] as int,
+          ),
+        )
         .toList();
   }
 
@@ -116,6 +118,9 @@ class WastePostRemoteDatasource {
     return WastePostDetail(
       id: response['id'] as String,
       title: response['title'] as String,
+      citizenName: response['citizenName'] as String? ?? '',
+      citizenProfilePictureUrl:
+          response['citizenProfilePictureUrl'] as String? ?? '',
       description: response['description'] as String,
       photoUrls: (response['photoUrls'] as List).cast<String>(),
       publishedAt: response['publishedAt'] as String,
@@ -124,29 +129,32 @@ class WastePostRemoteDatasource {
       materialTypeId: response['materialTypeId'] as String?,
       deliveryMode: response['deliveryMode'] as String,
       addressText: response['addressText'] as String?,
-      latitude: response['latitude'] != null ? (response['latitude'] as num).toDouble() : null,
-      longitude: response['longitude'] != null ? (response['longitude'] as num).toDouble() : null,
+      latitude: response['latitude'] != null
+          ? (response['latitude'] as num).toDouble()
+          : null,
+      longitude: response['longitude'] != null
+          ? (response['longitude'] as num).toDouble()
+          : null,
       offers: (response['offers'] as List)
-          .map((o) => OfferSummary(
-                offerId: o['offerId'] as String,
-                establishmentName: o['establishmentName'] as String,
-                pricePerUnit: (o['pricePerUnit'] as num).toDouble(),
-                unit: o['unit'] as String,
-                status: o['status'] as String,
-                distance: o['distance'] as String,
-                proposedPickupDate:
-                    o['proposedPickupDate'] as String? ?? '',
-                proposedPickupStart:
-                    o['proposedPickupStart'] as String? ?? '',
-                proposedPickupEnd:
-                    o['proposedPickupEnd'] as String? ?? '',
-              ))
+          .map(
+            (o) => OfferSummary(
+              offerId: o['offerId'] as String,
+              establishmentName: o['establishmentName'] as String,
+              pricePerUnit: (o['pricePerUnit'] as num).toDouble(),
+              unit: o['unit'] as String,
+              status: o['status'] as String,
+              distance: o['distance'] as String,
+              proposedPickupDate: o['proposedPickupDate'] as String? ?? '',
+              proposedPickupStart: o['proposedPickupStart'] as String? ?? '',
+              proposedPickupEnd: o['proposedPickupEnd'] as String? ?? '',
+            ),
+          )
           .toList(),
       myOffer: response['myOffer'] != null
           ? MyOffer(
               offerId: response['myOffer']['offerId'] as String,
-              pricePerUnit:
-                  (response['myOffer']['pricePerUnit'] as num).toDouble(),
+              pricePerUnit: (response['myOffer']['pricePerUnit'] as num)
+                  .toDouble(),
               unit: response['myOffer']['unit'] as String,
               status: response['myOffer']['status'] as String,
               proposedPickupDate:

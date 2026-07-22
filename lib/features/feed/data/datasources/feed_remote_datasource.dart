@@ -1,21 +1,20 @@
 import 'package:treasureflow/core/network/api_client.dart';
-import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
+import 'package:treasureflow/features/profile/citizen/domain/entities/post_summary.dart';
 
 class FeedRemoteDatasource {
   final ApiClient _apiClient;
 
   const FeedRemoteDatasource(this._apiClient);
 
-  Future<PaginatedPosts> getFeedPosts({
-    int limit = 10,
-    String? cursor,
-  }) async {
+  Future<PaginatedPosts> getFeedPosts({int limit = 10, String? cursor}) async {
     final queryParams = <String>[
       'limit=$limit',
       if (cursor != null) 'cursor=$cursor',
     ];
 
-    final response = await _apiClient.get('/posts/feed?${queryParams.join('&')}');
+    final response = await _apiClient.get(
+      '/posts/feed?${queryParams.join('&')}',
+    );
 
     final items = (response['items'] as List)
         .map((item) => _fromJson(item as Map<String, dynamic>))

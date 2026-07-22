@@ -9,13 +9,13 @@ import 'package:treasureflow/features/collections/citizen/domain/entities/paymen
 import 'package:treasureflow/features/collections/citizen/presentation/providers/citizen_collection_detail_provider.dart';
 import 'package:treasureflow/features/collections/shared/utils/collection_receipt_pdf.dart';
 import 'package:treasureflow/features/collections/shared/widgets/collection_stepper_widget.dart';
+import 'package:treasureflow/features/tracking/citizen/di/tracking_module.dart';
+import 'package:treasureflow/features/tracking/citizen/presentation/providers/citizen_tracking_entry_provider.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
-/// Detalle de una recolección — vista del CIUDADANO.
-/// Pasos: espera de pesaje → confirmar monto → espera de pago → completada.
 class CollectionDetailCitizenScreen extends StatefulWidget {
   final String collectionId;
 
@@ -29,6 +29,7 @@ class CollectionDetailCitizenScreen extends StatefulWidget {
 class _CollectionDetailCitizenScreenState
     extends State<CollectionDetailCitizenScreen> {
   late final CitizenCollectionDetailProvider _provider;
+  late final CitizenTrackingEntryProvider _trackingEntry;
 
   @override
   void initState() {
@@ -37,25 +38,36 @@ class _CollectionDetailCitizenScreenState
     _provider = CitizenCollectionsModule(container).provideDetailProvider();
     _provider.addListener(_onProviderChanged);
     _provider.load(widget.collectionId);
+
+    _trackingEntry = TrackingModule(container).provideTrackingEntryProvider();
+    _trackingEntry.addListener(_onProviderChanged);
+    _trackingEntry.check();
   }
 
   @override
   void dispose() {
     _provider.removeListener(_onProviderChanged);
     _provider.dispose();
+    _trackingEntry.removeListener(_onProviderChanged);
+    _trackingEntry.dispose();
     super.dispose();
   }
 
   void _onProviderChanged() {
     if (!mounted) return;
 
-    // Refresco pasivo mientras se espera a la contraparte
     final status = _provider.detail?.collection.status;
     if (status == CollectionStatus.pendingDelivery ||
         status == CollectionStatus.pendingPayment) {
       _provider.startPassiveRefresh();
     } else {
       _provider.stopPassiveRefresh();
+    }
+
+    if (status == CollectionStatus.pendingDelivery) {
+      _trackingEntry.startPassiveRefresh();
+    } else {
+      _trackingEntry.stopPassiveRefresh();
     }
 
     setState(() {});
@@ -145,8 +157,8 @@ class _CollectionDetailCitizenScreenState
           isCompleted
               ? 'Venta completada'
               : isCancelled
-                  ? 'Recolección cancelada'
-                  : 'Detalle de venta',
+              ? 'Recolección cancelada'
+              : 'Detalle de venta',
         ),
       ),
       body: SafeArea(
@@ -181,8 +193,7 @@ class _CollectionDetailCitizenScreenState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 48, color: colors.error),
+              Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
               const SizedBox(height: 16),
               Text(
                 _provider.errorMessage ?? 'No se pudo cargar la recolección',
@@ -205,8 +216,7 @@ class _CollectionDetailCitizenScreenState
     final collection = _provider.detail!.collection;
     return switch (collection.status) {
       CollectionStatus.pendingDelivery ||
-      CollectionStatus.pendingWeighing =>
-        _buildWeighingWaitStep(),
+      CollectionStatus.pendingWeighing => _buildWeighingWaitStep(),
       CollectionStatus.pendingConfirmation => _buildAmountReviewStep(),
       CollectionStatus.pendingPayment => _buildPaymentWaitStep(),
       CollectionStatus.completed => _buildCompletedStep(),
@@ -214,7 +224,6 @@ class _CollectionDetailCitizenScreenState
     };
   }
 
-  // ── Sección informativa (residuo + establecimiento + oferta) ────────────────
   Widget _buildInfoCard() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -288,7 +297,6 @@ class _CollectionDetailCitizenScreenState
     );
   }
 
-  // ── Paso 1: esperando pesaje ────────────────────────────────────────────────
   List<Widget> _buildWeighingWaitStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -330,18 +338,73 @@ class _CollectionDetailCitizenScreenState
         ),
       ),
       const SizedBox(height: 24),
+      if (_trackingEntry.hasActiveRoute) ...[
+        _buildLiveTrackingBanner(),
+        const SizedBox(height: 12),
+      ],
       OutlinedButton.icon(
-        onPressed:
-            _provider.actionStatus == CitizenActionStatus.working
-                ? null
-                : _onCancel,
+        onPressed: _provider.actionStatus == CitizenActionStatus.working
+            ? null
+            : _onCancel,
         icon: const Icon(Icons.cancel_outlined, size: 18),
         label: const Text('Cancelar recolección'),
       ),
     ];
   }
 
-  // ── Paso 2: revisar y confirmar monto ───────────────────────────────────────
+  Widget _buildLiveTrackingBanner() {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.local_shipping_rounded,
+                size: 20,
+                color: colors.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '¡El recolector va en camino!',
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Sigue en el mapa por dónde viene, en tiempo real.',
+            style: textTheme.bodySmall?.copyWith(
+              color: colors.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 12),
+          PrimaryButtonGreenWidget(
+            text: 'Ver en tiempo real',
+            onPressed: () => context.push(
+              '/tracking',
+              extra: {'routeId': _trackingEntry.routeId},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<Widget> _buildAmountReviewStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -432,7 +495,6 @@ class _CollectionDetailCitizenScreenState
     ];
   }
 
-  // ── Paso 3: esperando el pago ───────────────────────────────────────────────
   List<Widget> _buildPaymentWaitStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -478,7 +540,6 @@ class _CollectionDetailCitizenScreenState
     ];
   }
 
-  // ── Completada ─────────────────────────────────────────────────────────────
   List<Widget> _buildCompletedStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -580,23 +641,24 @@ class _CollectionDetailCitizenScreenState
     CollectionOfferInfo offer,
     Payment? payment,
   ) async {
-    await shareCollectionReceipt(CollectionReceiptData(
-      collectionId: collection.collectionId,
-      materialTitle: offer.wastePublicationTitle ?? 'Residuo',
-      counterpartLabel: 'Establecimiento',
-      counterpartName: offer.establishmentName ?? 'Establecimiento',
-      actualQuantity: collection.actualQuantity ?? 0,
-      unit: offer.unit,
-      pricePerUnit: offer.pricePerUnit,
-      finalAmount: payment?.grossAmount ?? collection.finalAmount ?? 0,
-      treasureflowFee: payment?.treasureflowFee,
-      netAmount: payment?.receiverNetAmount ?? collection.finalAmount ?? 0,
-      paymentMethodLabel: payment?.method.label,
-      date: payment?.paymentDate ?? DateTime.now(),
-    ));
+    await shareCollectionReceipt(
+      CollectionReceiptData(
+        collectionId: collection.collectionId,
+        materialTitle: offer.wastePublicationTitle ?? 'Residuo',
+        counterpartLabel: 'Establecimiento',
+        counterpartName: offer.establishmentName ?? 'Establecimiento',
+        actualQuantity: collection.actualQuantity ?? 0,
+        unit: offer.unit,
+        pricePerUnit: offer.pricePerUnit,
+        finalAmount: payment?.grossAmount ?? collection.finalAmount ?? 0,
+        treasureflowFee: payment?.treasureflowFee,
+        netAmount: payment?.receiverNetAmount ?? collection.finalAmount ?? 0,
+        paymentMethodLabel: payment?.method.label,
+        date: payment?.paymentDate ?? DateTime.now(),
+      ),
+    );
   }
 
-  // ── Cancelada ──────────────────────────────────────────────────────────────
   List<Widget> _buildCancelledStep() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -641,7 +703,6 @@ class _CollectionDetailCitizenScreenState
     ];
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   Widget _sectionTitle(IconData icon, String title) {
     final theme = Theme.of(context);
     return Row(

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class SolicitudCardWidget extends StatelessWidget {
   final String title;
   final String date;
-  final String views;
-  final String offersCount;
+  final String distanceLabel;
+  final String publisherName;
   final String address;
   final String status;
   final String? actionLabel;
@@ -15,8 +15,8 @@ class SolicitudCardWidget extends StatelessWidget {
     super.key,
     required this.title,
     required this.date,
-    required this.views,
-    required this.offersCount,
+    required this.distanceLabel,
+    required this.publisherName,
     required this.address,
     this.status = 'Activa',
     this.actionLabel,
@@ -52,7 +52,11 @@ class SolicitudCardWidget extends StatelessWidget {
                       color: colors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(Icons.inventory_2, size: 28, color: colors.primary.withValues(alpha: 0.4)),
+                    child: Icon(
+                      Icons.inventory_2,
+                      size: 28,
+                      color: colors.primary.withValues(alpha: 0.4),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -72,7 +76,10 @@ class SolicitudCardWidget extends StatelessWidget {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: colors.primary,
                                 borderRadius: BorderRadius.circular(20),
@@ -90,11 +97,26 @@ class SolicitudCardWidget extends StatelessWidget {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            _infoChip(Icons.calendar_today, date, textTheme, colors),
+                            _infoChip(
+                              Icons.calendar_today,
+                              date,
+                              textTheme,
+                              colors,
+                            ),
                             const SizedBox(width: 10),
-                            _infoChip(Icons.visibility_outlined, views, textTheme, colors),
+                            _infoChip(
+                              Icons.near_me_outlined,
+                              distanceLabel,
+                              textTheme,
+                              colors,
+                            ),
                             const SizedBox(width: 10),
-                            _infoChip(Icons.chat_bubble_outline, offersCount, textTheme, colors),
+                            _infoChip(
+                              Icons.person_outline,
+                              publisherName,
+                              textTheme,
+                              colors,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -121,7 +143,9 @@ class SolicitudCardWidget extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     border: Border(
-                      top: BorderSide(color: colors.outline.withValues(alpha: 0.3)),
+                      top: BorderSide(
+                        color: colors.outline.withValues(alpha: 0.3),
+                      ),
                     ),
                   ),
                   child: Row(
@@ -146,16 +170,18 @@ class SolicitudCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _infoChip(IconData icon, String text, TextTheme textTheme, ColorScheme colors) {
+  Widget _infoChip(
+    IconData icon,
+    String text,
+    TextTheme textTheme,
+    ColorScheme colors,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 12, color: colors.onSurface.withValues(alpha: 0.5)),
         const SizedBox(width: 3),
-        Text(
-          text,
-          style: textTheme.bodySmall?.copyWith(fontSize: 11),
-        ),
+        Text(text, style: textTheme.bodySmall?.copyWith(fontSize: 11)),
       ],
     );
   }

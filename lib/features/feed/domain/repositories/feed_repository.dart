@@ -1,4 +1,4 @@
-import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
+import 'package:treasureflow/features/profile/citizen/domain/entities/post_summary.dart';
 
 abstract class FeedRepository {
   Future<PaginatedPosts> getFeedPosts({

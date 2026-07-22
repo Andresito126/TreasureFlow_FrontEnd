@@ -45,6 +45,24 @@ class AuthRemoteDatasource {
     await _userStorage.clearSession();
   }
 
+  Future<void> requestForgotPasswordCode(String phone) async {
+    await _apiClient.post(
+      '/auth/forgot-password/request-code',
+      body: {'phone': phone},
+    );
+  }
+
+  Future<void> confirmForgotPassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  }) async {
+    await _apiClient.patch(
+      '/auth/forgot-password/confirm',
+      body: {'phone': phone, 'code': code, 'newPassword': newPassword},
+    );
+  }
+
   Map<String, dynamic> _decodeJwtPayload(String token) {
     final parts = token.split('.');
     final payload = parts[1];
