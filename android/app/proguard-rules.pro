@@ -2,6 +2,10 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 
+## WebView Flutter
+-keep class io.flutter.plugins.webviewflutter.** { *; }
+-dontwarn io.flutter.plugins.webviewflutter.**
+
 ## Google Maps
 -keep class com.google.android.gms.maps.** { *; }
 -keep class com.google.android.gms.location.** { *; }
