@@ -4,17 +4,14 @@ import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/posts/object/presentation/widgets/image_gallery_widget.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/available_slot.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/my_offer.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/waste_detail_local_provider.dart';
-import 'package:treasureflow/features/posts/waste/presentation/widgets/delivery_mode_banner_widget.dart';
-import 'package:treasureflow/features/posts/waste/presentation/widgets/existing_offer_banner_widget.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/info_banner_widget.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/make_offer_card_widget.dart';
-import 'package:treasureflow/features/posts/waste/presentation/widgets/waste_detail_local_bottom_bar_widget.dart';
-import 'package:treasureflow/features/posts/waste/presentation/widgets/waste_info_chip_widget.dart';
-import 'package:treasureflow/features/posts/waste/presentation/widgets/waste_status_badge_widget.dart';
 import 'package:treasureflow/shared/utils/material_type_translator.dart';
 import 'package:treasureflow/shared/utils/pickup_label_formatter.dart';
+import 'package:treasureflow/shared/utils/post_status_translator.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/image_viewer_screen.dart';
 
@@ -161,23 +158,39 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
   Future<void> _onSendOffer() async {
     final priceText = _priceController.text.trim();
     if (priceText.isEmpty) {
-      AppToast.show(context, 'Ingresa el precio que ofreces', type: ToastType.warning);
+      AppToast.show(
+        context,
+        'Ingresa el precio que ofreces',
+        type: ToastType.warning,
+      );
       return;
     }
 
     final price = double.tryParse(priceText);
     if (price == null || price <= 0) {
-      AppToast.show(context, 'Ingresa un precio válido', type: ToastType.warning);
+      AppToast.show(
+        context,
+        'Ingresa un precio válido',
+        type: ToastType.warning,
+      );
       return;
     }
 
     if (_selectedDate == null) {
-      AppToast.show(context, 'Selecciona el día de recolección', type: ToastType.warning);
+      AppToast.show(
+        context,
+        'Selecciona el día de recolección',
+        type: ToastType.warning,
+      );
       return;
     }
 
     if (_startTime == null || _endTime == null) {
-      AppToast.show(context, 'Selecciona el horario de recolección', type: ToastType.warning);
+      AppToast.show(
+        context,
+        'Selecciona el horario de recolección',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -185,7 +198,11 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
     final endMin = _endTime!.hour * 60 + _endTime!.minute;
 
     if (endMin <= startMin) {
-      AppToast.show(context, 'La hora de fin debe ser mayor a la de inicio', type: ToastType.warning);
+      AppToast.show(
+        context,
+        'La hora de fin debe ser mayor a la de inicio',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -228,7 +245,11 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
         _startTime = null;
         _endTime = null;
       });
-      AppToast.show(context, 'Oferta enviada correctamente', type: ToastType.success);
+      AppToast.show(
+        context,
+        'Oferta enviada correctamente',
+        type: ToastType.success,
+      );
     } else {
       AppToast.show(
         context,
@@ -273,7 +294,11 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today_outlined, size: 14, color: colors.primary),
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 14,
+                    color: colors.primary,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -311,18 +336,24 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
       child: Consumer<WasteDetailLocalProvider>(
         builder: (context, provider, _) {
           if (provider.status == WasteDetailLocalStatus.loading) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
           }
 
           if (provider.status == WasteDetailLocalStatus.error) {
             return Scaffold(
               appBar: AppBar(),
-              body: Center(child: Text(provider.errorMessage ?? 'Error al cargar')),
+              body: Center(
+                child: Text(provider.errorMessage ?? 'Error al cargar'),
+              ),
             );
           }
 
           final post = provider.post;
-          if (post == null) return const Scaffold(body: SizedBox.shrink());
+          if (post == null) {
+            return const Scaffold(body: SizedBox.shrink());
+          }
 
           return _buildContent(context, post, provider);
         },
@@ -376,42 +407,60 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  MaterialTypeTranslator.translate(post.materialTypeName),
+                                  MaterialTypeTranslator.translate(
+                                    post.materialTypeName,
+                                  ),
                                   style: textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              WasteStatusBadge(status: post.status),
+                              _statusBadge(post.status, textTheme),
                             ],
                           ),
+                          const SizedBox(height: 10),
+                          _publisherRow(post, colors, textTheme),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              WasteInfoChip(
-                                icon: Icons.recycling,
-                                label: MaterialTypeTranslator.translate(post.materialTypeName),
+                              _infoChip(
+                                Icons.recycling,
+                                MaterialTypeTranslator.translate(
+                                  post.materialTypeName,
+                                ),
+                                colors,
+                                textTheme,
                               ),
                               if (post.distance != null)
-                                WasteInfoChip(
-                                  icon: Icons.location_on_outlined,
-                                  label: post.distance!,
+                                _infoChip(
+                                  Icons.location_on_outlined,
+                                  post.distance!,
+                                  colors,
+                                  textTheme,
                                 ),
-                              WasteInfoChip(
-                                icon: Icons.access_time,
-                                label: post.publishedAt,
+                              _infoChip(
+                                Icons.access_time,
+                                post.publishedAt,
+                                colors,
+                                textTheme,
                               ),
                             ],
                           ),
                           const SizedBox(height: 14),
-                          DeliveryModeBanner(deliveryMode: post.deliveryMode),
+                          _deliveryModeBanner(
+                            post.deliveryMode,
+                            textTheme,
+                            colors,
+                          ),
                           const SizedBox(height: 20),
                           Text(
                             'Descripción',
-                            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -420,16 +469,21 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                               color: colors.onSurface.withValues(alpha: 0.7),
                             ),
                             maxLines: _descriptionExpanded ? null : 3,
-                            overflow: _descriptionExpanded ? null : TextOverflow.ellipsis,
+                            overflow: _descriptionExpanded
+                                ? null
+                                : TextOverflow.ellipsis,
                           ),
                           GestureDetector(
                             onTap: () => setState(
-                              () => _descriptionExpanded = !_descriptionExpanded,
+                              () =>
+                                  _descriptionExpanded = !_descriptionExpanded,
                             ),
                             child: Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                _descriptionExpanded ? 'Leer menos' : 'Leer más',
+                                _descriptionExpanded
+                                    ? 'Leer menos'
+                                    : 'Leer más',
                                 style: textTheme.bodySmall?.copyWith(
                                   color: colors.primary,
                                   fontWeight: FontWeight.w600,
@@ -445,16 +499,20 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                                 'El monto final se confirma al pesar el material en la recolección.',
                           ),
                           const SizedBox(height: 20),
-                          if (post.myOffer != null) ...[
-                            ExistingOfferBanner(offer: post.myOffer!),
-                            const SizedBox(height: 16),
-                          ],
+                          if (post.myOffer != null)
+                            _existingOfferBanner(
+                              post.myOffer!,
+                              colors,
+                              textTheme,
+                            ),
+                          if (post.myOffer != null) const SizedBox(height: 16),
                           MakeOfferCardWidget(
                             priceController: _priceController,
                             isLoading: provider.isSubmitting,
                             onSubmit: _onSendOffer,
                             selectedUnit: _selectedUnit,
-                            onUnitChanged: (unit) => setState(() => _selectedUnit = unit),
+                            onUnitChanged: (unit) =>
+                                setState(() => _selectedUnit = unit),
                             selectedDate: _selectedDate,
                             startTime: _startTime,
                             endTime: _endTime,
@@ -476,11 +534,295 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
               ),
             ),
           ),
-          WasteDetailLocalBottomBar(
-            post: post,
-            isSubmitting: provider.isSubmitting,
-            onConfirm: _onSendOffer,
+          _buildBottomBar(post, colors, textTheme, provider),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(
+    WastePostDetail post,
+    ColorScheme colors,
+    TextTheme textTheme,
+    WasteDetailLocalProvider provider,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            if (post.distance != null)
+              Expanded(
+                flex: 2,
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: colors.primary),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'Distancia: ${post.distance}',
+                        style: textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 3,
+              child: GestureDetector(
+                onTap: provider.isSubmitting ? null : _onSendOffer,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: provider.isSubmitting
+                        ? colors.primary.withValues(alpha: 0.5)
+                        : colors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (provider.isSubmitting)
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      else ...[
+                        Text(
+                          post.myOffer != null
+                              ? 'Actualizar oferta'
+                              : 'Confirmar oferta',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.arrow_forward,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _existingOfferBanner(
+    MyOffer offer,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    final isAccepted = offer.status == 'accepted';
+    final color = isAccepted ? Colors.green : colors.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isAccepted
+                ? Icons.check_circle_outline
+                : Icons.local_offer_outlined,
+            size: 20,
+            color: color,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isAccepted
+                      ? 'Tu oferta fue aceptada'
+                      : 'Ya enviaste una oferta',
+                  style: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '\$${offer.pricePerUnit.toStringAsFixed(2)} / ${offer.unit}',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colors.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+                if (offer.pickupLabel.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    offer.pickupLabel,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusBadge(String status, TextTheme textTheme) {
+    final info = PostStatusTranslator.translate(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: info.color,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        info.label,
+        style: textTheme.bodySmall?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+      ),
+    );
+  }
+
+  Widget _publisherRow(
+    WastePostDetail post,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    final hasPhoto = post.citizenProfilePictureUrl.isNotEmpty;
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 14,
+          backgroundColor: colors.primary.withValues(alpha: 0.1),
+          backgroundImage: hasPhoto
+              ? NetworkImage(post.citizenProfilePictureUrl)
+              : null,
+          child: hasPhoto
+              ? null
+              : Icon(Icons.person, size: 16, color: colors.primary),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            post.citizenName.isNotEmpty ? post.citizenName : 'Ciudadano',
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _deliveryModeBanner(
+    String deliveryMode,
+    TextTheme textTheme,
+    ColorScheme colors,
+  ) {
+    final (icon, label, color) = switch (deliveryMode) {
+      'home_delivery' => (
+        Icons.local_shipping_outlined,
+        'Disponible para recolección a domicilio',
+        colors.primary,
+      ),
+      'drop_off' => (
+        Icons.storefront_outlined,
+        'Debes llevarlo a un punto de acopio',
+        const Color(0xFF30A3F3),
+      ),
+      _ => (
+        Icons.swap_horiz_rounded,
+        'Recolección a domicilio o entrega en punto',
+        const Color(0xFF6D53ED),
+      ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoChip(
+    IconData icon,
+    String label,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.outline.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.06),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colors.onSurface.withValues(alpha: 0.6)),
+          const SizedBox(width: 6),
+          Text(label, style: textTheme.bodySmall?.copyWith(fontSize: 11)),
         ],
       ),
     );
@@ -521,7 +863,9 @@ class _SlotPickerSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Selecciona un día',
-                      style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                      style: textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -603,12 +947,18 @@ class _SlotCard extends StatelessWidget {
                 children: [
                   Text(
                     '${slot.dayLabel} · ${_displayDate(slot.date)}',
-                    style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      Icon(Icons.schedule, size: 12, color: colors.onSurface.withValues(alpha: 0.5)),
+                      Icon(
+                        Icons.schedule,
+                        size: 12,
+                        color: colors.onSurface.withValues(alpha: 0.5),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${slot.start} – ${slot.end}',
@@ -628,7 +978,9 @@ class _SlotCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8930C).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFE8930C).withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: const Color(0xFFE8930C).withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Text(
                   'Lleno',
@@ -658,7 +1010,20 @@ class _SlotCard extends StatelessWidget {
     if (parts.length < 3) return isoDate;
     final day = int.tryParse(parts[2]) ?? 0;
     final monthNum = int.tryParse(parts[1]) ?? 1;
-    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const months = [
+      'ene',
+      'feb',
+      'mar',
+      'abr',
+      'may',
+      'jun',
+      'jul',
+      'ago',
+      'sep',
+      'oct',
+      'nov',
+      'dic',
+    ];
     return '$day ${months[monthNum - 1]}';
   }
 }

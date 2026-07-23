@@ -18,4 +18,32 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() => _datasource.logout();
+
+  @override
+  Future<void> requestForgotPasswordCode({required String phone}) =>
+      _datasource.requestForgotPasswordCode(phone);
+
+  @override
+  Future<void> confirmForgotPassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  }) {
+    return _datasource.confirmForgotPassword(
+      phone: phone,
+      code: code,
+      newPassword: newPassword,
+    );
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) {
+    return _datasource.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
+  }
 }

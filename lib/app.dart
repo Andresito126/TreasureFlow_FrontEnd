@@ -6,21 +6,26 @@ import 'package:treasureflow/core/maps/presentation/providers/map_provider.dart'
 import 'package:treasureflow/core/router/app_router.dart';
 import 'package:treasureflow/core/notifications/services/notification_service.dart';
 import 'package:treasureflow/features/auth/di/auth_module.dart';
-import 'package:treasureflow/features/auth/citizen/di/citizen_auth_module.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/auth/di/citizen_auth_module.dart';
+import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:treasureflow/features/auth/citizen/presentation/providers/register_citizen_provider.dart';
-import 'package:treasureflow/features/auth/local/di/local_auth_module.dart';
-import 'package:treasureflow/features/auth/local/presentation/providers/register_local_provider.dart';
+import 'package:treasureflow/features/auth/presentation/providers/register_citizen_provider.dart';
+import 'package:treasureflow/features/auth/di/local_auth_module.dart';
+import 'package:treasureflow/features/auth/presentation/providers/register_local_provider.dart';
+import 'package:treasureflow/features/establishments/di/establishments_module.dart';
+import 'package:treasureflow/features/establishments/presentation/providers/establishments_list_provider.dart';
 import 'package:treasureflow/features/feed/di/feed_module.dart';
 import 'package:treasureflow/features/feed/presentation/providers/feed_provider.dart';
 import 'package:treasureflow/features/feed/presentation/providers/recommended_feed_provider.dart';
 import 'package:treasureflow/features/home/citizen/di/citizen_home_module.dart';
 import 'package:treasureflow/features/home/citizen/presentation/providers/citizen_home_provider.dart';
+import 'package:treasureflow/features/home/local/di/local_home_module.dart';
+import 'package:treasureflow/features/home/local/presentation/providers/local_home_feed_provider.dart';
+import 'package:treasureflow/features/home/local/presentation/providers/local_home_summary_provider.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/create_waste_provider.dart';
-import 'package:treasureflow/features/profile/di/profile_module.dart';
-import 'package:treasureflow/features/profile/presentation/providers/profile_posts_provider.dart';
+import 'package:treasureflow/features/profile/citizen/di/profile_module.dart';
+import 'package:treasureflow/features/profile/citizen/presentation/providers/profile_posts_provider.dart';
 import 'package:treasureflow/shared/theme/dark_theme.dart';
 import 'package:treasureflow/shared/theme/light_theme.dart';
 
@@ -85,6 +90,15 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider<CitizenHomeProvider>(
           create: (_) => CitizenHomeModule(widget.container).provideProvider(),
+        ),
+        ChangeNotifierProvider<LocalHomeFeedProvider>(
+          create: (_) => LocalHomeModule(widget.container).provideProvider(),
+        ),
+        ChangeNotifierProvider<LocalHomeSummaryProvider>(
+          create: (_) => LocalHomeModule(widget.container).provideLocalHomeSummaryProvider(),
+        ),
+        ChangeNotifierProvider<EstablishmentsListProvider>(
+          create: (_) => EstablishmentsModule(widget.container).provideListProvider(),
         ),
       ],
       child: MaterialApp.router(

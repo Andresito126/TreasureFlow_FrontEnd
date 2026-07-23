@@ -4,6 +4,8 @@ import 'package:treasureflow/features/posts/waste/domain/entities/offer_summary.
 class WastePostDetail {
   final String id;
   final String title;
+  final String citizenName;
+  final String citizenProfilePictureUrl;
   final String description;
   final List<String> photoUrls;
   final String publishedAt;
@@ -22,6 +24,8 @@ class WastePostDetail {
   const WastePostDetail({
     required this.id,
     required this.title,
+    required this.citizenName,
+    required this.citizenProfilePictureUrl,
     required this.description,
     required this.photoUrls,
     required this.publishedAt,

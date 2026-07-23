@@ -1,8 +1,10 @@
+import 'package:treasureflow/features/routes/local/domain/entities/route_status.dart';
+
 class TodayRouteStop {
   final String stopId;
   final String scheduledPickupId;
   final int stopOrder;
-  final String status;
+  final StopStatus status;
   final DateTime? estimatedArrival;
   final int distanceFromPrevMeters;
   final int durationFromPrevSeconds;
@@ -12,6 +14,9 @@ class TodayRouteStop {
   final double latitude;
   final double longitude;
   final String? addressText;
+
+  final bool paymentCompleted;
+  final String? collectionId;
 
   const TodayRouteStop({
     required this.stopId,
@@ -24,9 +29,11 @@ class TodayRouteStop {
     required this.citizenName,
     required this.latitude,
     required this.longitude,
+    required this.paymentCompleted,
     this.estimatedArrival,
     this.citizenPhone,
     this.addressText,
+    this.collectionId,
   });
 
   factory TodayRouteStop.fromJson(Map<String, dynamic> json) {
@@ -34,19 +41,20 @@ class TodayRouteStop {
       stopId: json['stopId'] as String,
       scheduledPickupId: json['scheduledPickupId'] as String,
       stopOrder: (json['stopOrder'] as num).toInt(),
-      status: json['status'] as String,
+      status: StopStatus.fromApi(json['status'] as String?),
       estimatedArrival: json['estimatedArrival'] != null
           ? DateTime.tryParse(json['estimatedArrival'].toString())
           : null,
       distanceFromPrevMeters: (json['distanceFromPrevMeters'] as num).toInt(),
-      durationFromPrevSeconds:
-          (json['durationFromPrevSeconds'] as num).toInt(),
+      durationFromPrevSeconds: (json['durationFromPrevSeconds'] as num).toInt(),
       citizenId: json['citizenId'] as String,
       citizenName: json['citizenName'] as String,
       citizenPhone: json['citizenPhone'] as String?,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       addressText: json['addressText'] as String?,
+      paymentCompleted: json['paymentCompleted'] as bool? ?? false,
+      collectionId: json['collectionId'] as String?,
     );
   }
 }

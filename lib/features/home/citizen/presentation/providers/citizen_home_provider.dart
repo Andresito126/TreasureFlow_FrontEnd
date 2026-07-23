@@ -2,12 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/home/citizen/domain/entities/citizen_home.dart';
-import 'package:treasureflow/features/home/citizen/domain/repositories/citizen_home_repository.dart';
+import 'package:treasureflow/features/home/citizen/domain/usecases/get_citizen_home_usecase.dart';
+import 'package:treasureflow/features/home/citizen/presentation/state/home_citizen_ui_state.dart';
 
-enum CitizenHomeStatus { idle, loading, success, error }
+export 'package:treasureflow/features/home/citizen/presentation/state/home_citizen_ui_state.dart'
+    show CitizenHomeStatus;
 
 class CitizenHomeProvider extends ChangeNotifier {
-  final CitizenHomeRepository _repository;
+  final GetCitizenHomeUseCase _getCitizenHomeUseCase;
 
   CitizenHomeStatus _status = CitizenHomeStatus.idle;
   CitizenHome? _data;
@@ -17,7 +19,7 @@ class CitizenHomeProvider extends ChangeNotifier {
   CitizenHome? get data => _data;
   String? get errorMessage => _errorMessage;
 
-  CitizenHomeProvider(this._repository);
+  CitizenHomeProvider(this._getCitizenHomeUseCase);
 
   Future<void> load() async {
     if (_status == CitizenHomeStatus.loading) return;
@@ -27,7 +29,10 @@ class CitizenHomeProvider extends ChangeNotifier {
 
     try {
       final position = await _getPosition();
-      _data = await _repository.getHome(lat: position.latitude, lng: position.longitude);
+      _data = await _getCitizenHomeUseCase(
+        lat: position.latitude,
+        lng: position.longitude,
+      );
       _status = CitizenHomeStatus.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -57,15 +62,15 @@ class CitizenHomeProvider extends ChangeNotifier {
   }
 
   Position _defaultPosition() => Position(
-        latitude: 19.432608,
-        longitude: -99.133209,
-        timestamp: DateTime.now(),
-        accuracy: 0,
-        altitude: 0,
-        altitudeAccuracy: 0,
-        heading: 0,
-        headingAccuracy: 0,
-        speed: 0,
-        speedAccuracy: 0,
-      );
+    latitude: 19.432608,
+    longitude: -99.133209,
+    timestamp: DateTime.now(),
+    accuracy: 0,
+    altitude: 0,
+    altitudeAccuracy: 0,
+    heading: 0,
+    headingAccuracy: 0,
+    speed: 0,
+    speedAccuracy: 0,
+  );
 }
