@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/features/establishments/presentation/providers/establishments_list_provider.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/establishment_card_widget.dart';
+import 'package:treasureflow/shared/utils/material_type_id_catalog.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 
 class EstablishmentsListScreen extends StatefulWidget {
@@ -51,6 +52,7 @@ class _EstablishmentsListScreenState extends State<EstablishmentsListScreen> {
                     ],
                   ),
                 ),
+                _buildMaterialFilterChips(provider, colors, textTheme),
                 Expanded(child: _buildBody(provider, colors, textTheme)),
               ],
             ),
@@ -62,6 +64,42 @@ class _EstablishmentsListScreenState extends State<EstablishmentsListScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMaterialFilterChips(
+    EstablishmentsListProvider provider,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    final materials = MaterialTypeIdCatalog.all;
+
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: const Text('Todos'),
+              selected: provider.materialTypeId == null,
+              onSelected: (_) => provider.filterByMaterial(null),
+            ),
+          ),
+          ...materials.entries.map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(entry.value),
+                selected: provider.materialTypeId == entry.key,
+                onSelected: (_) => provider.filterByMaterial(entry.key),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -133,6 +171,7 @@ class _EstablishmentsListScreenState extends State<EstablishmentsListScreen> {
               reviewCount: 0,
               materials: item.materials,
               isOpen: item.isOpen,
+              isPremium: item.isPremium,
               photoUrl: item.photoUrl,
               onTap: () => context.push('/establishmentDetail/${item.id}'),
             );

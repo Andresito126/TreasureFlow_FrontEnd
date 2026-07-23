@@ -27,6 +27,7 @@ class LocalHomeFeedRemoteDatasource {
       citizenId: json['citizenId'] as String,
       citizenName: json['citizenName'] as String,
       citizenProfilePictureUrl: json['citizenProfilePictureUrl'] as String,
+      citizenIsPremium: json['citizenIsPremium'] as bool? ?? false,
       publishedAt: json['publishedAt'] as String,
       isFeatured: json['isFeatured'] as bool,
       zoneId: (json['zoneId'] as num?)?.toInt(),

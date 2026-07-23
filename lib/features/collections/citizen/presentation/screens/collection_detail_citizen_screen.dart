@@ -624,6 +624,15 @@ class _CollectionDetailCitizenScreenState
       ),
       const SizedBox(height: 14),
       OutlinedButton.icon(
+        onPressed: () => context.push(
+          '/writeReview',
+          extra: {'collectionId': collection.collectionId},
+        ),
+        icon: const Icon(Icons.star_outline, size: 18),
+        label: const Text('Dejar reseña'),
+      ),
+      const SizedBox(height: 10),
+      OutlinedButton.icon(
         onPressed: () => _onShareReceipt(collection, offer, payment),
         icon: const Icon(Icons.share_outlined, size: 18),
         label: const Text('Compartir comprobante'),

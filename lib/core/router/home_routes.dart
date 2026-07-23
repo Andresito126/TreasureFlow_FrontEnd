@@ -11,6 +11,8 @@ import 'package:treasureflow/features/profile/citizen/presentation/screens/setti
 import 'package:treasureflow/features/profile/local/presentation/screens/edit_establishment_profile_screen.dart';
 import 'package:treasureflow/features/profile/local/presentation/screens/local_profile_screen.dart';
 import 'package:treasureflow/features/profile/local/presentation/screens/settings_screen_local.dart';
+import 'package:treasureflow/features/reviews/presentation/screens/local_reviews_screen.dart';
+import 'package:treasureflow/features/reviews/presentation/screens/write_review_screen.dart';
 
 final List<GoRoute> homeRoutes = [
   GoRoute(
@@ -62,5 +64,19 @@ final List<GoRoute> homeRoutes = [
     builder: (context, state) => EstablishmentDetailScreen(
       establishmentId: state.pathParameters['id']!,
     ),
+  ),
+  GoRoute(
+    path: '/localReviews',
+    builder: (context, state) => const LocalReviewsScreen(),
+  ),
+  GoRoute(
+    path: '/writeReview',
+    builder: (context, state) {
+      final extra = state.extra as Map<String, String>?;
+      return WriteReviewScreen(
+        collectionId: extra?['collectionId'],
+        establishmentId: extra?['establishmentId'],
+      );
+    },
   ),
 ];

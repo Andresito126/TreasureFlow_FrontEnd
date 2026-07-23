@@ -29,6 +29,7 @@ class CitizenHomeRemoteDatasource {
                     .map(MaterialTypeTranslator.translate)
                     .toList(),
                 isOpen: e['isOpen'] as bool,
+                isPremium: e['isPremium'] as bool,
               ))
           .toList(),
       nearbyItems: (response['nearbyItems'] as List)

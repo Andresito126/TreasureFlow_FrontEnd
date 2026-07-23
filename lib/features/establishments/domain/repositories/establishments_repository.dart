@@ -7,6 +7,7 @@ abstract class EstablishmentsRepository {
     required int offset,
     double? lat,
     double? lng,
+    String? materialTypeId,
   });
 
   Future<EstablishmentDetail> getDetail(String id);

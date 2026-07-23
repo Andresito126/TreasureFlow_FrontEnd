@@ -6,6 +6,7 @@ class NearbyEstablishment {
   final double averageRating;
   final List<String> materials;
   final bool isOpen;
+  final bool isPremium;
 
   const NearbyEstablishment({
     required this.id,
@@ -15,6 +16,7 @@ class NearbyEstablishment {
     required this.averageRating,
     required this.materials,
     required this.isOpen,
+    required this.isPremium,
   });
 }
 

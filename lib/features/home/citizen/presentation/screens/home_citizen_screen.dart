@@ -231,6 +231,7 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
         reviewCount: 0,
         materials: establishments[i].materials,
         isOpen: establishments[i].isOpen,
+        isPremium: establishments[i].isPremium,
         photoUrl: establishments[i].photoUrl,
         onTap: () =>
             context.push('/establishmentDetail/${establishments[i].id}'),

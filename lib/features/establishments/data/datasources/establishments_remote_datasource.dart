@@ -13,12 +13,14 @@ class EstablishmentsRemoteDatasource {
     required int offset,
     double? lat,
     double? lng,
+    String? materialTypeId,
   }) async {
     final query = <String, String>{
       'limit': '$limit',
       'offset': '$offset',
       if (lat != null) 'lat': '$lat',
       if (lng != null) 'lng': '$lng',
+      if (materialTypeId != null) 'materialTypeId': materialTypeId,
     };
     final queryString = query.entries.map((e) => '${e.key}=${e.value}').join('&');
     final response = await _apiClient.get('/establishments?$queryString');
@@ -38,6 +40,7 @@ class EstablishmentsRemoteDatasource {
                     .toList(),
                 isOpen: i['isOpen'] as bool,
                 distance: i['distance'] as String?,
+                isPremium: i['isPremium'] as bool,
               ))
           .toList(),
     );

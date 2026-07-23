@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 
 class OfferItemWidget extends StatelessWidget {
   final String name;
+  final bool isPremium;
   final String pricePerUnit;
   final String pickupLabel;
   final String status;
@@ -13,6 +15,7 @@ class OfferItemWidget extends StatelessWidget {
   const OfferItemWidget({
     super.key,
     required this.name,
+    this.isPremium = false,
     required this.pricePerUnit,
     required this.status,
     this.pickupLabel = '',
@@ -49,13 +52,23 @@ class OfferItemWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (isPremium) ...[
+                      const SizedBox(width: 6),
+                      const PremiumBadgeWidget(),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(

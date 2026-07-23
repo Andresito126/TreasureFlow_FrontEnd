@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:treasureflow/core/auth/user_role.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/establishments/di/establishments_module.dart';
 import 'package:treasureflow/features/establishments/domain/entities/establishment_detail.dart';
 import 'package:treasureflow/features/establishments/presentation/providers/establishment_detail_provider.dart';
-import 'package:treasureflow/shared/widgets/app_toast.dart';
+import 'package:treasureflow/features/reviews/di/reviews_module.dart';
+import 'package:treasureflow/features/reviews/domain/entities/review.dart';
+import 'package:treasureflow/features/reviews/presentation/providers/establishment_reviews_provider.dart';
+import 'package:treasureflow/features/reviews/presentation/providers/submit_review_provider.dart';
+import 'package:treasureflow/features/reviews/presentation/widgets/review_item_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 
 const _dayOrder = [1, 2, 3, 4, 5, 6, 7];
@@ -30,6 +36,11 @@ class EstablishmentDetailScreen extends StatefulWidget {
 
 class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
   late final EstablishmentDetailProvider _provider;
+  late final EstablishmentReviewsProvider _reviewsProvider;
+  late final SubmitReviewProvider _submitReviewProvider;
+
+  int _selectedTab = 0;
+  String? _currentUserId;
 
   @override
   void initState() {
@@ -38,12 +49,32 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     _provider = EstablishmentsModule(container).provideDetailProvider();
     _provider.addListener(_onProviderChanged);
     _provider.load(widget.establishmentId);
+
+    final reviewsModule = ReviewsModule(container);
+    _reviewsProvider = reviewsModule.provideReviewsProvider(
+      establishmentId: widget.establishmentId,
+    );
+    _reviewsProvider.addListener(_onProviderChanged);
+    _reviewsProvider.load();
+
+    _submitReviewProvider = reviewsModule.provideSubmitReviewProvider();
+    _submitReviewProvider.addListener(_onProviderChanged);
+    if (context.isCitizen) {
+      _submitReviewProvider.loadEligibility(widget.establishmentId);
+      container.userStorage.getUserId().then((id) {
+        if (mounted) setState(() => _currentUserId = id);
+      });
+    }
   }
 
   @override
   void dispose() {
     _provider.removeListener(_onProviderChanged);
     _provider.dispose();
+    _reviewsProvider.removeListener(_onProviderChanged);
+    _reviewsProvider.dispose();
+    _submitReviewProvider.removeListener(_onProviderChanged);
+    _submitReviewProvider.dispose();
     super.dispose();
   }
 
@@ -156,11 +187,14 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
           const SizedBox(height: 16),
           _buildSegmentedControl(colors, textTheme),
           const SizedBox(height: 16),
-          _buildContactCard(detail, colors, textTheme),
-          const SizedBox(height: 16),
-          _buildScheduleCard(detail, colors, textTheme),
-          const SizedBox(height: 16),
-          _buildMaterialsCard(detail, colors, textTheme),
+          if (_selectedTab == 0) ...[
+            _buildContactCard(detail, colors, textTheme),
+            const SizedBox(height: 16),
+            _buildScheduleCard(detail, colors, textTheme),
+            const SizedBox(height: 16),
+            _buildMaterialsCard(detail, colors, textTheme),
+          ] else
+            _buildReviewsTab(colors, textTheme),
         ],
       ),
     );
@@ -290,46 +324,190 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: colors.primary,
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: Center(
-                child: Text(
-                  'Información',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+          Expanded(child: _segmentedTab('Información', 0, colors, textTheme)),
+          Expanded(child: _segmentedTab('Reseñas', 1, colors, textTheme)),
+        ],
+      ),
+    );
+  }
+
+  Widget _segmentedTab(
+    String label,
+    int index,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    final isSelected = _selectedTab == index;
+    return InkWell(
+      borderRadius: BorderRadius.circular(11),
+      onTap: () => setState(() => _selectedTab = index),
+      child: Container(
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isSelected ? colors.primary : null,
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: textTheme.bodySmall?.copyWith(
+              color: isSelected
+                  ? colors.onPrimary
+                  : colors.onSurface.withValues(alpha: 0.5),
+              fontWeight: FontWeight.w600,
             ),
           ),
-          Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(11),
-              onTap: () => AppToast.show(
-                context,
-                'Las reseñas estarán disponibles próximamente',
-                type: ToastType.info,
-              ),
-              child: Center(
-                child: Text(
-                  'Reseñas',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.onSurface.withValues(alpha: 0.5),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReviewsTab(ColorScheme colors, TextTheme textTheme) {
+    final canReview =
+        context.isCitizen && _submitReviewProvider.eligibleCollections.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (canReview) ...[
+          PrimaryButtonBlueWidget(
+            text: 'Dejar reseña',
+            onPressed: () async {
+              final result = await context.push<bool>(
+                '/writeReview',
+                extra: {'establishmentId': widget.establishmentId},
+              );
+              if (result == true) {
+                _reviewsProvider.load();
+                _submitReviewProvider.loadEligibility(widget.establishmentId);
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
+        _buildReviewsList(colors, textTheme),
+      ],
+    );
+  }
+
+  Widget _buildReviewsList(ColorScheme colors, TextTheme textTheme) {
+    if (_reviewsProvider.status == ReviewsListStatus.loading ||
+        _reviewsProvider.status == ReviewsListStatus.idle) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_reviewsProvider.status == ReviewsListStatus.error) {
+      return Text(
+        _reviewsProvider.errorMessage ?? 'No se pudieron cargar las reseñas',
+        style: textTheme.bodyMedium,
+      );
+    }
+
+    if (_reviewsProvider.items.isEmpty) {
+      return Text(
+        'Este establecimiento aún no tiene reseñas',
+        style: textTheme.bodySmall?.copyWith(
+          color: colors.onSurface.withValues(alpha: 0.5),
+        ),
+      );
+    }
+
+    return Column(
+      children: _reviewsProvider.items
+          .map(
+            (review) => ReviewItemWidget(
+              review: review,
+              isOwn: _currentUserId != null && review.citizenId == _currentUserId,
+              onEdit: () => _showEditReviewDialog(review),
+              onDelete: () => _confirmDeleteReview(review),
             ),
+          )
+          .toList(),
+    );
+  }
+
+  Future<void> _showEditReviewDialog(Review review) async {
+    int rating = review.rating;
+    final commentController = TextEditingController(text: review.comment ?? '');
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: const Text('Editar reseña'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (i) {
+                      final starValue = i + 1;
+                      return IconButton(
+                        onPressed: () => setDialogState(() => rating = starValue),
+                        icon: Icon(
+                          starValue <= rating ? Icons.star : Icons.star_border,
+                          color: const Color(0xFFF5A623),
+                        ),
+                      );
+                    }),
+                  ),
+                  TextField(
+                    controller: commentController,
+                    maxLines: 3,
+                    maxLength: 500,
+                    decoration: const InputDecoration(hintText: 'Comentario (opcional)'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('Guardar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      await _reviewsProvider.updateReview(
+        reviewId: review.id,
+        rating: rating,
+        comment: commentController.text.trim(),
+      );
+    }
+  }
+
+  Future<void> _confirmDeleteReview(Review review) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar reseña'),
+        content: const Text('¿Seguro que quieres eliminar tu reseña? Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
     );
+
+    if (confirmed == true) {
+      await _reviewsProvider.deleteReview(review.id);
+    }
   }
 
   Widget _buildContactCard(

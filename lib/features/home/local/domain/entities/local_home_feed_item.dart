@@ -5,6 +5,7 @@ class LocalHomeFeedItem {
   final String citizenId;
   final String citizenName;
   final String citizenProfilePictureUrl;
+  final bool citizenIsPremium;
   final String publishedAt;
   final bool isFeatured;
   final int? zoneId;
@@ -21,6 +22,7 @@ class LocalHomeFeedItem {
     required this.citizenId,
     required this.citizenName,
     required this.citizenProfilePictureUrl,
+    required this.citizenIsPremium,
     required this.publishedAt,
     required this.isFeatured,
     this.zoneId,

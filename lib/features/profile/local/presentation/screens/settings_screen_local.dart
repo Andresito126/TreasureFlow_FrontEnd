@@ -100,7 +100,7 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
                     icon: Icons.star_outline,
                     title: 'Ver reseñas',
                     subtitle: 'Consulta lo que opinan los ciudadanos de ti.',
-                    onTap: () {},
+                    onTap: () => context.push('/localReviews'),
                   ),
                   SettingsTileWidget(
                     icon: Icons.notifications_outlined,

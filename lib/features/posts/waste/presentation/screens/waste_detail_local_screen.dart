@@ -8,6 +8,7 @@ import 'package:treasureflow/features/posts/waste/domain/entities/my_offer.dart'
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/waste_detail_local_provider.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/info_banner_widget.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 import 'package:treasureflow/features/posts/waste/presentation/widgets/make_offer_card_widget.dart';
 import 'package:treasureflow/shared/utils/material_type_translator.dart';
 import 'package:treasureflow/shared/utils/pickup_label_formatter.dart';
@@ -744,6 +745,10 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
             style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
+        if (post.citizenIsPremium) ...[
+          const SizedBox(width: 6),
+          const PremiumBadgeWidget(),
+        ],
       ],
     );
   }

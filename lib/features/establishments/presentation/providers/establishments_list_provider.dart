@@ -22,12 +22,14 @@ class EstablishmentsListProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
   double? _lat;
   double? _lng;
+  String? _materialTypeId;
 
   EstablishmentsListStatus get status => _status;
   List<EstablishmentListItem> get items => List.unmodifiable(_items);
   String? get errorMessage => _errorMessage;
   bool get hasMore => _items.length < _total;
   bool get isLoadingMore => _isLoadingMore;
+  String? get materialTypeId => _materialTypeId;
 
   Future<void> load() async {
     if (_status == EstablishmentsListStatus.loading) return;
@@ -45,6 +47,7 @@ class EstablishmentsListProvider extends ChangeNotifier {
         offset: 0,
         lat: _lat,
         lng: _lng,
+        materialTypeId: _materialTypeId,
       );
       _items = page.items;
       _total = page.total;
@@ -58,6 +61,14 @@ class EstablishmentsListProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> filterByMaterial(String? materialTypeId) async {
+    if (_materialTypeId == materialTypeId) return;
+    _materialTypeId = materialTypeId;
+    _items = [];
+    _total = 0;
+    await load();
   }
 
   Future<void> loadMore() async {
@@ -75,6 +86,7 @@ class EstablishmentsListProvider extends ChangeNotifier {
         offset: _items.length,
         lat: _lat,
         lng: _lng,
+        materialTypeId: _materialTypeId,
       );
       _items = [..._items, ...page.items];
       _total = page.total;
