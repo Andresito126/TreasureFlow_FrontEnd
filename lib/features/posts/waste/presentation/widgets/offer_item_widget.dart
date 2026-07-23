@@ -118,7 +118,8 @@ class OfferItemWidget extends StatelessWidget {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (isAccepting)
           _actionSpinner(colors.primary)
@@ -134,6 +135,7 @@ class OfferItemWidget extends StatelessWidget {
               ),
               child: Text(
                 'Aceptar',
+                textAlign: TextAlign.center,
                 style: textTheme.bodySmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -150,7 +152,7 @@ class OfferItemWidget extends StatelessWidget {
             onTap: onReject,
             child: Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 border:
@@ -158,6 +160,7 @@ class OfferItemWidget extends StatelessWidget {
               ),
               child: Text(
                 'Rechazar',
+                textAlign: TextAlign.center,
                 style: textTheme.bodySmall?.copyWith(
                   color: colors.error,
                   fontWeight: FontWeight.w600,

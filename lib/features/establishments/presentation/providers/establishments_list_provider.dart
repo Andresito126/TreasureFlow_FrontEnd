@@ -98,6 +98,14 @@ class EstablishmentsListProvider extends ChangeNotifier {
     });
   }
 
+  /// Descarta cualquier búsqueda pendiente sin disparar una recarga —
+  /// se usa al reingresar a la pantalla para que no arrastre el texto
+  /// de una búsqueda anterior.
+  void resetSearch() {
+    _searchDebounce?.cancel();
+    _searchQuery = '';
+  }
+
   @override
   void dispose() {
     _searchDebounce?.cancel();

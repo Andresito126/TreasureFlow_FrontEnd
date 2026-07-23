@@ -14,21 +14,17 @@ class ProfilePostsProvider extends ChangeNotifier {
 
   static const filterLabels = [
     'Todas',
-    'En revisión',
     'Activas',
     'Con ofertas',
     'Apartadas',
     'Finalizadas',
-    'Rechazadas',
   ];
   static const _filterValues = [
     'all',
-    'pending_moderation',
     'active',
     'with_offers',
     'reserved',
     'completed',
-    'rejected',
   ];
 
   ProfilePostsProvider({

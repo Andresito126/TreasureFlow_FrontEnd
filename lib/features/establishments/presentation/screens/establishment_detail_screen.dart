@@ -409,6 +409,7 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
         border: Border.all(color: colors.primary.withValues(alpha: 0.15)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(child: _segmentedTab('Información', Icons.info_outline_rounded, 0, colors, textTheme)),
           Expanded(child: _segmentedTab('Reseñas', Icons.star_outline_rounded, 1, colors, textTheme)),

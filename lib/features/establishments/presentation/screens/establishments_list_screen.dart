@@ -21,7 +21,10 @@ class _EstablishmentsListScreenState extends State<EstablishmentsListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EstablishmentsListProvider>().load();
+      final provider = context.read<EstablishmentsListProvider>();
+      provider.resetSearch();
+      _searchController.clear();
+      provider.load();
     });
   }
 

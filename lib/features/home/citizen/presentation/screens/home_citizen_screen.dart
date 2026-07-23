@@ -6,7 +6,6 @@ import 'package:treasureflow/features/home/citizen/presentation/providers/citize
 import 'package:treasureflow/features/home/citizen/presentation/widgets/action_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/activity_summary_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/establishment_card_widget.dart';
-import 'package:treasureflow/features/home/citizen/presentation/widgets/object_nearby_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/offer_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/stat_card_widget.dart';
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
@@ -109,11 +108,6 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildEstablishments(data, colors, textTheme),
-                        const SizedBox(height: 24),
-
-                        _sectionTitle('Objetos cerca de ti', textTheme),
-                        const SizedBox(height: 12),
-                        _buildNearbyItems(data, colors, textTheme),
                         const SizedBox(height: 24),
 
                         _sectionTitle('Ofertas recibidas', textTheme),
@@ -223,42 +217,6 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
         photoUrl: establishments[i].photoUrl,
         onTap: () =>
             context.push('/establishmentDetail/${establishments[i].id}'),
-      ),
-    );
-  }
-
-  Widget _buildNearbyItems(
-    CitizenHome? data,
-    ColorScheme colors,
-    TextTheme textTheme,
-  ) {
-    final items = data?.nearbyItems ?? [];
-
-    if (data == null) {
-      return _buildHorizontalList(
-        itemCount: 3,
-        itemBuilder: (_) => const ObjectNearbyCardWidget(
-          objectName: 'Mesa de madera',
-          price: '\$1,200',
-          ownerName: 'Andre Gutiérrez',
-          timeAgo: '3 hrs',
-          distance: '1.5 km',
-        ),
-      );
-    }
-
-    if (items.isEmpty) {
-      return _emptySection('No hay objetos cerca de ti', colors, textTheme);
-    }
-
-    return _buildHorizontalList(
-      itemCount: items.length,
-      itemBuilder: (i) => ObjectNearbyCardWidget(
-        objectName: items[i].description,
-        price: '—',
-        ownerName: 'Ciudadano',
-        timeAgo: items[i].publishedAt,
-        distance: items[i].distance,
       ),
     );
   }
