@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 const _darkBg = Color(0xFF070D19);
 const _lightBg = Color(0xFFF5F5F5);
@@ -58,25 +59,10 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
+              SvgPicture.asset(
+                'assets/auth/softgenix.svg',
                 width: 52,
                 height: 52,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text(
-                    'S',
-                    style: TextStyle(
-                      color: _darkBg,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
               ),
               AnimatedSize(
                 duration: const Duration(milliseconds: 300),
