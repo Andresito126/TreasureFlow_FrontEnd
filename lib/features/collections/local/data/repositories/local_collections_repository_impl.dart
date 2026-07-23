@@ -20,16 +20,22 @@ class LocalCollectionsRepositoryImpl implements LocalCollectionsRepository {
       _datasource.getCollectionDetail(id);
 
   @override
-  Future<void> registerWeighing(String id, double actualQuantity) =>
-      _datasource.registerWeighing(id, actualQuantity);
+  Future<void> registerWeighing(
+    String id,
+    double actualQuantity, {
+    double? finalAmount,
+  }) => _datasource.registerWeighing(
+    id,
+    actualQuantity,
+    finalAmount: finalAmount,
+  );
 
   @override
   Future<CreatePaymentResult> createPayment(
     String id, {
     required PaymentMethodType method,
     String? tokenId,
-  }) =>
-      _datasource.createPayment(id, method: method, tokenId: tokenId);
+  }) => _datasource.createPayment(id, method: method, tokenId: tokenId);
 
   @override
   Future<CheckPaymentStatusResult> checkPaymentStatus(String id) =>

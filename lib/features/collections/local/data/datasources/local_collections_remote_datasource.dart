@@ -23,10 +23,17 @@ class LocalCollectionsRemoteDatasource {
     return CollectionDetail.fromJson(data);
   }
 
-  Future<void> registerWeighing(String id, double actualQuantity) async {
+  Future<void> registerWeighing(
+    String id,
+    double actualQuantity, {
+    double? finalAmount,
+  }) async {
     await _apiClient.patch(
       '/collections/$id/weighing',
-      body: {'actualQuantity': actualQuantity},
+      body: {
+        'actualQuantity': actualQuantity,
+        if (finalAmount != null) 'finalAmount': finalAmount,
+      },
     );
   }
 
@@ -37,10 +44,7 @@ class LocalCollectionsRemoteDatasource {
   }) async {
     final data = await _apiClient.post(
       '/collections/$id/payment',
-      body: {
-        'method': method.apiValue,
-        'tokenId': ?tokenId,
-      },
+      body: {'method': method.apiValue, 'tokenId': ?tokenId},
     );
     return CreatePaymentResult.fromJson(data);
   }

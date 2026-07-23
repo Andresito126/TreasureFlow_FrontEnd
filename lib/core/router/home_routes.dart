@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:treasureflow/features/auth/presentation/screens/change_password_screen.dart';
 import 'package:treasureflow/features/establishments/presentation/screens/establishment_detail_screen.dart';
 import 'package:treasureflow/features/establishments/presentation/screens/establishments_list_screen.dart';
+import 'package:treasureflow/features/feed/presentation/screens/feed_screen.dart';
 import 'package:treasureflow/features/home/citizen/presentation/screens/home_citizen_screen.dart';
 import 'package:treasureflow/features/home/local/presentation/screens/home_local_screen.dart';
 import 'package:treasureflow/features/profile/citizen/presentation/screens/edit_citizen_profile_screen.dart';
@@ -50,7 +51,7 @@ final List<GoRoute> homeRoutes = [
   ),
   GoRoute(
     path: '/feed',
-    builder: (context, state) => const EstablishmentsListScreen(),
+    builder: (context, state) => const FeedScreen(),
   ),
   GoRoute(
     path: '/establishments',

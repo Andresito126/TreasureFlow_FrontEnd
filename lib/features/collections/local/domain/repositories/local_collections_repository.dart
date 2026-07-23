@@ -7,7 +7,11 @@ import 'package:treasureflow/features/collections/local/domain/entities/payment.
 abstract class LocalCollectionsRepository {
   Future<List<CollectionListItem>> getCollections();
   Future<CollectionDetail> getCollectionDetail(String id);
-  Future<void> registerWeighing(String id, double actualQuantity);
+  Future<void> registerWeighing(
+    String id,
+    double actualQuantity, {
+    double? finalAmount,
+  });
   Future<CreatePaymentResult> createPayment(
     String id, {
     required PaymentMethodType method,
