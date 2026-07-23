@@ -51,6 +51,7 @@ class LocalPendingOffer {
 class LocalHomeSummary {
   final String storeName;
   final String profilePictureUrl;
+  final bool isPremium;
   final List<String> photoUrls;
   final double averageRating;
   final List<String> materials;
@@ -64,6 +65,7 @@ class LocalHomeSummary {
   const LocalHomeSummary({
     required this.storeName,
     required this.profilePictureUrl,
+    required this.isPremium,
     required this.photoUrls,
     required this.averageRating,
     required this.materials,

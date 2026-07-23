@@ -119,7 +119,7 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
               ),
               const SizedBox(height: 20),
 
-              PremiumBannerWidget(onTap: () {}),
+              PremiumBannerWidget(onTap: () => context.push('/premiumLocal')),
               const SizedBox(height: 24),
 
               const SettingsLogoutTile(),

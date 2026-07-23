@@ -84,7 +84,7 @@ class _SettingsScreenCitizenState extends State<SettingsScreenCitizen> {
               ),
               const SizedBox(height: 20),
 
-              PremiumBannerWidget(onTap: () {}),
+              PremiumBannerWidget(onTap: () => context.push('/premiumCitizen')),
               const SizedBox(height: 24),
 
               const SettingsSectionLabel('SOPORTE'),

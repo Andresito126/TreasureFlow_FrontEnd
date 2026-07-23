@@ -72,8 +72,12 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
                   _buildHeader(home.data, colors, textTheme),
                   const SizedBox(height: 20),
 
-                  const PremiumBannerWidget(),
-                  const SizedBox(height: 20),
+                  if (!(home.data?.isPremium ?? false)) ...[
+                    PremiumBannerWidget(
+                      onTap: () => context.push('/premiumLocal'),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
                   _buildStats(home, colors, textTheme),
                   const SizedBox(height: 24),

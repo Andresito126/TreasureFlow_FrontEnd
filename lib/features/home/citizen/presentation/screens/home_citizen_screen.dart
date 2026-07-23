@@ -52,8 +52,12 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
                         _buildHeader(data, colors, textTheme),
                         const SizedBox(height: 20),
 
-                        const PremiumBannerWidget(),
-                        const SizedBox(height: 20),
+                        if (!(data?.isPremium ?? false)) ...[
+                          PremiumBannerWidget(
+                            onTap: () => context.push('/premiumCitizen'),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
 
                         _sectionTitle('Resumen de tus actividades', textTheme),
                         const SizedBox(height: 12),

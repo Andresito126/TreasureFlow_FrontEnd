@@ -31,6 +31,9 @@ import 'package:treasureflow/features/auth/domain/repositories/local_auth_reposi
 import 'package:treasureflow/features/feed/data/datasources/feed_remote_datasource.dart';
 import 'package:treasureflow/features/feed/data/repositories/feed_repository_impl.dart';
 import 'package:treasureflow/features/feed/domain/repositories/feed_repository.dart';
+import 'package:treasureflow/features/premium/shared/data/datasources/premium_remote_datasource.dart';
+import 'package:treasureflow/features/premium/shared/data/repositories/premium_repository_impl.dart';
+import 'package:treasureflow/features/premium/shared/domain/repositories/premium_repository.dart';
 import 'package:treasureflow/features/posts/waste/data/datasources/waste_post_remote_datasource.dart';
 import 'package:treasureflow/features/posts/waste/data/repositories/waste_post_repository_impl.dart';
 import 'package:treasureflow/features/posts/waste/domain/repositories/waste_post_repository.dart';
@@ -55,6 +58,7 @@ class AppContainer {
   late final ApiClient routesApiClient;
   late final CitizenCollectionsRepository citizenCollectionsRepository;
   late final LocalCollectionsRepository localCollectionsRepository;
+  late final PremiumRepository premiumRepository;
   late final RoutesRepository routesRepository;
   late final TrackingSocketClientFactory trackingSocketClientFactory;
   late final AuthRepository authRepository;
@@ -142,6 +146,9 @@ class AppContainer {
     localCollectionsRepository = LocalCollectionsRepositoryImpl(
       localCollectionsDatasource,
     );
+
+    final premiumDatasource = PremiumRemoteDatasource(collectionsApiClient);
+    premiumRepository = PremiumRepositoryImpl(premiumDatasource);
 
     // tf_backend_routes
     final routesDatasource = RoutesRemoteDatasource(routesApiClient);

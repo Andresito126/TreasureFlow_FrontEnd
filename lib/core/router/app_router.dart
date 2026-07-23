@@ -5,6 +5,7 @@ import 'package:treasureflow/core/router/auth_routes.dart';
 import 'package:treasureflow/core/router/home_routes.dart';
 import 'package:treasureflow/core/router/posts_routes.dart';
 import 'package:treasureflow/core/router/routes_routes.dart';
+import 'package:treasureflow/core/router/premium_routes.dart';
 import 'package:treasureflow/core/router/sales_routes.dart';
 import 'package:treasureflow/core/router/tracking_routes.dart';
 import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
@@ -66,6 +67,7 @@ GoRouter createRouter({
       ...homeRoutes,
       ...postsRoutes,
       ...salesRoutes,
+      ...premiumRoutes,
       ...routesRoutes,
       ...trackingRoutes,
     ],

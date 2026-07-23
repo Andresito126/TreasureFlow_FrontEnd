@@ -12,6 +12,7 @@ class LocalHomeSummaryRemoteDatasource {
     return LocalHomeSummary(
       storeName: response['storeName'] as String,
       profilePictureUrl: response['profilePictureUrl'] as String,
+      isPremium: response['isPremium'] as bool? ?? false,
       photoUrls: (response['photoUrls'] as List).cast<String>(),
       averageRating: (response['averageRating'] as num).toDouble(),
       materials: (response['materials'] as List).cast<String>(),
