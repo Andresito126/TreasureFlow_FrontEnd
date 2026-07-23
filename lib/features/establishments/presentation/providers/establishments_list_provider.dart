@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:treasureflow/core/network/api_client.dart';
@@ -23,6 +25,9 @@ class EstablishmentsListProvider extends ChangeNotifier {
   double? _lat;
   double? _lng;
   String? _materialTypeId;
+  String _searchQuery = '';
+  bool _nearbyOnly = false;
+  Timer? _searchDebounce;
 
   EstablishmentsListStatus get status => _status;
   List<EstablishmentListItem> get items => List.unmodifiable(_items);
@@ -30,6 +35,8 @@ class EstablishmentsListProvider extends ChangeNotifier {
   bool get hasMore => _items.length < _total;
   bool get isLoadingMore => _isLoadingMore;
   String? get materialTypeId => _materialTypeId;
+  String get searchQuery => _searchQuery;
+  bool get nearbyOnly => _nearbyOnly;
 
   Future<void> load() async {
     if (_status == EstablishmentsListStatus.loading) return;
@@ -48,6 +55,8 @@ class EstablishmentsListProvider extends ChangeNotifier {
         lat: _lat,
         lng: _lng,
         materialTypeId: _materialTypeId,
+        search: _searchQuery.isEmpty ? null : _searchQuery,
+        nearby: _nearbyOnly ? true : null,
       );
       _items = page.items;
       _total = page.total;
@@ -71,6 +80,30 @@ class EstablishmentsListProvider extends ChangeNotifier {
     await load();
   }
 
+  Future<void> setNearbyOnly(bool nearbyOnly) async {
+    if (_nearbyOnly == nearbyOnly) return;
+    _nearbyOnly = nearbyOnly;
+    _items = [];
+    _total = 0;
+    await load();
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      _items = [];
+      _total = 0;
+      load();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
+
   Future<void> loadMore() async {
     if (_isLoadingMore ||
         !hasMore ||
@@ -87,6 +120,8 @@ class EstablishmentsListProvider extends ChangeNotifier {
         lat: _lat,
         lng: _lng,
         materialTypeId: _materialTypeId,
+        search: _searchQuery.isEmpty ? null : _searchQuery,
+        nearby: _nearbyOnly ? true : null,
       );
       _items = [..._items, ...page.items];
       _total = page.total;

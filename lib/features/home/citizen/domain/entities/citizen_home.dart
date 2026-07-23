@@ -4,6 +4,7 @@ class NearbyEstablishment {
   final String? photoUrl;
   final String distance;
   final double averageRating;
+  final int reviewsCount;
   final List<String> materials;
   final bool isOpen;
   final bool isPremium;
@@ -14,6 +15,7 @@ class NearbyEstablishment {
     this.photoUrl,
     required this.distance,
     required this.averageRating,
+    required this.reviewsCount,
     required this.materials,
     required this.isOpen,
     required this.isPremium,

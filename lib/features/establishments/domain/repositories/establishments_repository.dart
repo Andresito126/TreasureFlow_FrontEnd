@@ -8,6 +8,8 @@ abstract class EstablishmentsRepository {
     double? lat,
     double? lng,
     String? materialTypeId,
+    String? search,
+    bool? nearby,
   });
 
   Future<EstablishmentDetail> getDetail(String id);

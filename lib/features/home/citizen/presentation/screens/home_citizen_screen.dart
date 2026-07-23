@@ -228,7 +228,7 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
         name: establishments[i].storeName,
         distance: establishments[i].distance,
         rating: establishments[i].averageRating,
-        reviewCount: 0,
+        reviewCount: establishments[i].reviewsCount,
         materials: establishments[i].materials,
         isOpen: establishments[i].isOpen,
         isPremium: establishments[i].isPremium,
