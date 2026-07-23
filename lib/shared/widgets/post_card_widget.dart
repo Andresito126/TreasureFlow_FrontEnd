@@ -4,10 +4,11 @@ class PostCardWidget extends StatelessWidget {
   final String? imageUrl;
   final String title;
   final String subtitle;
-  final String statusLabel;
-  final Color statusColor;
-  final int viewsCount;
-  final int offersCount;
+  final String? statusLabel;
+  final Color? statusColor;
+  final int? viewsCount;
+  final int? offersCount;
+  final String? distanceLabel;
   final VoidCallback? onTap;
   final VoidCallback? onMenuTap;
 
@@ -16,10 +17,11 @@ class PostCardWidget extends StatelessWidget {
     this.imageUrl,
     required this.title,
     required this.subtitle,
-    required this.statusLabel,
-    required this.statusColor,
-    required this.viewsCount,
-    required this.offersCount,
+    this.statusLabel,
+    this.statusColor,
+    this.viewsCount,
+    this.offersCount,
+    this.distanceLabel,
     this.onTap,
     this.onMenuTap,
   });
@@ -61,25 +63,26 @@ class PostCardWidget extends StatelessWidget {
                             child: Icon(Icons.image_outlined, color: colors.onSurface.withValues(alpha: 0.3)),
                           ),
                   ),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        statusLabel,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
+                  if (statusLabel != null && statusColor != null)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          statusLabel!,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   if (onMenuTap != null)
                     Positioned(
                       top: 4,
@@ -116,18 +119,36 @@ class PostCardWidget extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.visibility_outlined, size: 14, color: colors.onSurface.withValues(alpha: 0.5)),
-                      const SizedBox(width: 4),
-                      Text('$viewsCount', style: textTheme.bodySmall?.copyWith(fontSize: 11)),
-                      const SizedBox(width: 12),
-                      Icon(Icons.chat_bubble_outline, size: 14, color: colors.onSurface.withValues(alpha: 0.5)),
-                      const SizedBox(width: 4),
-                      Text('$offersCount ofertas', style: textTheme.bodySmall?.copyWith(fontSize: 11)),
-                    ],
-                  ),
+                  if (viewsCount != null && offersCount != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.visibility_outlined, size: 14, color: colors.onSurface.withValues(alpha: 0.5)),
+                        const SizedBox(width: 4),
+                        Text('$viewsCount', style: textTheme.bodySmall?.copyWith(fontSize: 11)),
+                        const SizedBox(width: 12),
+                        Icon(Icons.chat_bubble_outline, size: 14, color: colors.onSurface.withValues(alpha: 0.5)),
+                        const SizedBox(width: 4),
+                        Text('$offersCount ofertas', style: textTheme.bodySmall?.copyWith(fontSize: 11)),
+                      ],
+                    ),
+                  ],
+                  if (distanceLabel != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.near_me_outlined, size: 14, color: colors.onSurface.withValues(alpha: 0.5)),
+                        const SizedBox(width: 4),
+                        Text(
+                          distanceLabel!,
+                          style: textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: colors.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

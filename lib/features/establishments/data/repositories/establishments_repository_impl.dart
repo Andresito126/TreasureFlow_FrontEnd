@@ -14,8 +14,19 @@ class EstablishmentsRepositoryImpl implements EstablishmentsRepository {
     required int offset,
     double? lat,
     double? lng,
+    String? materialTypeId,
+    String? search,
+    bool? nearby,
   }) {
-    return _datasource.list(limit: limit, offset: offset, lat: lat, lng: lng);
+    return _datasource.list(
+      limit: limit,
+      offset: offset,
+      lat: lat,
+      lng: lng,
+      materialTypeId: materialTypeId,
+      search: search,
+      nearby: nearby,
+    );
   }
 
   @override

@@ -22,6 +22,7 @@ class EstablishmentProfile {
   final List<String> materialTypeIds;
   final List<EstablishmentSchedule> schedules;
   final List<String> photoUrls;
+  final bool isPremium;
 
   const EstablishmentProfile({
     required this.email,
@@ -35,5 +36,6 @@ class EstablishmentProfile {
     required this.photoUrls,
     this.profilePictureUrl,
     this.addressText,
+    this.isPremium = false,
   });
 }

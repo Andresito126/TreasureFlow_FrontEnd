@@ -13,12 +13,18 @@ class EstablishmentsRemoteDatasource {
     required int offset,
     double? lat,
     double? lng,
+    String? materialTypeId,
+    String? search,
+    bool? nearby,
   }) async {
     final query = <String, String>{
       'limit': '$limit',
       'offset': '$offset',
       if (lat != null) 'lat': '$lat',
       if (lng != null) 'lng': '$lng',
+      if (materialTypeId != null) 'materialTypeId': materialTypeId,
+      if (search != null && search.isNotEmpty) 'search': search,
+      if (nearby != null) 'nearby': '$nearby',
     };
     final queryString = query.entries.map((e) => '${e.key}=${e.value}').join('&');
     final response = await _apiClient.get('/establishments?$queryString');
@@ -32,12 +38,14 @@ class EstablishmentsRemoteDatasource {
                 photoUrl: i['photoUrl'] as String?,
                 addressText: i['addressText'] as String?,
                 averageRating: (i['averageRating'] as num).toDouble(),
+                reviewsCount: (i['reviewsCount'] as num?)?.toInt() ?? 0,
                 materials: (i['materialTypeIds'] as List)
                     .cast<String>()
                     .map(MaterialTypeIdCatalog.nameOf)
                     .toList(),
                 isOpen: i['isOpen'] as bool,
                 distance: i['distance'] as String?,
+                isPremium: i['isPremium'] as bool,
               ))
           .toList(),
     );

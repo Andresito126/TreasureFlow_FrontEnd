@@ -100,13 +100,7 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
                     icon: Icons.star_outline,
                     title: 'Ver reseñas',
                     subtitle: 'Consulta lo que opinan los ciudadanos de ti.',
-                    onTap: () {},
-                  ),
-                  SettingsTileWidget(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notificaciones',
-                    subtitle: 'Gestiona tus preferencias de notificaciones.',
-                    onTap: () {},
+                    onTap: () => context.push('/localReviews'),
                   ),
                   SettingsTileWidget(
                     icon: Icons.credit_card_outlined,
@@ -125,7 +119,7 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
               ),
               const SizedBox(height: 20),
 
-              PremiumBannerWidget(onTap: () {}),
+              PremiumBannerWidget(onTap: () => context.push('/premiumLocal')),
               const SizedBox(height: 24),
 
               const SettingsLogoutTile(),

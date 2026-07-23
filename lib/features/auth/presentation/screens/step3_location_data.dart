@@ -81,8 +81,17 @@ class _Step3LocationDataState extends State<Step3LocationData> {
 
   @override
   Widget build(BuildContext context) {
+    final isLoading =
+        context.watch<RegisterLocalProvider>().status ==
+        RegisterLocalStatus.loading;
+
     return Scaffold(
-      body: TreasureMapWidget(onNext: _onConfirm, onBack: widget.onBack, nextLabel: 'Crear cuenta'),
+      body: TreasureMapWidget(
+        onNext: _onConfirm,
+        onBack: widget.onBack,
+        nextLabel: 'Crear cuenta',
+        isLoadingNext: isLoading,
+      ),
     );
   }
 }

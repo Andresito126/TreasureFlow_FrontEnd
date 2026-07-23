@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:treasureflow/core/network/api_client.dart';
@@ -22,12 +24,19 @@ class EstablishmentsListProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
   double? _lat;
   double? _lng;
+  String? _materialTypeId;
+  String _searchQuery = '';
+  bool _nearbyOnly = false;
+  Timer? _searchDebounce;
 
   EstablishmentsListStatus get status => _status;
   List<EstablishmentListItem> get items => List.unmodifiable(_items);
   String? get errorMessage => _errorMessage;
   bool get hasMore => _items.length < _total;
   bool get isLoadingMore => _isLoadingMore;
+  String? get materialTypeId => _materialTypeId;
+  String get searchQuery => _searchQuery;
+  bool get nearbyOnly => _nearbyOnly;
 
   Future<void> load() async {
     if (_status == EstablishmentsListStatus.loading) return;
@@ -45,6 +54,9 @@ class EstablishmentsListProvider extends ChangeNotifier {
         offset: 0,
         lat: _lat,
         lng: _lng,
+        materialTypeId: _materialTypeId,
+        search: _searchQuery.isEmpty ? null : _searchQuery,
+        nearby: _nearbyOnly ? true : null,
       );
       _items = page.items;
       _total = page.total;
@@ -58,6 +70,46 @@ class EstablishmentsListProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> filterByMaterial(String? materialTypeId) async {
+    if (_materialTypeId == materialTypeId) return;
+    _materialTypeId = materialTypeId;
+    _items = [];
+    _total = 0;
+    await load();
+  }
+
+  Future<void> setNearbyOnly(bool nearbyOnly) async {
+    if (_nearbyOnly == nearbyOnly) return;
+    _nearbyOnly = nearbyOnly;
+    _items = [];
+    _total = 0;
+    await load();
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      _items = [];
+      _total = 0;
+      load();
+    });
+  }
+
+  /// Descarta cualquier búsqueda pendiente sin disparar una recarga —
+  /// se usa al reingresar a la pantalla para que no arrastre el texto
+  /// de una búsqueda anterior.
+  void resetSearch() {
+    _searchDebounce?.cancel();
+    _searchQuery = '';
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
   }
 
   Future<void> loadMore() async {
@@ -75,6 +127,9 @@ class EstablishmentsListProvider extends ChangeNotifier {
         offset: _items.length,
         lat: _lat,
         lng: _lng,
+        materialTypeId: _materialTypeId,
+        search: _searchQuery.isEmpty ? null : _searchQuery,
+        nearby: _nearbyOnly ? true : null,
       );
       _items = [..._items, ...page.items];
       _total = page.total;

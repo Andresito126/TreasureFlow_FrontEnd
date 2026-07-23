@@ -10,12 +10,14 @@ class TreasureMapWidget extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
   final String nextLabel;
+  final bool isLoadingNext;
 
   const TreasureMapWidget({
     super.key,
     required this.onNext,
     required this.onBack,
     this.nextLabel = 'Siguiente',
+    this.isLoadingNext = false,
   });
 
   @override
@@ -159,6 +161,7 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
                         : widget.onBack,
                     onNext: widget.onNext,
                     nextLabel: widget.nextLabel,
+                    isLoadingNext: widget.isLoadingNext,
                   ),
                 ),
             ],

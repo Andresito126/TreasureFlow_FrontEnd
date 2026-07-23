@@ -4,6 +4,7 @@ import 'package:treasureflow/features/posts/waste/domain/entities/available_slot
 import 'package:treasureflow/features/posts/waste/domain/entities/my_offer.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/offer_summary.dart';
 import 'package:treasureflow/features/posts/waste/domain/entities/waste_post_detail.dart';
+import 'package:treasureflow/features/posts/waste/domain/entities/viewer_summary.dart';
 
 class WastePostRemoteDatasource {
   final ApiClient _apiClient;
@@ -121,6 +122,7 @@ class WastePostRemoteDatasource {
       citizenName: response['citizenName'] as String? ?? '',
       citizenProfilePictureUrl:
           response['citizenProfilePictureUrl'] as String? ?? '',
+      citizenIsPremium: response['citizenIsPremium'] as bool? ?? false,
       description: response['description'] as String,
       photoUrls: (response['photoUrls'] as List).cast<String>(),
       publishedAt: response['publishedAt'] as String,
@@ -140,6 +142,7 @@ class WastePostRemoteDatasource {
             (o) => OfferSummary(
               offerId: o['offerId'] as String,
               establishmentName: o['establishmentName'] as String,
+              establishmentIsPremium: o['establishmentIsPremium'] as bool? ?? false,
               pricePerUnit: (o['pricePerUnit'] as num).toDouble(),
               unit: o['unit'] as String,
               status: o['status'] as String,
@@ -167,6 +170,15 @@ class WastePostRemoteDatasource {
           : null,
       viewsCount: response['viewsCount'] as int,
       distance: response['distance'] as String?,
+      viewers: (response['viewers'] as List?)
+          ?.map(
+            (v) => ViewerSummary(
+              establishmentId: v['establishmentId'] as String,
+              storeName: v['storeName'] as String,
+              viewedAt: DateTime.parse(v['viewedAt'] as String),
+            ),
+          )
+          .toList(),
     );
   }
 }

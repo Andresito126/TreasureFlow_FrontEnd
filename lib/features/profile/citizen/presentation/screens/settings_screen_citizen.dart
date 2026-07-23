@@ -74,12 +74,6 @@ class _SettingsScreenCitizenState extends State<SettingsScreenCitizen> {
                     onTap: () => context.push('/editCitizenProfile'),
                   ),
                   SettingsTileWidget(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notificaciones',
-                    subtitle: 'Gestiona tus preferencias de notificaciones.',
-                    onTap: () {},
-                  ),
-                  SettingsTileWidget(
                     icon: Icons.shield_outlined,
                     title: 'Privacidad y seguridad',
                     subtitle: 'Configura tu contraseña y protege tu cuenta.',
@@ -90,7 +84,7 @@ class _SettingsScreenCitizenState extends State<SettingsScreenCitizen> {
               ),
               const SizedBox(height: 20),
 
-              PremiumBannerWidget(onTap: () {}),
+              PremiumBannerWidget(onTap: () => context.push('/premiumCitizen')),
               const SizedBox(height: 24),
 
               const SettingsSectionLabel('SOPORTE'),

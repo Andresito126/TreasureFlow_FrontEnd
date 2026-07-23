@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 
 class EstablishmentCardWidget extends StatelessWidget {
   final String name;
@@ -135,24 +136,7 @@ class EstablishmentCardWidget extends StatelessWidget {
                   ),
                   if (isPremium) ...[
                     const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5A623),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        'Premium',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                    const PremiumBadgeWidget(),
                   ],
                 ],
               ),

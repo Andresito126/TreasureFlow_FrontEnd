@@ -11,6 +11,7 @@ class AddressCard extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onNext;
   final String nextLabel;
+  final bool isLoadingNext;
 
   const AddressCard({
     super.key,
@@ -21,6 +22,7 @@ class AddressCard extends StatelessWidget {
     required this.onBack,
     required this.onNext,
     this.nextLabel = 'Siguiente',
+    this.isLoadingNext = false,
   });
 
   @override
@@ -149,7 +151,7 @@ class AddressCard extends StatelessWidget {
               Expanded(
                 child: PrimaryButtonBlueWidget(
                   text: 'Regresar',
-                  onPressed: onBack,
+                  onPressed: isLoadingNext ? null : onBack,
                 ),
               ),
               const SizedBox(width: 16),
@@ -157,6 +159,7 @@ class AddressCard extends StatelessWidget {
                 child: PrimaryButtonGreenWidget(
                   text: nextLabel,
                   onPressed: onNext,
+                  isLoading: isLoadingNext,
                 ),
               ),
             ],

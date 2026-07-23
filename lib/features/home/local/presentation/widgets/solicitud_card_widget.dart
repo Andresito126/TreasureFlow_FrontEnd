@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 
 class SolicitudCardWidget extends StatelessWidget {
   final String title;
   final String date;
   final String distanceLabel;
   final String publisherName;
+  final bool citizenIsPremium;
   final String address;
   final String status;
   final String? actionLabel;
@@ -17,6 +19,7 @@ class SolicitudCardWidget extends StatelessWidget {
     required this.date,
     required this.distanceLabel,
     required this.publisherName,
+    this.citizenIsPremium = false,
     required this.address,
     this.status = 'Activa',
     this.actionLabel,
@@ -117,6 +120,10 @@ class SolicitudCardWidget extends StatelessWidget {
                               textTheme,
                               colors,
                             ),
+                            if (citizenIsPremium) ...[
+                              const SizedBox(width: 6),
+                              const PremiumBadgeWidget(fontSize: 7),
+                            ],
                           ],
                         ),
                         const SizedBox(height: 6),

@@ -364,6 +364,7 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                               children: [
                                 OfferItemWidget(
                                   name: offer.establishmentName,
+                                  isPremium: offer.establishmentIsPremium,
                                   pricePerUnit: '\$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}',
                                   pickupLabel: offer.pickupLabel,
                                   status: offer.status,
@@ -386,6 +387,50 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                               ],
                             );
                           }),
+                        if (post.viewers != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            'Quién vio tu publicación',
+                            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const Divider(),
+                          if (post.viewers!.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Text(
+                                'Aún nadie ha visto tu publicación',
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colors.onSurface.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            )
+                          else
+                            ...post.viewers!.map(
+                              (viewer) => Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.visibility_outlined, size: 16, color: colors.primary),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        viewer.storeName,
+                                        style: textTheme.bodySmall,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatViewedAt(viewer.viewedAt),
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: colors.onSurface.withValues(alpha: 0.5),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
                         const SizedBox(height: 12),
                       ],
                     ),
@@ -552,6 +597,14 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
         ],
       ),
     );
+  }
+
+  String _formatViewedAt(DateTime viewedAt) {
+    final diff = DateTime.now().difference(viewedAt);
+    if (diff.inMinutes < 1) return 'hace un momento';
+    if (diff.inMinutes < 60) return 'hace ${diff.inMinutes} min';
+    if (diff.inHours < 24) return 'hace ${diff.inHours} h';
+    return 'hace ${diff.inDays} d';
   }
 
   Widget _infoChip(IconData icon, String label, ColorScheme colors, TextTheme textTheme) {

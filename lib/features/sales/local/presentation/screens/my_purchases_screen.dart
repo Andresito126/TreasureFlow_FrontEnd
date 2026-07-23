@@ -20,6 +20,7 @@ class MyPurchasesScreen extends StatefulWidget {
 
 class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
   late final LocalCollectionsListProvider _provider;
+  bool _showHistory = false;
 
   @override
   void initState() {
@@ -60,16 +61,25 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
       ),
       body: Stack(
         children: [
-          _buildBody(colors, textTheme),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 100,
-            child: PrimaryButtonGreenWidget(
-              text: 'Planificar rutas',
-              onPressed: () => context.push('/routePlanning'),
-            ),
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: _buildScopeToggle(colors, textTheme),
+              ),
+              Expanded(child: _buildBody(colors, textTheme)),
+            ],
           ),
+          if (!_showHistory)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 100,
+              child: PrimaryButtonGreenWidget(
+                text: 'Planificar rutas',
+                onPressed: () => context.push('/routePlanning'),
+              ),
+            ),
           const Positioned(
             bottom: 0,
             left: 0,
@@ -77,6 +87,80 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
             child: FloatingNavBarWidget(currentIndex: 2),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildScopeToggle(ColorScheme colors, TextTheme textTheme) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _scopeOption(
+              label: 'En curso',
+              icon: Icons.autorenew_rounded,
+              selected: !_showHistory,
+              colors: colors,
+              textTheme: textTheme,
+              onTap: () => setState(() => _showHistory = false),
+            ),
+          ),
+          Expanded(
+            child: _scopeOption(
+              label: 'Historial',
+              icon: Icons.history_rounded,
+              selected: _showHistory,
+              colors: colors,
+              textTheme: textTheme,
+              onTap: () => setState(() => _showHistory = true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _scopeOption({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required ColorScheme colors,
+    required TextTheme textTheme,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? colors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: selected ? colors.onPrimary : colors.onSurface.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: selected ? colors.onPrimary : colors.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -89,7 +173,11 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
       case LocalListStatus.error:
         return _errorState(colors, textTheme);
       case LocalListStatus.success:
-        final items = _provider.activeItems;
+        final items = _showHistory
+            ? _provider.allItems
+                .where((i) => !i.collection.status.isActive)
+                .toList()
+            : _provider.activeItems;
         if (items.isEmpty) return _emptyState(colors, textTheme);
 
         return RefreshIndicator(
@@ -102,7 +190,9 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: Text(
-                    'Materiales con oferta aceptada. Pesa, espera la confirmación y paga.',
+                    _showHistory
+                        ? 'Compras completadas o canceladas.'
+                        : 'Materiales con oferta aceptada. Pesa, espera la confirmación y paga.',
                     style: textTheme.bodyMedium?.copyWith(
                       color: colors.onSurface.withValues(alpha: 0.6),
                     ),
@@ -175,21 +265,25 @@ class _MyPurchasesScreenState extends State<MyPurchasesScreen> {
                 color: colors.primary.withValues(alpha: 0.1),
               ),
               child: Icon(
-                Icons.local_shipping_outlined,
+                _showHistory ? Icons.history_rounded : Icons.local_shipping_outlined,
                 size: 40,
                 color: colors.primary,
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              'No tienes compras en curso',
+              _showHistory
+                  ? 'Aún no tienes compras en tu historial'
+                  : 'No tienes compras en curso',
               textAlign: TextAlign.center,
               style:
                   textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Cuando un ciudadano acepte una de tus ofertas, aquí verás la recolección pendiente.',
+              _showHistory
+                  ? 'Aquí aparecerán tus compras completadas o canceladas.'
+                  : 'Cuando un ciudadano acepte una de tus ofertas, aquí verás la recolección pendiente.',
               textAlign: TextAlign.center,
               style: textTheme.bodySmall?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.6),

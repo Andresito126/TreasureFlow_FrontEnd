@@ -8,7 +8,11 @@ import 'package:treasureflow/features/profile/local/presentation/providers/local
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/utils/material_type_id_catalog.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
+
+const _statBlue = Color(0xFF155DFC);
+const _statGold = Color(0xFFF5A623);
 
 const _dayNames = [
   '',
@@ -63,20 +67,10 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 12,
             right: 16,
-            child: Row(
-              children: [
-                _topIconButton(
-                  Icons.notifications_outlined,
-                  colors,
-                  badgeCount: 3,
-                ),
-                const SizedBox(width: 8),
-                _topIconButton(
-                  Icons.settings_outlined,
-                  colors,
-                  onTap: () => context.push('/settingsLocal'),
-                ),
-              ],
+            child: _topIconButton(
+              Icons.settings_outlined,
+              colors,
+              onTap: () => context.push('/settingsLocal'),
             ),
           ),
           Positioned(
@@ -153,6 +147,13 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                 _buildStats(profile, colors, textTheme),
                 const SizedBox(height: 24),
 
+                _sectionTitle(
+                  'Información de contacto',
+                  colors,
+                  textTheme,
+                  icon: Icons.badge_outlined,
+                ),
+                const SizedBox(height: 10),
                 AppCardContainer(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,7 +193,12 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                _sectionTitle('Materiales que recibe', colors, textTheme),
+                _sectionTitle(
+                  'Materiales que recibe',
+                  colors,
+                  textTheme,
+                  icon: Icons.recycling_rounded,
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
@@ -208,35 +214,51 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                _sectionTitle('Horario laboral', colors, textTheme),
-                const SizedBox(height: 10),
-                AppCardContainer(
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < profile.schedules.length; i++)
-                        _scheduleRow(
-                          profile.schedules[i],
-                          colors,
-                          textTheme,
-                          showDivider: i < profile.schedules.length - 1,
-                        ),
-                      if (profile.schedules.isEmpty)
-                        Text(
-                          'Sin horario configurado',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colors.onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                    ],
-                  ),
+                _sectionTitle(
+                  'Horario laboral',
+                  colors,
+                  textTheme,
+                  icon: Icons.access_time_rounded,
                 ),
+                const SizedBox(height: 10),
+                if (profile.schedules.isEmpty)
+                  AppCardContainer(
+                    child: Text(
+                      'Sin horario configurado',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  )
+                else
+                  AppCardContainer(
+                    child: Column(
+                      children: [
+                        for (var day = 1; day <= 7; day++)
+                          _scheduleRow(
+                            day,
+                            profile.schedules
+                                .where((s) => s.dayOfWeek == day)
+                                .toList(),
+                            colors,
+                            textTheme,
+                            showDivider: day < 7,
+                          ),
+                      ],
+                    ),
+                  ),
 
                 if (profile.photoUrls.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  _sectionTitle('Fotos del establecimiento', colors, textTheme),
+                  _sectionTitle(
+                    'Fotos del establecimiento',
+                    colors,
+                    textTheme,
+                    icon: Icons.photo_library_outlined,
+                  ),
                   const SizedBox(height: 10),
                   SizedBox(
-                    height: 104,
+                    height: 120,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: profile.photoUrls.length,
@@ -254,13 +276,40 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
     );
   }
 
-  Widget _sectionTitle(String text, ColorScheme colors, TextTheme textTheme) {
-    return Text(
-      text,
-      style: textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        fontSize: 15,
-      ),
+  Widget _sectionTitle(
+    String text,
+    ColorScheme colors,
+    TextTheme textTheme, {
+    IconData? icon,
+  }) {
+    if (icon == null) {
+      return Text(
+        text,
+        style: textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: 15,
+        ),
+      );
+    }
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 15, color: colors.primary),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          text,
+          style: textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+      ],
     );
   }
 
@@ -274,26 +323,51 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
         clipBehavior: Clip.none,
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/auth/banner.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: colors.primary.withValues(alpha: 0.15)),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(28),
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    'assets/auth/banner.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: colors.primary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0.55, 1],
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.28),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Positioned(
             left: 16,
             bottom: -44,
             child: Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: colors.surface,
                 shape: BoxShape.circle,
+                border: Border.all(color: colors.primary, width: 2.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -330,42 +404,70 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                profile.storeName,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      profile.storeName,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  if (profile.isPremium) ...[
+                    const SizedBox(width: 8),
+                    const PremiumBadgeWidget(fontSize: 10),
+                  ],
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                profile.email,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colors.onSurface.withValues(alpha: 0.5),
-                ),
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  Icon(
+                    Icons.mail_outline_rounded,
+                    size: 13,
+                    color: colors.onSurface.withValues(alpha: 0.45),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      profile.email,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
         const SizedBox(width: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.1),
+            color: colors.primary,
             borderRadius: BorderRadius.circular(100),
+            boxShadow: [
+              BoxShadow(
+                color: colors.primary.withValues(alpha: 0.25),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.storefront_rounded, size: 13, color: colors.primary),
-              const SizedBox(width: 4),
+              Icon(Icons.storefront_rounded, size: 13, color: colors.onPrimary),
+              const SizedBox(width: 5),
               Text(
                 'Establecimiento',
                 style: textTheme.bodySmall?.copyWith(
-                  color: colors.primary,
-                  fontWeight: FontWeight.w600,
+                  color: colors.onPrimary,
+                  fontWeight: FontWeight.w700,
                   fontSize: 11,
                 ),
               ),
@@ -384,22 +486,28 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
     return Row(
       children: [
         _statChip(
+          icon: Icons.recycling_rounded,
           label: 'Materiales',
           value: '${profile.materialTypeIds.length}',
+          accent: colors.primary,
           colors: colors,
           textTheme: textTheme,
         ),
         const SizedBox(width: 8),
         _statChip(
+          icon: Icons.calendar_today_rounded,
           label: 'Días activos',
           value: '${profile.schedules.length}',
+          accent: _statBlue,
           colors: colors,
           textTheme: textTheme,
         ),
         const SizedBox(width: 8),
         _statChip(
+          icon: Icons.photo_library_rounded,
           label: 'Fotos',
           value: '${profile.photoUrls.length}',
+          accent: _statGold,
           colors: colors,
           textTheme: textTheme,
         ),
@@ -408,24 +516,42 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
   }
 
   Widget _statChip({
+    required IconData icon,
     required String label,
     required String value,
+    required Color accent,
     required ColorScheme colors,
     required TextTheme textTheme,
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.outline.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: colors.outline.withValues(alpha: 0.15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 16, color: accent),
+            ),
+            const SizedBox(height: 8),
             Text(
               value,
-              style: textTheme.bodyMedium?.copyWith(
+              style: textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -433,6 +559,7 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
             Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: textTheme.bodySmall?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.5),
@@ -448,46 +575,18 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
   Widget _topIconButton(
     IconData icon,
     ColorScheme colors, {
-    int? badgeCount,
     VoidCallback? onTap,
   }) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colors.surface.withValues(alpha: 0.9),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 20, color: colors.onSurface),
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: colors.surface.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
         ),
-        if (badgeCount != null && badgeCount > 0)
-          Positioned(
-            top: -2,
-            right: -2,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: colors.error,
-                shape: BoxShape.circle,
-              ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                '$badgeCount',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: colors.onError,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-      ],
+        child: Icon(icon, size: 20, color: colors.onSurface),
+      ),
     );
   }
 
@@ -542,58 +641,103 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
   }
 
   Widget _scheduleRow(
-    EstablishmentSchedule schedule,
+    int dayOfWeek,
+    List<EstablishmentSchedule> daySchedules,
     ColorScheme colors,
     TextTheme textTheme, {
     required bool showDivider,
   }) {
-    final dayLabel = schedule.dayOfWeek >= 1 && schedule.dayOfWeek <= 7
-        ? _dayNames[schedule.dayOfWeek]
-        : 'Día ${schedule.dayOfWeek}';
+    final dayLabel = _dayNames[dayOfWeek];
+    final isToday = dayOfWeek == DateTime.now().weekday;
+    final isClosed = daySchedules.isEmpty;
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              Icon(
-                Icons.calendar_today_rounded,
-                size: 14,
-                color: colors.primary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  dayLabel,
-                  style: textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+    return Container(
+      decoration: BoxDecoration(
+        color: isToday ? colors.primary.withValues(alpha: 0.06) : null,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_rounded,
+                  size: 14,
+                  color: isToday ? colors.primary : colors.onSurface.withValues(alpha: 0.4),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        dayLabel,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+                        ),
+                      ),
+                      if (isToday) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: colors.primary,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            'Hoy',
+                            style: TextStyle(
+                              color: colors.onPrimary,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Text(
-                  '${schedule.startTime} – ${schedule.endTime}',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.onSurface.withValues(alpha: 0.7),
-                    fontSize: 11,
+                if (isClosed)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: colors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      'Cerrado',
+                      style: TextStyle(
+                        color: colors.error,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      daySchedules
+                          .map((s) => '${s.startTime} – ${s.endTime}')
+                          .join(', '),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.onSurface.withValues(alpha: 0.7),
+                        fontSize: 11,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        if (showDivider)
-          Divider(height: 1, color: colors.outline.withValues(alpha: 0.15)),
-      ],
+          if (showDivider)
+            Divider(height: 1, color: colors.outline.withValues(alpha: 0.15)),
+        ],
+      ),
     );
   }
 
@@ -623,28 +767,29 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
 
   Widget _photoTile(String url, ColorScheme colors) {
     return Container(
-      width: 104,
-      height: 104,
+      width: 120,
+      height: 120,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.outline.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: Image.network(
           url,
-          width: 104,
-          height: 104,
+          width: 120,
+          height: 120,
           fit: BoxFit.cover,
           errorBuilder: (_, _, _) => Container(
-            width: 104,
-            height: 104,
+            width: 120,
+            height: 120,
             color: colors.primary.withValues(alpha: 0.1),
             child: Icon(Icons.storefront_outlined, color: colors.primary),
           ),

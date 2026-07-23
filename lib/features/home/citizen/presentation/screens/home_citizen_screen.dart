@@ -6,11 +6,11 @@ import 'package:treasureflow/features/home/citizen/presentation/providers/citize
 import 'package:treasureflow/features/home/citizen/presentation/widgets/action_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/activity_summary_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/establishment_card_widget.dart';
-import 'package:treasureflow/features/home/citizen/presentation/widgets/object_nearby_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/offer_card_widget.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/stat_card_widget.dart';
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 
 class HomeCitizenScreen extends StatefulWidget {
   const HomeCitizenScreen({super.key});
@@ -53,8 +53,12 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
                         _buildHeader(data, colors, textTheme),
                         const SizedBox(height: 20),
 
-                        const PremiumBannerWidget(),
-                        const SizedBox(height: 20),
+                        if (!(data?.isPremium ?? false)) ...[
+                          PremiumBannerWidget(
+                            onTap: () => context.push('/premiumCitizen'),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
 
                         _sectionTitle('Resumen de tus actividades', textTheme),
                         const SizedBox(height: 12),
@@ -111,11 +115,6 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
                         _buildEstablishments(data, colors, textTheme),
                         const SizedBox(height: 24),
 
-                        _sectionTitle('Objetos cerca de ti', textTheme),
-                        const SizedBox(height: 12),
-                        _buildNearbyItems(data, colors, textTheme),
-                        const SizedBox(height: 24),
-
                         _sectionTitle('Ofertas recibidas', textTheme),
                         const SizedBox(height: 12),
                         _buildReceivedOffers(data, colors, textTheme),
@@ -159,13 +158,24 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                data != null
-                    ? 'Hola, ${data.fullName.split(' ').first}!'
-                    : 'Hola!',
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      data != null
+                          ? 'Hola, ${data.fullName.split(' ').first}!'
+                          : 'Hola!',
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (data?.isPremium ?? false) ...[
+                    const SizedBox(width: 6),
+                    const PremiumBadgeWidget(),
+                  ],
+                ],
               ),
               Text(
                 'Vamos a ayudar el planeta hoy',
@@ -175,18 +185,6 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
                 ),
               ),
             ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.notifications_outlined,
-            size: 22,
-            color: colors.primary,
           ),
         ),
       ],
@@ -228,48 +226,13 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
         name: establishments[i].storeName,
         distance: establishments[i].distance,
         rating: establishments[i].averageRating,
-        reviewCount: 0,
+        reviewCount: establishments[i].reviewsCount,
         materials: establishments[i].materials,
         isOpen: establishments[i].isOpen,
+        isPremium: establishments[i].isPremium,
         photoUrl: establishments[i].photoUrl,
         onTap: () =>
             context.push('/establishmentDetail/${establishments[i].id}'),
-      ),
-    );
-  }
-
-  Widget _buildNearbyItems(
-    CitizenHome? data,
-    ColorScheme colors,
-    TextTheme textTheme,
-  ) {
-    final items = data?.nearbyItems ?? [];
-
-    if (data == null) {
-      return _buildHorizontalList(
-        itemCount: 3,
-        itemBuilder: (_) => const ObjectNearbyCardWidget(
-          objectName: 'Mesa de madera',
-          price: '\$1,200',
-          ownerName: 'Andre Gutiérrez',
-          timeAgo: '3 hrs',
-          distance: '1.5 km',
-        ),
-      );
-    }
-
-    if (items.isEmpty) {
-      return _emptySection('No hay objetos cerca de ti', colors, textTheme);
-    }
-
-    return _buildHorizontalList(
-      itemCount: items.length,
-      itemBuilder: (i) => ObjectNearbyCardWidget(
-        objectName: items[i].description,
-        price: '—',
-        ownerName: 'Ciudadano',
-        timeAgo: items[i].publishedAt,
-        distance: items[i].distance,
       ),
     );
   }

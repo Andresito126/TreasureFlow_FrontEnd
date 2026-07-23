@@ -33,6 +33,7 @@ class MyPostsRemoteDatasource {
         totalEarnings: (p['totalEarnings'] as num).toDouble(),
         totalPublications: p['totalPublications'] as int,
         activePublications: p['activePublications'] as int,
+        isPremium: p['isPremium'] as bool? ?? false,
       );
     }
 

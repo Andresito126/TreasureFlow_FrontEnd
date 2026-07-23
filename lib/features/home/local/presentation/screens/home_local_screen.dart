@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:treasureflow/core/di/app_container.dart';
+import 'package:treasureflow/features/reviews/di/reviews_module.dart';
+import 'package:treasureflow/features/reviews/presentation/providers/establishment_reviews_provider.dart';
+import 'package:treasureflow/features/reviews/presentation/widgets/review_item_widget.dart';
 import 'package:treasureflow/features/home/local/domain/entities/local_home_summary.dart';
 import 'package:treasureflow/features/home/local/domain/entities/local_home_feed_item.dart';
 import 'package:treasureflow/features/home/local/presentation/providers/local_home_summary_provider.dart';
@@ -12,6 +16,7 @@ import 'package:treasureflow/features/home/citizen/presentation/widgets/stat_car
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
 import 'package:treasureflow/shared/theme/app_theme_extension.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 
 class HomeLocalScreen extends StatefulWidget {
   const HomeLocalScreen({super.key});
@@ -21,13 +26,31 @@ class HomeLocalScreen extends StatefulWidget {
 }
 
 class _HomeLocalScreenState extends State<HomeLocalScreen> {
+  late final EstablishmentReviewsProvider _reviewsProvider;
+
   @override
   void initState() {
     super.initState();
+    final container = context.read<AppContainer>();
+    _reviewsProvider = ReviewsModule(container).provideReviewsProvider();
+    _reviewsProvider.addListener(_onReviewsChanged);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LocalHomeFeedProvider>().load();
       context.read<LocalHomeSummaryProvider>().load();
+      _reviewsProvider.load();
     });
+  }
+
+  @override
+  void dispose() {
+    _reviewsProvider.removeListener(_onReviewsChanged);
+    _reviewsProvider.dispose();
+    super.dispose();
+  }
+
+  void _onReviewsChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -50,8 +73,12 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
                   _buildHeader(home.data, colors, textTheme),
                   const SizedBox(height: 20),
 
-                  const PremiumBannerWidget(),
-                  const SizedBox(height: 20),
+                  if (!(home.data?.isPremium ?? false)) ...[
+                    PremiumBannerWidget(
+                      onTap: () => context.push('/premiumLocal'),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
                   _buildStats(home, colors, textTheme),
                   const SizedBox(height: 24),
@@ -79,9 +106,14 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
                   _buildPendingOffersSection(home, colors, textTheme),
                   const SizedBox(height: 24),
 
-                  _buildSectionHeader('Nuevas reseñas', '0', colors, textTheme),
+                  _buildSectionHeader(
+                    'Nuevas reseñas',
+                    '${_reviewsProvider.total}',
+                    colors,
+                    textTheme,
+                  ),
                   const SizedBox(height: 12),
-                  _emptySection('Aún no tienes reseñas', colors, textTheme),
+                  _buildReviewsSection(colors, textTheme),
                 ],
               ),
             ),
@@ -147,6 +179,7 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
       date: item.publishedAt,
       distanceLabel: '${item.distanceMeters} m',
       publisherName: item.citizenName,
+    citizenIsPremium: item.citizenIsPremium,
       address: item.description ?? 'Sin descripción',
       status: item.isFeatured ? 'Destacada' : 'Nueva',
       actionLabel: 'Ofertar residuos',
@@ -217,6 +250,24 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
     );
   }
 
+  Widget _buildReviewsSection(ColorScheme colors, TextTheme textTheme) {
+    if (_reviewsProvider.status == ReviewsListStatus.loading ||
+        _reviewsProvider.status == ReviewsListStatus.idle) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_reviewsProvider.items.isEmpty) {
+      return _emptySection('Aún no tienes reseñas', colors, textTheme);
+    }
+
+    return Column(
+      children: _reviewsProvider.items
+          .take(3)
+          .map((review) => ReviewItemWidget(review: review))
+          .toList(),
+    );
+  }
+
   Widget _buildHeader(
     LocalHomeSummary? data,
     ColorScheme colors,
@@ -225,22 +276,24 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
     return Row(
       children: [
         Expanded(
-          child: Text(
-            data != null ? '¡Bienvenido ${data.storeName}!' : '¡Bienvenido!',
-            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.notifications_outlined,
-            size: 22,
-            color: colors.primary,
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  data != null
+                      ? '¡Bienvenido ${data.storeName}!'
+                      : '¡Bienvenido!',
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              if (data?.isPremium ?? false) ...[
+                const SizedBox(width: 6),
+                const PremiumBadgeWidget(),
+              ],
+            ],
           ),
         ),
       ],

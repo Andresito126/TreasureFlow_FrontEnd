@@ -48,11 +48,19 @@ class StatCardWidget extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 18, color: colors.primary),
               ),
-              Text(
-                value,
-                style: textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 26,
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 26,
+                    ),
+                  ),
                 ),
               ),
             ],

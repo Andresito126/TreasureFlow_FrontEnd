@@ -10,4 +10,8 @@ class MaterialTypeIdCatalog {
 
   static String nameOf(String materialTypeId) =>
       _names[materialTypeId] ?? 'Material';
+
+  /// Pares (id, nombre) de todos los tipos de material — útil para pintar
+  /// filtros/chips de selección.
+  static Map<String, String> get all => Map.unmodifiable(_names);
 }

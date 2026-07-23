@@ -4,9 +4,11 @@ class EstablishmentListItem {
   final String? photoUrl;
   final String? addressText;
   final double averageRating;
+  final int reviewsCount;
   final List<String> materials;
   final bool isOpen;
   final String? distance;
+  final bool isPremium;
 
   const EstablishmentListItem({
     required this.id,
@@ -14,9 +16,11 @@ class EstablishmentListItem {
     this.photoUrl,
     this.addressText,
     required this.averageRating,
+    required this.reviewsCount,
     required this.materials,
     required this.isOpen,
     this.distance,
+    required this.isPremium,
   });
 }
 

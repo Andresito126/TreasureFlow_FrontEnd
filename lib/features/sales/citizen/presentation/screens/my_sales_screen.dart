@@ -18,6 +18,7 @@ class MySalesScreen extends StatefulWidget {
 
 class _MySalesScreenState extends State<MySalesScreen> {
   late final CitizenCollectionsListProvider _provider;
+  bool _showHistory = false;
 
   @override
   void initState() {
@@ -58,7 +59,15 @@ class _MySalesScreenState extends State<MySalesScreen> {
       ),
       body: Stack(
         children: [
-          _buildBody(colors, textTheme),
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: _buildScopeToggle(colors, textTheme),
+              ),
+              Expanded(child: _buildBody(colors, textTheme)),
+            ],
+          ),
           const Positioned(
             bottom: 0,
             left: 0,
@@ -66,6 +75,80 @@ class _MySalesScreenState extends State<MySalesScreen> {
             child: FloatingNavBarWidget(currentIndex: 2),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildScopeToggle(ColorScheme colors, TextTheme textTheme) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _scopeOption(
+              label: 'En curso',
+              icon: Icons.autorenew_rounded,
+              selected: !_showHistory,
+              colors: colors,
+              textTheme: textTheme,
+              onTap: () => setState(() => _showHistory = false),
+            ),
+          ),
+          Expanded(
+            child: _scopeOption(
+              label: 'Historial',
+              icon: Icons.history_rounded,
+              selected: _showHistory,
+              colors: colors,
+              textTheme: textTheme,
+              onTap: () => setState(() => _showHistory = true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _scopeOption({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required ColorScheme colors,
+    required TextTheme textTheme,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? colors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: selected ? colors.onPrimary : colors.onSurface.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: selected ? colors.onPrimary : colors.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -78,7 +161,11 @@ class _MySalesScreenState extends State<MySalesScreen> {
       case CitizenListStatus.error:
         return _errorState(colors, textTheme);
       case CitizenListStatus.success:
-        final items = _provider.activeItems;
+        final items = _showHistory
+            ? _provider.allItems
+                .where((i) => !i.collection.status.isActive)
+                .toList()
+            : _provider.activeItems;
         if (items.isEmpty) return _emptyState(colors, textTheme);
 
         return RefreshIndicator(
@@ -91,7 +178,9 @@ class _MySalesScreenState extends State<MySalesScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: Text(
-                    'Continúa el proceso de entrega y pago de tus materiales.',
+                    _showHistory
+                        ? 'Recolecciones completadas o canceladas.'
+                        : 'Continúa el proceso de entrega y pago de tus materiales.',
                     style: textTheme.bodyMedium?.copyWith(
                       color: colors.onSurface.withValues(alpha: 0.6),
                     ),
@@ -163,19 +252,26 @@ class _MySalesScreenState extends State<MySalesScreen> {
                 shape: BoxShape.circle,
                 color: colors.primary.withValues(alpha: 0.1),
               ),
-              child:
-                  Icon(Icons.sell_outlined, size: 40, color: colors.primary),
+              child: Icon(
+                _showHistory ? Icons.history_rounded : Icons.sell_outlined,
+                size: 40,
+                color: colors.primary,
+              ),
             ),
             const SizedBox(height: 20),
             Text(
-              'No tienes ventas en curso',
+              _showHistory
+                  ? 'Aún no tienes ventas en tu historial'
+                  : 'No tienes ventas en curso',
               textAlign: TextAlign.center,
               style:
                   textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Cuando aceptes una oferta en alguna de tus publicaciones, aquí verás el avance de la venta.',
+              _showHistory
+                  ? 'Aquí aparecerán tus ventas completadas o canceladas.'
+                  : 'Cuando aceptes una oferta en alguna de tus publicaciones, aquí verás el avance de la venta.',
               textAlign: TextAlign.center,
               style: textTheme.bodySmall?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.6),
