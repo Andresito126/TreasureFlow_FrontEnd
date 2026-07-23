@@ -24,6 +24,7 @@ class CitizenHomeRemoteDatasource {
                 photoUrl: e['photoUrl'] as String?,
                 distance: e['distance'] as String,
                 averageRating: (e['averageRating'] as num).toDouble(),
+                reviewsCount: (e['reviewsCount'] as num?)?.toInt() ?? 0,
                 materials: (e['materials'] as List)
                     .cast<String>()
                     .map(MaterialTypeTranslator.translate)

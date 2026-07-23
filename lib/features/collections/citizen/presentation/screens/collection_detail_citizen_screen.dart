@@ -9,6 +9,8 @@ import 'package:treasureflow/features/collections/citizen/domain/entities/paymen
 import 'package:treasureflow/features/collections/citizen/presentation/providers/citizen_collection_detail_provider.dart';
 import 'package:treasureflow/features/collections/shared/utils/collection_receipt_pdf.dart';
 import 'package:treasureflow/features/collections/shared/widgets/collection_stepper_widget.dart';
+import 'package:treasureflow/features/reviews/di/reviews_module.dart';
+import 'package:treasureflow/features/reviews/presentation/providers/submit_review_provider.dart';
 import 'package:treasureflow/features/tracking/citizen/di/tracking_module.dart';
 import 'package:treasureflow/features/tracking/citizen/presentation/providers/citizen_tracking_entry_provider.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
@@ -30,6 +32,8 @@ class _CollectionDetailCitizenScreenState
     extends State<CollectionDetailCitizenScreen> {
   late final CitizenCollectionDetailProvider _provider;
   late final CitizenTrackingEntryProvider _trackingEntry;
+  late final SubmitReviewProvider _reviewEligibilityProvider;
+  bool _reviewEligibilityRequested = false;
 
   @override
   void initState() {
@@ -42,6 +46,9 @@ class _CollectionDetailCitizenScreenState
     _trackingEntry = TrackingModule(container).provideTrackingEntryProvider();
     _trackingEntry.addListener(_onProviderChanged);
     _trackingEntry.check();
+
+    _reviewEligibilityProvider = ReviewsModule(container).provideSubmitReviewProvider();
+    _reviewEligibilityProvider.addListener(_onProviderChanged);
   }
 
   @override
@@ -50,6 +57,8 @@ class _CollectionDetailCitizenScreenState
     _provider.dispose();
     _trackingEntry.removeListener(_onProviderChanged);
     _trackingEntry.dispose();
+    _reviewEligibilityProvider.removeListener(_onProviderChanged);
+    _reviewEligibilityProvider.dispose();
     super.dispose();
   }
 
@@ -70,7 +79,19 @@ class _CollectionDetailCitizenScreenState
       _trackingEntry.stopPassiveRefresh();
     }
 
+    if (status == CollectionStatus.completed && !_reviewEligibilityRequested) {
+      _reviewEligibilityRequested = true;
+      _reviewEligibilityProvider.loadEligibility(_provider.detail!.offer.establishmentId);
+    }
+
     setState(() {});
+  }
+
+  bool get _canReviewThisCollection {
+    return _reviewEligibilityProvider.eligibilityStatus == EligibilityStatus.success &&
+        _reviewEligibilityProvider.eligibleCollections.any(
+          (c) => c.collectionId == widget.collectionId,
+        );
   }
 
   Future<void> _onConfirmAmount() async {
@@ -623,15 +644,26 @@ class _CollectionDetailCitizenScreenState
         ),
       ),
       const SizedBox(height: 14),
-      OutlinedButton.icon(
-        onPressed: () => context.push(
-          '/writeReview',
-          extra: {'collectionId': collection.collectionId},
+      if (_canReviewThisCollection) ...[
+        OutlinedButton.icon(
+          onPressed: () async {
+            final result = await context.push<bool>(
+              '/writeReview',
+              extra: {'collectionId': collection.collectionId},
+            );
+            if (result == true) {
+              // Vuelve a cargar elegibilidad: el backend ya excluye esta
+              // collectionId porque quedó reseñada.
+              _reviewEligibilityProvider.loadEligibility(
+                _provider.detail!.offer.establishmentId,
+              );
+            }
+          },
+          icon: const Icon(Icons.star_outline, size: 18),
+          label: const Text('Dejar reseña'),
         ),
-        icon: const Icon(Icons.star_outline, size: 18),
-        label: const Text('Dejar reseña'),
-      ),
-      const SizedBox(height: 10),
+        const SizedBox(height: 10),
+      ],
       OutlinedButton.icon(
         onPressed: () => _onShareReceipt(collection, offer, payment),
         icon: const Icon(Icons.share_outlined, size: 18),

@@ -12,6 +12,8 @@ class ListEstablishmentsUseCase {
     double? lat,
     double? lng,
     String? materialTypeId,
+    String? search,
+    bool? nearby,
   }) {
     return _repository.list(
       limit: limit,
@@ -19,6 +21,8 @@ class ListEstablishmentsUseCase {
       lat: lat,
       lng: lng,
       materialTypeId: materialTypeId,
+      search: search,
+      nearby: nearby,
     );
   }
 }

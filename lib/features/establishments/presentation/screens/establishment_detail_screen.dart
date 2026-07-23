@@ -23,6 +23,7 @@ const _dayLabels = {
   6: 'Sábado',
   7: 'Domingo',
 };
+const _goldStar = Color(0xFFF5A623);
 
 class EstablishmentDetailScreen extends StatefulWidget {
   final String establishmentId;
@@ -38,8 +39,10 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
   late final EstablishmentDetailProvider _provider;
   late final EstablishmentReviewsProvider _reviewsProvider;
   late final SubmitReviewProvider _submitReviewProvider;
+  final _heroPageController = PageController();
 
   int _selectedTab = 0;
+  int _heroPage = 0;
   String? _currentUserId;
 
   @override
@@ -75,6 +78,7 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     _reviewsProvider.dispose();
     _submitReviewProvider.removeListener(_onProviderChanged);
     _submitReviewProvider.dispose();
+    _heroPageController.dispose();
     super.dispose();
   }
 
@@ -90,48 +94,7 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLowest,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAppBar(colors, textTheme),
-            Expanded(child: _buildBody(colors, textTheme)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar(ColorScheme colors, TextTheme textTheme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: colors.outline.withValues(alpha: 0.3)),
-        ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.of(context).maybePop(),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: colors.primary,
-              child: Icon(Icons.arrow_back, size: 18, color: colors.onPrimary),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              _provider.detail?.storeName ?? 'Establecimiento',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
+      body: _buildBody(colors, textTheme),
     );
   }
 
@@ -139,33 +102,44 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     switch (_provider.status) {
       case EstablishmentDetailStatus.loading:
       case EstablishmentDetailStatus.idle:
-        return const Center(child: CircularProgressIndicator());
+        return SafeArea(
+          child: Column(
+            children: [
+              _buildMinimalAppBar(colors),
+              const Expanded(child: Center(child: CircularProgressIndicator())),
+            ],
+          ),
+        );
       case EstablishmentDetailStatus.error:
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.error_outline_rounded,
-                  size: 48,
-                  color: colors.error,
+        return SafeArea(
+          child: Column(
+            children: [
+              _buildMinimalAppBar(colors),
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
+                        const SizedBox(height: 16),
+                        Text(
+                          _provider.errorMessage ?? 'No se pudo cargar el establecimiento',
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 20),
+                        PrimaryButtonBlueWidget(
+                          text: 'Reintentar',
+                          onPressed: () => _provider.load(widget.establishmentId),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  _provider.errorMessage ??
-                      'No se pudo cargar el establecimiento',
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 20),
-                PrimaryButtonBlueWidget(
-                  text: 'Reintentar',
-                  onPressed: () => _provider.load(widget.establishmentId),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       case EstablishmentDetailStatus.success:
@@ -173,150 +147,263 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     }
   }
 
+  Widget _buildMinimalAppBar(ColorScheme colors) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: GestureDetector(
+          onTap: () => Navigator.of(context).maybePop(),
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: colors.primary,
+            child: Icon(Icons.arrow_back, size: 18, color: colors.onPrimary),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDetail(
     EstablishmentDetail detail,
     ColorScheme colors,
     TextTheme textTheme,
   ) {
-    return SingleChildScrollView(
+    final images = detail.photoUrls.isNotEmpty
+        ? detail.photoUrls
+        : (detail.profilePictureUrl != null ? [detail.profilePictureUrl!] : <String>[]);
+
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          stretch: true,
+          expandedHeight: 260,
+          backgroundColor: colors.surfaceContainerLowest,
+          surfaceTintColor: Colors.transparent,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 8, top: 4),
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).maybePop(),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.black.withValues(alpha: 0.35),
+                child: const Icon(Icons.arrow_back, size: 18, color: Colors.white),
+              ),
+            ),
+          ),
+          flexibleSpace: FlexibleSpaceBar(
+            background: _buildHeroCarousel(images, detail, colors),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildIdentityCard(detail, colors, textTheme),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: _buildSegmentedControl(colors, textTheme),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                child: _selectedTab == 0
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildContactCard(detail, colors, textTheme),
+                          const SizedBox(height: 14),
+                          _buildScheduleCard(detail, colors, textTheme),
+                          const SizedBox(height: 14),
+                          _buildMaterialsCard(detail, colors, textTheme),
+                        ],
+                      )
+                    : _buildReviewsTab(detail, colors, textTheme),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeroCarousel(
+    List<String> images,
+    EstablishmentDetail detail,
+    ColorScheme colors,
+  ) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (images.isEmpty)
+          Container(
+            color: colors.primary.withValues(alpha: 0.15),
+            child: Icon(Icons.storefront_rounded, size: 64, color: colors.primary),
+          )
+        else if (images.length == 1)
+          Image.network(
+            images.first,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => Container(color: colors.primary.withValues(alpha: 0.15)),
+          )
+        else
+          PageView.builder(
+            controller: _heroPageController,
+            itemCount: images.length,
+            onPageChanged: (i) => setState(() => _heroPage = i),
+            itemBuilder: (context, i) => Image.network(
+              images[i],
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(color: colors.primary.withValues(alpha: 0.15)),
+            ),
+          ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.4, 1],
+              colors: [
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.65),
+              ],
+            ),
+          ),
+        ),
+        if (images.length > 1)
+          Positioned(
+            bottom: 14,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                images.length,
+                (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _heroPage ? 16 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: i == _heroPage ? 0.95 : 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildIdentityCard(
+    EstablishmentDetail detail,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      transform: Matrix4.translationValues(0, -28, 0),
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeroImage(detail, colors, textTheme),
-          const SizedBox(height: 16),
-          _buildSegmentedControl(colors, textTheme),
-          const SizedBox(height: 16),
-          if (_selectedTab == 0) ...[
-            _buildContactCard(detail, colors, textTheme),
-            const SizedBox(height: 16),
-            _buildScheduleCard(detail, colors, textTheme),
-            const SizedBox(height: 16),
-            _buildMaterialsCard(detail, colors, textTheme),
-          ] else
-            _buildReviewsTab(colors, textTheme),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  detail.storeName,
+                  style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+              _statusPill(
+                text: detail.isOpen ? 'Abierto' : 'Cerrado',
+                color: detail.isOpen ? colors.primary : colors.error,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.star_rounded, size: 20, color: _goldStar),
+              const SizedBox(width: 4),
+              Text(
+                detail.averageRating.toStringAsFixed(1),
+                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '(${_reviewsProvider.total} ${_reviewsProvider.total == 1 ? 'reseña' : 'reseñas'})',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+              if (detail.addressText != null) ...[
+                const SizedBox(width: 10),
+                Container(width: 3, height: 3, decoration: BoxDecoration(color: colors.onSurface.withValues(alpha: 0.3), shape: BoxShape.circle)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.place_outlined, size: 14, color: colors.onSurface.withValues(alpha: 0.5)),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          detail.addressText!,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colors.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildHeroImage(
-    EstablishmentDetail detail,
-    ColorScheme colors,
-    TextTheme textTheme,
-  ) {
-    final imageUrl = detail.photoUrls.isNotEmpty
-        ? detail.photoUrls.first
-        : detail.profilePictureUrl;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: SizedBox(
-        height: 192,
-        width: double.infinity,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (imageUrl != null)
-              Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) =>
-                    Container(color: colors.primary.withValues(alpha: 0.15)),
-              )
-            else
-              Container(
-                color: colors.primary.withValues(alpha: 0.15),
-                child: Icon(
-                  Icons.storefront_rounded,
-                  size: 56,
-                  color: colors.primary,
-                ),
-              ),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.15),
-                    Colors.black.withValues(alpha: 0.55),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 12,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          detail.storeName,
-                          style: textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          detail.isOpen ? 'Abierto ahora' : 'Cerrado ahora',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          size: 14,
-                          color: Color(0xFFF5A623),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          detail.averageRating.toStringAsFixed(1),
-                          style: textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+  Widget _statusPill({required String text, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSegmentedControl(ColorScheme colors, TextTheme textTheme) {
     return Container(
-      height: 40,
+      height: 44,
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(14),
@@ -324,8 +411,8 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _segmentedTab('Información', 0, colors, textTheme)),
-          Expanded(child: _segmentedTab('Reseñas', 1, colors, textTheme)),
+          Expanded(child: _segmentedTab('Información', Icons.info_outline_rounded, 0, colors, textTheme)),
+          Expanded(child: _segmentedTab('Reseñas', Icons.star_outline_rounded, 1, colors, textTheme)),
         ],
       ),
     );
@@ -333,6 +420,7 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
 
   Widget _segmentedTab(
     String label,
+    IconData icon,
     int index,
     ColorScheme colors,
     TextTheme textTheme,
@@ -341,34 +429,47 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     return InkWell(
       borderRadius: BorderRadius.circular(11),
       onTap: () => setState(() => _selectedTab = index),
-      child: Container(
-        margin: const EdgeInsets.all(4),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: isSelected ? colors.primary : null,
           borderRadius: BorderRadius.circular(11),
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: textTheme.bodySmall?.copyWith(
-              color: isSelected
-                  ? colors.onPrimary
-                  : colors.onSurface.withValues(alpha: 0.5),
-              fontWeight: FontWeight.w600,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? colors.onPrimary : colors.onSurface.withValues(alpha: 0.5),
             ),
-          ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: textTheme.bodySmall?.copyWith(
+                color: isSelected ? colors.onPrimary : colors.onSurface.withValues(alpha: 0.5),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildReviewsTab(ColorScheme colors, TextTheme textTheme) {
+  Widget _buildReviewsTab(
+    EstablishmentDetail detail,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
     final canReview =
         context.isCitizen && _submitReviewProvider.eligibleCollections.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildRatingSummary(detail, colors, textTheme),
+        const SizedBox(height: 16),
         if (canReview) ...[
           PrimaryButtonBlueWidget(
             text: 'Dejar reseña',
@@ -390,10 +491,66 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     );
   }
 
+  Widget _buildRatingSummary(
+    EstablishmentDetail detail,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Column(
+            children: [
+              Text(
+                detail.averageRating.toStringAsFixed(1),
+                style: textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: _goldStar,
+                ),
+              ),
+              Row(
+                children: List.generate(
+                  5,
+                  (i) => Icon(
+                    i < detail.averageRating.round() ? Icons.star_rounded : Icons.star_border_rounded,
+                    size: 14,
+                    color: _goldStar,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 18),
+          Container(height: 44, width: 1, color: colors.outline.withValues(alpha: 0.2)),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Text(
+              _reviewsProvider.total == 0
+                  ? 'Aún no hay reseñas de este establecimiento'
+                  : 'Basado en ${_reviewsProvider.total} ${_reviewsProvider.total == 1 ? 'reseña' : 'reseñas'} de ciudadanos',
+              style: textTheme.bodySmall?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildReviewsList(ColorScheme colors, TextTheme textTheme) {
     if (_reviewsProvider.status == ReviewsListStatus.loading ||
         _reviewsProvider.status == ReviewsListStatus.idle) {
-      return const Center(child: CircularProgressIndicator());
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (_reviewsProvider.status == ReviewsListStatus.error) {
@@ -404,10 +561,19 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     }
 
     if (_reviewsProvider.items.isEmpty) {
-      return Text(
-        'Este establecimiento aún no tiene reseñas',
-        style: textTheme.bodySmall?.copyWith(
-          color: colors.onSurface.withValues(alpha: 0.5),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          children: [
+            Icon(Icons.rate_review_outlined, size: 32, color: colors.onSurface.withValues(alpha: 0.25)),
+            const SizedBox(height: 8),
+            Text(
+              'Este establecimiento aún no tiene reseñas',
+              style: textTheme.bodySmall?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -448,7 +614,7 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
                         onPressed: () => setDialogState(() => rating = starValue),
                         icon: Icon(
                           starValue <= rating ? Icons.star : Icons.star_border,
-                          color: const Color(0xFFF5A623),
+                          color: _goldStar,
                         ),
                       );
                     }),
@@ -510,34 +676,43 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     }
   }
 
+  Widget _sectionHeader(String label, IconData icon, ColorScheme colors, TextTheme textTheme) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 16, color: colors.primary),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          label,
+          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
   Widget _buildContactCard(
     EstablishmentDetail detail,
     ColorScheme colors,
     TextTheme textTheme,
   ) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.location_on_outlined, size: 20, color: colors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Contacto y ubicación',
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          _sectionHeader('Contacto y ubicación', Icons.location_on_outlined, colors, textTheme),
+          const SizedBox(height: 14),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -567,12 +742,8 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
                     icon: Icons.local_shipping_outlined,
                     label: 'Transporte',
                     value: null,
-                    badgeText: detail.hasVehicle
-                        ? 'Disponible'
-                        : 'No disponible',
-                    badgeColor: detail.hasVehicle
-                        ? colors.primary
-                        : colors.error,
+                    badgeText: detail.hasVehicle ? 'Disponible' : 'No disponible',
+                    badgeColor: detail.hasVehicle ? colors.primary : colors.error,
                     colors: colors,
                     textTheme: textTheme,
                   ),
@@ -600,14 +771,14 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: colors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 16, color: colors.primary),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
@@ -616,7 +787,7 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
               fontSize: 11,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 5),
           if (badgeText != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -658,38 +829,26 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     for (final s in detail.schedules) {
       (byDay[s.dayOfWeek] ??= []).add(s);
     }
+    final today = DateTime.now().weekday;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.access_time, size: 20, color: colors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Horarios de atención',
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+          _sectionHeader('Horarios de atención', Icons.access_time_rounded, colors, textTheme),
           const SizedBox(height: 10),
           for (final day in _dayOrder)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(
-                    color: colors.outline.withValues(alpha: 0.15),
-                  ),
+                  bottom: BorderSide(color: colors.outline.withValues(alpha: 0.12)),
                 ),
               ),
               child: Row(
@@ -698,33 +857,31 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
                   Text(
                     _dayLabels[day]!,
                     style: textTheme.bodySmall?.copyWith(
-                      color: colors.onSurface.withValues(alpha: 0.6),
+                      fontWeight: day == today ? FontWeight.w700 : FontWeight.normal,
+                      color: day == today
+                          ? colors.onSurface
+                          : colors.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   if (byDay[day] == null)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 2,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                       decoration: BoxDecoration(
-                        color: colors.error,
+                        color: colors.error.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cerrado',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.error,
                           fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     )
                   else
                     Text(
-                      byDay[day]!
-                          .map((s) => '${s.startTime} - ${s.endTime}')
-                          .join(', '),
+                      byDay[day]!.map((s) => '${s.startTime} - ${s.endTime}').join(', '),
                       style: textTheme.bodySmall?.copyWith(
                         color: colors.primary,
                         fontWeight: FontWeight.w600,
@@ -744,28 +901,17 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     TextTheme textTheme,
   ) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.recycling, size: 20, color: colors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Materiales aceptados',
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          _sectionHeader('Materiales aceptados', Icons.recycling_rounded, colors, textTheme),
+          const SizedBox(height: 14),
           if (detail.materials.isEmpty)
             Text(
               'Sin materiales registrados',
@@ -780,28 +926,22 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
               children: detail.materials
                   .map(
                     (m) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                       decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: colors.primary, width: 0.8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.eco_outlined,
-                            size: 13,
-                            color: colors.primary,
-                          ),
-                          const SizedBox(width: 4),
+                          Icon(Icons.eco_rounded, size: 13, color: colors.primary),
+                          const SizedBox(width: 5),
                           Text(
                             m,
                             style: textTheme.bodySmall?.copyWith(
                               fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
+                              color: colors.primary,
                             ),
                           ),
                         ],

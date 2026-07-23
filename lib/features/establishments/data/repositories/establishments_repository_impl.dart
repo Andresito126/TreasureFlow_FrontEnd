@@ -15,6 +15,8 @@ class EstablishmentsRepositoryImpl implements EstablishmentsRepository {
     double? lat,
     double? lng,
     String? materialTypeId,
+    String? search,
+    bool? nearby,
   }) {
     return _datasource.list(
       limit: limit,
@@ -22,6 +24,8 @@ class EstablishmentsRepositoryImpl implements EstablishmentsRepository {
       lat: lat,
       lng: lng,
       materialTypeId: materialTypeId,
+      search: search,
+      nearby: nearby,
     );
   }
 
