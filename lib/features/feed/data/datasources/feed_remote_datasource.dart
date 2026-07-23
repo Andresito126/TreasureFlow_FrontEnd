@@ -1,7 +1,7 @@
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/profile/citizen/domain/entities/post_summary.dart';
 import 'package:treasureflow/features/feed/domain/entities/recommended_post.dart';
-import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
+// import 'package:treasureflow/features/profile/domain/entities/post_summary.dart';
 
 class FeedRemoteDatasource {
   final ApiClient _apiClient;
@@ -45,10 +45,10 @@ class FeedRemoteDatasource {
     int offset = 0,
   }) async {
     final path = '/posts/waste/feed?limit=$limit&offset=$offset';
-    debugPrint('[FeedRemoteDatasource] GET $path');
+    // debugPrint('[FeedRemoteDatasource] GET $path');
 
     final response = await _apiClient.get(path);
-    debugPrint('[FeedRemoteDatasource] response: $response');
+    // debugPrint('[FeedRemoteDatasource] response: $response');
 
     final items = (response['results'] as List)
         .map((item) => _recommendedFromJson(item as Map<String, dynamic>))
@@ -76,8 +76,8 @@ class FeedRemoteDatasource {
         longitude: (json['longitude'] as num).toDouble(),
       );
     } catch (e) {
-      debugPrint('[FeedRemoteDatasource] error parsing item: $json');
-      debugPrint('[FeedRemoteDatasource] parse error: $e');
+      // debugPrint('[FeedRemoteDatasource] error parsing item: $json');
+      // debugPrint('[FeedRemoteDatasource] parse error: $e');
       rethrow;
     }
   }
