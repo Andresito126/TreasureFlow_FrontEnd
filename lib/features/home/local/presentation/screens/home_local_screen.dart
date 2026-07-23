@@ -276,19 +276,6 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
             style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400),
           ),
         ),
-        const SizedBox(width: 12),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.notifications_outlined,
-            size: 22,
-            color: colors.primary,
-          ),
-        ),
       ],
     );
   }

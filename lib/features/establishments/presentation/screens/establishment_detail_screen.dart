@@ -402,12 +402,12 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
 
   Widget _buildSegmentedControl(ColorScheme colors, TextTheme textTheme) {
     return Container(
-      height: 44,
+      height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: colors.primary.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
@@ -713,50 +713,37 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
         children: [
           _sectionHeader('Contacto y ubicación', Icons.location_on_outlined, colors, textTheme),
           const SizedBox(height: 14),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _contactColumn(
-                    icon: Icons.location_on_outlined,
-                    label: 'Dirección',
-                    value: detail.addressText ?? 'Sin registrar',
-                    colors: colors,
-                    textTheme: textTheme,
-                  ),
-                ),
-                VerticalDivider(color: colors.outline.withValues(alpha: 0.2)),
-                Expanded(
-                  child: _contactColumn(
-                    icon: Icons.phone_outlined,
-                    label: 'Teléfono',
-                    value: detail.phone,
-                    colors: colors,
-                    textTheme: textTheme,
-                  ),
-                ),
-                VerticalDivider(color: colors.outline.withValues(alpha: 0.2)),
-                Expanded(
-                  child: _contactColumn(
-                    icon: Icons.local_shipping_outlined,
-                    label: 'Transporte',
-                    value: null,
-                    badgeText: detail.hasVehicle ? 'Disponible' : 'No disponible',
-                    badgeColor: detail.hasVehicle ? colors.primary : colors.error,
-                    colors: colors,
-                    textTheme: textTheme,
-                  ),
-                ),
-              ],
-            ),
+          _contactRow(
+            icon: Icons.location_on_outlined,
+            label: 'Dirección',
+            value: detail.addressText ?? 'Sin registrar',
+            colors: colors,
+            textTheme: textTheme,
+          ),
+          Divider(height: 24, color: colors.outline.withValues(alpha: 0.15)),
+          _contactRow(
+            icon: Icons.phone_outlined,
+            label: 'Teléfono',
+            value: detail.phone,
+            colors: colors,
+            textTheme: textTheme,
+          ),
+          Divider(height: 24, color: colors.outline.withValues(alpha: 0.15)),
+          _contactRow(
+            icon: Icons.local_shipping_outlined,
+            label: 'Transporte propio',
+            value: null,
+            badgeText: detail.hasVehicle ? 'Disponible' : 'No disponible',
+            badgeColor: detail.hasVehicle ? colors.primary : colors.error,
+            colors: colors,
+            textTheme: textTheme,
           ),
         ],
       ),
     );
   }
 
-  Widget _contactColumn({
+  Widget _contactRow({
     required IconData icon,
     required String label,
     required String? value,
@@ -765,58 +752,56 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     required ColorScheme colors,
     required TextTheme textTheme,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 16, color: colors.primary),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
           ),
-          const SizedBox(height: 8),
-          Text(
+          child: Icon(icon, size: 17, color: colors.primary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
             label,
-            textAlign: TextAlign.center,
             style: textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
-              fontSize: 11,
+              color: colors.onSurface.withValues(alpha: 0.6),
             ),
           ),
-          const SizedBox(height: 5),
-          if (badgeText != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: badgeColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                badgeText,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            )
-          else
-            Text(
-              value ?? '',
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: textTheme.bodySmall?.copyWith(
-                fontSize: 10,
-                color: colors.onSurface.withValues(alpha: 0.6),
+        ),
+        const SizedBox(width: 12),
+        if (badgeText != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: badgeColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              badgeText,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
               ),
             ),
-        ],
-      ),
+          )
+        else
+          Flexible(
+            child: Text(
+              value ?? '',
+              textAlign: TextAlign.right,
+              style: textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.onSurface,
+              ),
+            ),
+          ),
+      ],
     );
   }
 

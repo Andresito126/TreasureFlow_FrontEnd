@@ -63,20 +63,10 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 12,
             right: 16,
-            child: Row(
-              children: [
-                _topIconButton(
-                  Icons.notifications_outlined,
-                  colors,
-                  badgeCount: 3,
-                ),
-                const SizedBox(width: 8),
-                _topIconButton(
-                  Icons.settings_outlined,
-                  colors,
-                  onTap: () => context.push('/settingsLocal'),
-                ),
-              ],
+            child: _topIconButton(
+              Icons.settings_outlined,
+              colors,
+              onTap: () => context.push('/settingsLocal'),
             ),
           ),
           Positioned(
@@ -153,6 +143,13 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                 _buildStats(profile, colors, textTheme),
                 const SizedBox(height: 24),
 
+                _sectionTitle(
+                  'Información de contacto',
+                  colors,
+                  textTheme,
+                  icon: Icons.badge_outlined,
+                ),
+                const SizedBox(height: 10),
                 AppCardContainer(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,7 +189,12 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                _sectionTitle('Materiales que recibe', colors, textTheme),
+                _sectionTitle(
+                  'Materiales que recibe',
+                  colors,
+                  textTheme,
+                  icon: Icons.recycling_rounded,
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
@@ -208,7 +210,12 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                _sectionTitle('Horario laboral', colors, textTheme),
+                _sectionTitle(
+                  'Horario laboral',
+                  colors,
+                  textTheme,
+                  icon: Icons.access_time_rounded,
+                ),
                 const SizedBox(height: 10),
                 AppCardContainer(
                   child: Column(
@@ -233,7 +240,12 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
 
                 if (profile.photoUrls.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  _sectionTitle('Fotos del establecimiento', colors, textTheme),
+                  _sectionTitle(
+                    'Fotos del establecimiento',
+                    colors,
+                    textTheme,
+                    icon: Icons.photo_library_outlined,
+                  ),
                   const SizedBox(height: 10),
                   SizedBox(
                     height: 104,
@@ -254,13 +266,40 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
     );
   }
 
-  Widget _sectionTitle(String text, ColorScheme colors, TextTheme textTheme) {
-    return Text(
-      text,
-      style: textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        fontSize: 15,
-      ),
+  Widget _sectionTitle(
+    String text,
+    ColorScheme colors,
+    TextTheme textTheme, {
+    IconData? icon,
+  }) {
+    if (icon == null) {
+      return Text(
+        text,
+        style: textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: 15,
+        ),
+      );
+    }
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 15, color: colors.primary),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          text,
+          style: textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+      ],
     );
   }
 
@@ -384,6 +423,7 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
     return Row(
       children: [
         _statChip(
+          icon: Icons.recycling_rounded,
           label: 'Materiales',
           value: '${profile.materialTypeIds.length}',
           colors: colors,
@@ -391,6 +431,7 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
         ),
         const SizedBox(width: 8),
         _statChip(
+          icon: Icons.calendar_today_rounded,
           label: 'Días activos',
           value: '${profile.schedules.length}',
           colors: colors,
@@ -398,6 +439,7 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
         ),
         const SizedBox(width: 8),
         _statChip(
+          icon: Icons.photo_library_rounded,
           label: 'Fotos',
           value: '${profile.photoUrls.length}',
           colors: colors,
@@ -408,6 +450,7 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
   }
 
   Widget _statChip({
+    required IconData icon,
     required String label,
     required String value,
     required ColorScheme colors,
@@ -415,14 +458,23 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.outline.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.outline.withValues(alpha: 0.15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
+            Icon(icon, size: 16, color: colors.primary),
+            const SizedBox(height: 6),
             Text(
               value,
               style: textTheme.bodyMedium?.copyWith(
@@ -433,6 +485,7 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
             Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: textTheme.bodySmall?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.5),
@@ -448,46 +501,18 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
   Widget _topIconButton(
     IconData icon,
     ColorScheme colors, {
-    int? badgeCount,
     VoidCallback? onTap,
   }) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colors.surface.withValues(alpha: 0.9),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 20, color: colors.onSurface),
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: colors.surface.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
         ),
-        if (badgeCount != null && badgeCount > 0)
-          Positioned(
-            top: -2,
-            right: -2,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: colors.error,
-                shape: BoxShape.circle,
-              ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                '$badgeCount',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: colors.onError,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-      ],
+        child: Icon(icon, size: 20, color: colors.onSurface),
+      ),
     );
   }
 
@@ -550,6 +575,7 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
     final dayLabel = schedule.dayOfWeek >= 1 && schedule.dayOfWeek <= 7
         ? _dayNames[schedule.dayOfWeek]
         : 'Día ${schedule.dayOfWeek}';
+    final isToday = schedule.dayOfWeek == DateTime.now().weekday;
 
     return Column(
       children: [
@@ -567,7 +593,7 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                 child: Text(
                   dayLabel,
                   style: textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
                   ),
                 ),
               ),

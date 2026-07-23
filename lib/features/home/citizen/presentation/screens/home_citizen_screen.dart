@@ -177,18 +177,6 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
             ],
           ),
         ),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.notifications_outlined,
-            size: 22,
-            color: colors.primary,
-          ),
-        ),
       ],
     );
   }

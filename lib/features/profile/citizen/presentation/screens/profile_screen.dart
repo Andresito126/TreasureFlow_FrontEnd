@@ -98,16 +98,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 12,
             right: 16,
-            child: Row(
-              children: [
-                _topIconButton(Icons.notifications_outlined, colors, badgeCount: 3),
-                const SizedBox(width: 8),
-                _topIconButton(
-                  Icons.settings_outlined,
-                  colors,
-                  onTap: () => context.push('/settingsCitizen'),
-                ),
-              ],
+            child: _topIconButton(
+              Icons.settings_outlined,
+              colors,
+              onTap: () => context.push('/settingsCitizen'),
             ),
           ),
 
@@ -273,6 +267,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Text(
               value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 2),
@@ -358,37 +354,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _topIconButton(IconData icon, ColorScheme colors, {int? badgeCount, VoidCallback? onTap}) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colors.surface.withValues(alpha: 0.9),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 20, color: colors.onSurface),
-          ),
+  Widget _topIconButton(IconData icon, ColorScheme colors, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: colors.surface.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
         ),
-        if (badgeCount != null && badgeCount > 0)
-          Positioned(
-            top: -2,
-            right: -2,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                '$badgeCount',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-      ],
+        child: Icon(icon, size: 20, color: colors.onSurface),
+      ),
     );
   }
 
