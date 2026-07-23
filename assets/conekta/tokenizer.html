@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <script src="https://cdn.conekta.io/js/latest/conekta.js"></script>
+</head>
+<body>
+  <script>
+    function tokenize(publicKey, number, name, expMonth, expYear, cvc) {
+      if (typeof Conekta === 'undefined') {
+        TokenResult.postMessage(JSON.stringify({
+          error: 'No se pudo cargar el SDK de Conekta (sin internet o CDN bloqueado).',
+        }));
+        return;
+      }
+
+      try {
+        Conekta.setPublicKey(publicKey);
+        Conekta.Token.create(
+          {
+            card: {
+              number: number,
+              name: name,
+              exp_month: expMonth,
+              exp_year: expYear,
+              cvc: cvc,
+            },
+          },
+          function (token) {
+            TokenResult.postMessage(JSON.stringify({ id: token.id }));
+          },
+          function (error) {
+            var message =
+              (error && error.message_to_purchaser) ||
+              (error && error.message) ||
+              'No se pudo procesar la tarjeta';
+            TokenResult.postMessage(JSON.stringify({ error: message }));
+          },
+        );
+      } catch (e) {
+        TokenResult.postMessage(JSON.stringify({ error: 'Error interno: ' + e.message }));
+      }
+    }
+  </script>
+</body>
+</html>
