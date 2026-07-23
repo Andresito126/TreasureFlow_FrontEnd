@@ -76,8 +76,28 @@ class _CardPaymentFormWidgetState extends State<CardPaymentFormWidget> {
             }
           },
         ),
-      )
-      ..loadFlutterAsset('assets/conekta/tokenizer.html');
+      );
+    _loadTokenizer();
+  }
+
+  /// Carga el tokenizer desde assets pero con un baseUrl HTTPS: Conekta.js con
+  /// llave LIVE rechaza orígenes no seguros ("Connection must be secured in
+  /// production"). Con baseUrl https el WebView reporta un origen seguro.
+  Future<void> _loadTokenizer() async {
+    try {
+      final html =
+          await rootBundle.loadString('assets/conekta/tokenizer.html');
+      await _webViewController.loadHtmlString(
+        html,
+        baseUrl: 'https://tfbackendgateway-production.up.railway.app',
+      );
+    } catch (_) {
+      if (!_pageLoaded.isCompleted) {
+        _pageLoaded.completeError(
+          const ConektaTokenException('No se pudo abrir la pasarela de pago.'),
+        );
+      }
+    }
   }
 
   @override
