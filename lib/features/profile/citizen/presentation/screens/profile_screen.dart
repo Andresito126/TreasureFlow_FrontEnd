@@ -6,6 +6,7 @@ import 'package:treasureflow/shared/utils/post_status_translator.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 import 'package:treasureflow/shared/widgets/post_card_widget.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 import 'package:treasureflow/shared/widgets/post_filter_bar_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -336,12 +337,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, provider, _) {
         final name = provider.profile?.fullName ?? '—';
         final email = provider.profile?.email ?? '';
+        final isPremium = provider.profile?.isPremium ?? false;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              name,
-              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 18),
+            Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    name,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ),
+                if (isPremium) ...[
+                  const SizedBox(width: 8),
+                  const PremiumBadgeWidget(fontSize: 10),
+                ],
+              ],
             ),
             const SizedBox(height: 2),
             Text(

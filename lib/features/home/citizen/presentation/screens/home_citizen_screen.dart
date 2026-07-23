@@ -10,6 +10,7 @@ import 'package:treasureflow/features/home/citizen/presentation/widgets/offer_ca
 import 'package:treasureflow/features/home/citizen/presentation/widgets/stat_card_widget.dart';
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 
 class HomeCitizenScreen extends StatefulWidget {
   const HomeCitizenScreen({super.key});
@@ -157,13 +158,24 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                data != null
-                    ? 'Hola, ${data.fullName.split(' ').first}!'
-                    : 'Hola!',
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      data != null
+                          ? 'Hola, ${data.fullName.split(' ').first}!'
+                          : 'Hola!',
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (data?.isPremium ?? false) ...[
+                    const SizedBox(width: 6),
+                    const PremiumBadgeWidget(),
+                  ],
+                ],
               ),
               Text(
                 'Vamos a ayudar el planeta hoy',

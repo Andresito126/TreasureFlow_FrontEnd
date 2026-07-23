@@ -8,6 +8,7 @@ import 'package:treasureflow/features/profile/local/presentation/providers/local
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/utils/material_type_id_catalog.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 
 const _statBlue = Color(0xFF155DFC);
@@ -403,12 +404,22 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                profile.storeName,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      profile.storeName,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  if (profile.isPremium) ...[
+                    const SizedBox(width: 8),
+                    const PremiumBadgeWidget(fontSize: 10),
+                  ],
+                ],
               ),
               const SizedBox(height: 5),
               Row(

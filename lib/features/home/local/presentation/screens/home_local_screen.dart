@@ -16,6 +16,7 @@ import 'package:treasureflow/features/home/citizen/presentation/widgets/stat_car
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
 import 'package:treasureflow/shared/theme/app_theme_extension.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
+import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 
 class HomeLocalScreen extends StatefulWidget {
   const HomeLocalScreen({super.key});
@@ -275,9 +276,24 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
     return Row(
       children: [
         Expanded(
-          child: Text(
-            data != null ? '¡Bienvenido ${data.storeName}!' : '¡Bienvenido!',
-            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  data != null
+                      ? '¡Bienvenido ${data.storeName}!'
+                      : '¡Bienvenido!',
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              if (data?.isPremium ?? false) ...[
+                const SizedBox(width: 6),
+                const PremiumBadgeWidget(),
+              ],
+            ],
           ),
         ),
       ],

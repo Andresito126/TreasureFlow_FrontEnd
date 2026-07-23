@@ -29,6 +29,7 @@ class LocalProfileRemoteDatasource {
           )
           .toList(),
       photoUrls: (response['photoUrls'] as List).cast<String>(),
+      isPremium: response['isPremium'] as bool? ?? false,
     );
   }
 

@@ -5,6 +5,7 @@ class CitizenProfile {
   final double totalEarnings;
   final int totalPublications;
   final int activePublications;
+  final bool isPremium;
 
   const CitizenProfile({
     required this.fullName,
@@ -13,6 +14,7 @@ class CitizenProfile {
     required this.totalEarnings,
     required this.totalPublications,
     required this.activePublications,
+    this.isPremium = false,
   });
 }
 
