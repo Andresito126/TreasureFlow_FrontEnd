@@ -16,6 +16,7 @@ import 'package:treasureflow/features/establishments/di/establishments_module.da
 import 'package:treasureflow/features/establishments/presentation/providers/establishments_list_provider.dart';
 import 'package:treasureflow/features/feed/di/feed_module.dart';
 import 'package:treasureflow/features/feed/presentation/providers/feed_provider.dart';
+import 'package:treasureflow/features/feed/presentation/providers/recommended_feed_provider.dart';
 import 'package:treasureflow/features/home/citizen/di/citizen_home_module.dart';
 import 'package:treasureflow/features/home/citizen/presentation/providers/citizen_home_provider.dart';
 import 'package:treasureflow/features/home/local/di/local_home_module.dart';
@@ -83,6 +84,9 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider<FeedProvider>(
           create: (_) => FeedModule(widget.container).provideFeedProvider(),
+        ),
+        ChangeNotifierProvider<RecommendedFeedProvider>(
+          create: (_) => FeedModule(widget.container).provideRecommendedFeedProvider(),
         ),
         ChangeNotifierProvider<CitizenHomeProvider>(
           create: (_) => CitizenHomeModule(widget.container).provideProvider(),

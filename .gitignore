@@ -54,3 +54,5 @@ app.*.map.json
 # en el .gitignore raíz
 lib/firebase_options.dart
 firebase.json
+
+docs/

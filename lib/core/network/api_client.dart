@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:treasureflow/core/storage/token_storage.dart';
@@ -39,10 +40,12 @@ class ApiClient {
 
   Future<Map<String, dynamic>> get(String path) async {
     final headers = await _buildHeaders();
+    debugPrint('[ApiClient] GET $baseUrl$path');
     final response = await _client.get(
       Uri.parse('$baseUrl$path'),
       headers: headers,
     );
+    debugPrint('[ApiClient] <- ${response.statusCode} $baseUrl$path');
     return _handleResponse(response, 'GET', path);
   }
 
