@@ -5,9 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/profile/local/di/local_profile_module.dart';
+import 'package:treasureflow/features/profile/local/domain/entities/establishment_profile.dart';
 import 'package:treasureflow/features/profile/local/presentation/providers/local_profile_provider.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
+import 'package:treasureflow/shared/widgets/operating_hours_selector.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
 
@@ -28,6 +30,7 @@ class _EditEstablishmentProfileScreenState
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   bool _hasVehicle = false;
+  List<DaySchedule>? _daySchedules;
 
   bool _formPrefilled = false;
   bool _popped = false;
@@ -92,6 +95,60 @@ class _EditEstablishmentProfileScreenState
     }
   }
 
+  Future<void> _pickEstablishmentPhoto() async {
+    final picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 80,
+    );
+    if (picked != null && mounted) {
+      _provider.addPhoto(File(picked.path));
+    }
+  }
+
+  void _onScheduleChanged(List<DaySchedule> days) {
+    _daySchedules = days;
+  }
+
+  List<ScheduleEntry>? _initialScheduleEntries(EstablishmentProfile? profile) {
+    if (profile == null) return null;
+    return profile.schedules
+        .map(
+          (s) => (
+            dayOfWeek: s.dayOfWeek,
+            startTime: s.startTime,
+            endTime: s.endTime,
+          ),
+        )
+        .toList();
+  }
+
+  List<EstablishmentSchedule>? _resolveSchedules() {
+    final edited = _daySchedules;
+    if (edited == null) return _provider.profile?.schedules;
+
+    final schedules = <EstablishmentSchedule>[];
+    for (int i = 0; i < edited.length; i++) {
+      final day = edited[i];
+      if (!day.isOpen) continue;
+      for (final range in day.ranges) {
+        final startStr =
+            '${range.start.hour.toString().padLeft(2, '0')}:${range.start.minute.toString().padLeft(2, '0')}';
+        final endStr =
+            '${range.end.hour.toString().padLeft(2, '0')}:${range.end.minute.toString().padLeft(2, '0')}';
+        schedules.add(
+          EstablishmentSchedule(
+            dayOfWeek: i + 1,
+            startTime: startStr,
+            endTime: endStr,
+          ),
+        );
+      }
+    }
+    return schedules;
+  }
+
   void _onSave() {
     if (_storeNameController.text.trim().isEmpty ||
         _phoneController.text.trim().isEmpty ||
@@ -109,6 +166,7 @@ class _EditEstablishmentProfileScreenState
       phone: _phoneController.text.trim(),
       addressText: _addressController.text.trim(),
       hasVehicle: _hasVehicle,
+      schedules: _resolveSchedules(),
     );
   }
 
@@ -226,6 +284,10 @@ class _EditEstablishmentProfileScreenState
             ],
           ),
         ),
+        const SizedBox(height: 24),
+        AppCardContainer(child: _buildPhotosSection(colors, textTheme)),
+        const SizedBox(height: 24),
+        AppCardContainer(child: _buildHoursSection(profile, colors, textTheme)),
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
@@ -351,6 +413,127 @@ class _EditEstablishmentProfileScreenState
           value: _hasVehicle,
           activeTrackColor: colors.primary,
           onChanged: (value) => setState(() => _hasVehicle = value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhotosSection(ColorScheme colors, TextTheme textTheme) {
+    final existing = _provider.existingPhotoUrls;
+    final newOnes = _provider.newPhotos;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Fotos del establecimiento',
+          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Muestra tu local con fotos del lugar (máx. 3).',
+          style: textTheme.bodySmall?.copyWith(
+            color: colors.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (int i = 0; i < existing.length; i++)
+              _photoThumb(
+                image: NetworkImage(existing[i]),
+                onRemove: () => _provider.removeExistingPhoto(i),
+                colors: colors,
+              ),
+            for (int i = 0; i < newOnes.length; i++)
+              _photoThumb(
+                image: FileImage(newOnes[i]),
+                onRemove: () => _provider.removeNewPhoto(i),
+                colors: colors,
+              ),
+            if (_provider.canAddMorePhotos) _addPhotoTile(colors),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _photoThumb({
+    required ImageProvider image,
+    required VoidCallback onRemove,
+    required ColorScheme colors,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image(image: image, width: 80, height: 80, fit: BoxFit.cover),
+        ),
+        Positioned(
+          top: -6,
+          right: -6,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colors.error,
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.surface, width: 2),
+              ),
+              child: Icon(Icons.close, size: 12, color: colors.onError),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _addPhotoTile(ColorScheme colors) {
+    return GestureDetector(
+      onTap: _pickEstablishmentPhoto,
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.outline.withValues(alpha: 0.4)),
+          color: colors.surfaceContainerLowest,
+        ),
+        child: Icon(Icons.add_a_photo_outlined, color: colors.primary),
+      ),
+    );
+  }
+
+  Widget _buildHoursSection(
+    EstablishmentProfile? profile,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.access_time, size: 18, color: colors.onSurface),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Horarios de atención',
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        OperatingHoursSelector(
+          initialEntries: _initialScheduleEntries(profile),
+          onChanged: _onScheduleChanged,
         ),
       ],
     );

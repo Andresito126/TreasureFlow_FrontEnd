@@ -30,6 +30,11 @@ class LocalProfileProvider extends ChangeNotifier {
   EstablishmentProfile? _profile;
   File? _selectedImage;
 
+  final List<String> _existingPhotoUrls = [];
+  final List<File> _newPhotos = [];
+
+  static const _maxPhotos = 3;
+
   SaveLocalProfileStatus _saveStatus = SaveLocalProfileStatus.idle;
   String? _saveError;
 
@@ -37,6 +42,11 @@ class LocalProfileProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   EstablishmentProfile? get profile => _profile;
   File? get selectedImage => _selectedImage;
+
+  List<String> get existingPhotoUrls => List.unmodifiable(_existingPhotoUrls);
+  List<File> get newPhotos => List.unmodifiable(_newPhotos);
+  bool get canAddMorePhotos =>
+      _existingPhotoUrls.length + _newPhotos.length < _maxPhotos;
 
   SaveLocalProfileStatus get saveStatus => _saveStatus;
   String? get saveError => _saveError;
@@ -48,6 +58,9 @@ class LocalProfileProvider extends ChangeNotifier {
 
     try {
       _profile = await _getEstablishmentProfileUseCase();
+      _existingPhotoUrls
+        ..clear()
+        ..addAll(_profile!.photoUrls);
       _status = LocalProfileStatus.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -65,11 +78,33 @@ class LocalProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addPhoto(File photo) {
+    if (canAddMorePhotos) {
+      _newPhotos.add(photo);
+      notifyListeners();
+    }
+  }
+
+  void removeExistingPhoto(int index) {
+    if (index < _existingPhotoUrls.length) {
+      _existingPhotoUrls.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  void removeNewPhoto(int index) {
+    if (index < _newPhotos.length) {
+      _newPhotos.removeAt(index);
+      notifyListeners();
+    }
+  }
+
   Future<bool> updateProfile({
     required String storeName,
     required String phone,
     required String addressText,
     required bool hasVehicle,
+    List<EstablishmentSchedule>? schedules,
   }) async {
     _saveStatus = SaveLocalProfileStatus.saving;
     _saveError = null;
@@ -84,12 +119,23 @@ class LocalProfileProvider extends ChangeNotifier {
         );
       }
 
+      final uploadedPhotoUrls = <String>[];
+      for (final photo in _newPhotos) {
+        final url = await _uploadImageUseCase(
+          imageFile: photo,
+          folder: 'establishments/photos',
+        );
+        uploadedPhotoUrls.add(url);
+      }
+
       await _updateEstablishmentProfileUseCase(
         storeName: storeName,
         phone: phone,
         addressText: addressText,
         hasVehicle: hasVehicle,
         profilePictureUrl: profilePictureUrl,
+        schedules: schedules,
+        photoUrls: [..._existingPhotoUrls, ...uploadedPhotoUrls],
       );
 
       _saveStatus = SaveLocalProfileStatus.saved;

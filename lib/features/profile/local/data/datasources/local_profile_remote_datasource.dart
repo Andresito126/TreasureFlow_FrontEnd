@@ -38,6 +38,8 @@ class LocalProfileRemoteDatasource {
     String? addressText,
     bool? hasVehicle,
     String? profilePictureUrl,
+    List<EstablishmentSchedule>? schedules,
+    List<String>? photoUrls,
   }) {
     return _apiClient.patch(
       '/establishments/me',
@@ -47,6 +49,17 @@ class LocalProfileRemoteDatasource {
         if (addressText != null) 'addressText': addressText,
         if (hasVehicle != null) 'hasVehicle': hasVehicle,
         if (profilePictureUrl != null) 'profilePictureUrl': profilePictureUrl,
+        if (schedules != null)
+          'schedules': schedules
+              .map(
+                (s) => {
+                  'dayOfWeek': s.dayOfWeek,
+                  'startTime': s.startTime,
+                  'endTime': s.endTime,
+                },
+              )
+              .toList(),
+        if (photoUrls != null) 'photoUrls': photoUrls,
       },
     );
   }

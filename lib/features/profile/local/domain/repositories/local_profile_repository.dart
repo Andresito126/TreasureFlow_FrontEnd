@@ -9,5 +9,7 @@ abstract class LocalProfileRepository {
     String? addressText,
     bool? hasVehicle,
     String? profilePictureUrl,
+    List<EstablishmentSchedule>? schedules,
+    List<String>? photoUrls,
   });
 }
