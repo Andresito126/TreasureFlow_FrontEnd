@@ -302,8 +302,7 @@ class _EstablishmentDetailScreenState extends State<EstablishmentDetailScreen> {
     TextTheme textTheme,
   ) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-      transform: Matrix4.translationValues(0, -28, 0),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,

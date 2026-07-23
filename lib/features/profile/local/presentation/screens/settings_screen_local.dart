@@ -103,12 +103,6 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
                     onTap: () => context.push('/localReviews'),
                   ),
                   SettingsTileWidget(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notificaciones',
-                    subtitle: 'Gestiona tus preferencias de notificaciones.',
-                    onTap: () {},
-                  ),
-                  SettingsTileWidget(
                     icon: Icons.credit_card_outlined,
                     title: 'Métodos de pago',
                     subtitle: 'Administra cómo pagas tus recolecciones.',
