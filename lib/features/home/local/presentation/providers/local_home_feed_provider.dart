@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/home/local/domain/entities/local_home_feed_item.dart';
 import 'package:treasureflow/features/home/local/domain/usecases/get_local_home_feed_usecase.dart';
+import 'package:treasureflow/features/home/local/presentation/state/home_local_ui_state.dart';
 
-enum LocalHomeFeedStatus { idle, loading, success, error }
+export 'package:treasureflow/features/home/local/presentation/state/home_local_ui_state.dart'
+    show LocalHomeFeedStatus;
 
 class LocalHomeFeedProvider extends ChangeNotifier {
   final GetLocalHomeFeedUseCase _getLocalHomeFeedUseCase;

@@ -18,6 +18,7 @@ import 'package:treasureflow/features/home/citizen/di/citizen_home_module.dart';
 import 'package:treasureflow/features/home/citizen/presentation/providers/citizen_home_provider.dart';
 import 'package:treasureflow/features/home/local/di/local_home_module.dart';
 import 'package:treasureflow/features/home/local/presentation/providers/local_home_feed_provider.dart';
+import 'package:treasureflow/features/home/local/presentation/providers/local_home_summary_provider.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
 import 'package:treasureflow/features/posts/waste/presentation/providers/create_waste_provider.dart';
 import 'package:treasureflow/features/profile/citizen/di/profile_module.dart';
@@ -86,6 +87,9 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider<LocalHomeFeedProvider>(
           create: (_) => LocalHomeModule(widget.container).provideProvider(),
+        ),
+        ChangeNotifierProvider<LocalHomeSummaryProvider>(
+          create: (_) => LocalHomeModule(widget.container).provideLocalHomeSummaryProvider(),
         ),
       ],
       child: MaterialApp.router(
