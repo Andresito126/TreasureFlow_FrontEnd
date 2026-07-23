@@ -1,5 +1,6 @@
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/home/citizen/domain/entities/citizen_home.dart';
+import 'package:treasureflow/shared/utils/material_type_translator.dart';
 
 class CitizenHomeRemoteDatasource {
   final ApiClient _apiClient;
@@ -23,7 +24,10 @@ class CitizenHomeRemoteDatasource {
                 photoUrl: e['photoUrl'] as String?,
                 distance: e['distance'] as String,
                 averageRating: (e['averageRating'] as num).toDouble(),
-                materials: (e['materials'] as List).cast<String>(),
+                materials: (e['materials'] as List)
+                    .cast<String>()
+                    .map(MaterialTypeTranslator.translate)
+                    .toList(),
                 isOpen: e['isOpen'] as bool,
               ))
           .toList(),

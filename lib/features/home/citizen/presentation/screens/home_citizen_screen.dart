@@ -65,28 +65,15 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
                           percentChange: '—',
                         ),
                         const SizedBox(height: 12),
-                        IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(
-                                child: StatCardWidget(
-                                  icon: Icons.article_outlined,
-                                  value: data != null ? '${data.totalPublications}' : '—',
-                                  title: 'Publicaciones hechas',
-                                  subtitle: 'Activas y finalizadas',
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: StatCardWidget(
-                                  icon: Icons.inventory_2_outlined,
-                                  value: data != null ? '${data.itemsObtained}' : '—',
-                                  title: 'Objetos obtenidos',
-                                  subtitle: 'De segunda vida',
-                                ),
-                              ),
-                            ],
+                        SizedBox(
+                          width: double.infinity,
+                          child: StatCardWidget(
+                            icon: Icons.article_outlined,
+                            value: data != null
+                                ? '${data.totalPublications}'
+                                : '—',
+                            title: 'Publicaciones hechas',
+                            subtitle: 'Activas y finalizadas',
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -96,7 +83,30 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
                         _buildActionCards(),
                         const SizedBox(height: 24),
 
-                        _sectionTitle('Establecimientos destacados', textTheme),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _sectionTitle(
+                              'Establecimientos destacados',
+                              textTheme,
+                            ),
+                            TextButton(
+                              onPressed: () => context.push('/establishments'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Ver más',
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 12),
                         _buildEstablishments(data, colors, textTheme),
                         const SizedBox(height: 24),
@@ -128,7 +138,11 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
     );
   }
 
-  Widget _buildHeader(CitizenHome? data, ColorScheme colors, TextTheme textTheme) {
+  Widget _buildHeader(
+    CitizenHome? data,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
     final pictureUrl = data?.profilePictureUrl;
     return Row(
       children: [
@@ -146,8 +160,12 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                data != null ? 'Hola, ${data.fullName.split(' ').first}!' : 'Hola!',
-                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                data != null
+                    ? 'Hola, ${data.fullName.split(' ').first}!'
+                    : 'Hola!',
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               Text(
                 'Vamos a ayudar el planeta hoy',
@@ -165,13 +183,21 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
             color: colors.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.notifications_outlined, size: 22, color: colors.primary),
+          child: Icon(
+            Icons.notifications_outlined,
+            size: 22,
+            color: colors.primary,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildEstablishments(CitizenHome? data, ColorScheme colors, TextTheme textTheme) {
+  Widget _buildEstablishments(
+    CitizenHome? data,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
     final establishments = data?.nearbyEstablishments ?? [];
 
     if (data == null) {
@@ -189,7 +215,11 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
     }
 
     if (establishments.isEmpty) {
-      return _emptySection('No hay establecimientos cercanos', colors, textTheme);
+      return _emptySection(
+        'No hay establecimientos cercanos',
+        colors,
+        textTheme,
+      );
     }
 
     return _buildHorizontalList(
@@ -201,11 +231,18 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
         reviewCount: 0,
         materials: establishments[i].materials,
         isOpen: establishments[i].isOpen,
+        photoUrl: establishments[i].photoUrl,
+        onTap: () =>
+            context.push('/establishmentDetail/${establishments[i].id}'),
       ),
     );
   }
 
-  Widget _buildNearbyItems(CitizenHome? data, ColorScheme colors, TextTheme textTheme) {
+  Widget _buildNearbyItems(
+    CitizenHome? data,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
     final items = data?.nearbyItems ?? [];
 
     if (data == null) {
@@ -237,7 +274,11 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
     );
   }
 
-  Widget _buildReceivedOffers(CitizenHome? data, ColorScheme colors, TextTheme textTheme) {
+  Widget _buildReceivedOffers(
+    CitizenHome? data,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
     final offers = data?.receivedOffers ?? [];
 
     if (data == null) {
@@ -261,7 +302,8 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
       itemCount: offers.length,
       itemBuilder: (i) => OfferCardWidget(
         objectName: 'Publicación de residuo',
-        offeredPrice: '\$${offers[i].pricePerUnit.toStringAsFixed(2)}/${offers[i].unit}',
+        offeredPrice:
+            '\$${offers[i].pricePerUnit.toStringAsFixed(2)}/${offers[i].unit}',
         buyerName: offers[i].establishmentName,
         timeAgo: offers[i].offeredAt,
         status: 'Pendiente',
@@ -270,122 +312,17 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
     );
   }
 
-  Widget _emptySection(String message, ColorScheme colors, TextTheme textTheme) {
+  Widget _emptySection(
+    String message,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Text(
         message,
         style: textTheme.bodySmall?.copyWith(
           color: colors.onSurface.withValues(alpha: 0.4),
-        ),
-      ),
-    );
-  }
-
-  void _showPublishOptions(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: colors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.outline.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              '¿Qué quieres publicar?',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            _publishOption(
-              icon: Icons.recycling,
-              title: 'Publicar residuo',
-              subtitle: 'Material reciclable para establecimientos',
-              colors: colors,
-              textTheme: textTheme,
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/createWaste');
-              },
-            ),
-            const SizedBox(height: 12),
-            _publishOption(
-              icon: Icons.inventory_2_outlined,
-              title: 'Publicar objeto',
-              subtitle: 'Dale una segunda vida a lo que ya no uses',
-              colors: colors,
-              textTheme: textTheme,
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/createObject');
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _publishOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required ColorScheme colors,
-    required TextTheme textTheme,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.outline.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 24, color: colors.primary),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colors.onSurface.withValues(alpha: 0.5),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: colors.onSurface.withValues(alpha: 0.3)),
-          ],
         ),
       ),
     );
@@ -407,35 +344,41 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
         return Wrap(
           spacing: 12,
           runSpacing: 12,
-          children: [
-            ActionCardWidget(
-              title: 'Publicar',
-              subtitle: 'Sube algo que ya no uses',
-              icon: Icons.add_a_photo_outlined,
-              gradientColors: const [Color(0xFF17B593), Color(0xFF5ACA7E)],
-              onTap: () => _showPublishOptions(context),
-            ),
-            const ActionCardWidget(
-              title: 'Ver locales',
-              subtitle: 'Encuentra dónde llevar tu material',
-              icon: Icons.storefront_outlined,
-              gradientColors: [Color(0xFF59B3E0), Color(0xFF30A3F3)],
-            ),
-            const ActionCardWidget(
-              title: 'Explorar',
-              subtitle: 'Descubre objetos cerca de ti',
-              icon: Icons.explore_outlined,
-              gradientColors: [Color(0xFF6D53ED), Color(0xFF9F72F7)],
-            ),
-            const ActionCardWidget(
-              title: 'Mis ofertas',
-              subtitle: 'Gestiona tus publicaciones',
-              icon: Icons.local_offer_outlined,
-              gradientColors: [Color(0xFFF5A32E), Color(0xFFFEC562)],
-            ),
-          ].map((card) {
-            return SizedBox(width: cardWidth, height: cardHeight, child: card);
-          }).toList(),
+          children:
+              [
+                ActionCardWidget(
+                  title: 'Publicar',
+                  subtitle: 'Sube algo que ya no uses',
+                  icon: Icons.add_a_photo_outlined,
+                  gradientColors: const [Color(0xFF17B593), Color(0xFF5ACA7E)],
+                  onTap: () => context.push('/createWaste'),
+                ),
+                ActionCardWidget(
+                  title: 'Ver locales',
+                  subtitle: 'Encuentra dónde llevar tu material',
+                  icon: Icons.storefront_outlined,
+                  gradientColors: const [Color(0xFF59B3E0), Color(0xFF30A3F3)],
+                  onTap: () => context.push('/establishments'),
+                ),
+                const ActionCardWidget(
+                  title: 'Explorar',
+                  subtitle: 'Descubre objetos cerca de ti',
+                  icon: Icons.explore_outlined,
+                  gradientColors: [Color(0xFF6D53ED), Color(0xFF9F72F7)],
+                ),
+                const ActionCardWidget(
+                  title: 'Mis ofertas',
+                  subtitle: 'Gestiona tus publicaciones',
+                  icon: Icons.local_offer_outlined,
+                  gradientColors: [Color(0xFFF5A32E), Color(0xFFFEC562)],
+                ),
+              ].map((card) {
+                return SizedBox(
+                  width: cardWidth,
+                  height: cardHeight,
+                  child: card,
+                );
+              }).toList(),
         );
       },
     );

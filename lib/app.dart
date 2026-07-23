@@ -12,6 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'package:treasureflow/features/auth/presentation/providers/register_citizen_provider.dart';
 import 'package:treasureflow/features/auth/di/local_auth_module.dart';
 import 'package:treasureflow/features/auth/presentation/providers/register_local_provider.dart';
+import 'package:treasureflow/features/establishments/di/establishments_module.dart';
+import 'package:treasureflow/features/establishments/presentation/providers/establishments_list_provider.dart';
 import 'package:treasureflow/features/feed/di/feed_module.dart';
 import 'package:treasureflow/features/feed/presentation/providers/feed_provider.dart';
 import 'package:treasureflow/features/home/citizen/di/citizen_home_module.dart';
@@ -90,6 +92,9 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider<LocalHomeSummaryProvider>(
           create: (_) => LocalHomeModule(widget.container).provideLocalHomeSummaryProvider(),
+        ),
+        ChangeNotifierProvider<EstablishmentsListProvider>(
+          create: (_) => EstablishmentsModule(widget.container).provideListProvider(),
         ),
       ],
       child: MaterialApp.router(

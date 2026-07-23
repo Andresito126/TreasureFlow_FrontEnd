@@ -8,6 +8,7 @@ class EstablishmentCardWidget extends StatelessWidget {
   final List<String> materials;
   final bool isPremium;
   final bool isOpen;
+  final String? photoUrl;
   final VoidCallback? onTap;
 
   const EstablishmentCardWidget({
@@ -19,6 +20,7 @@ class EstablishmentCardWidget extends StatelessWidget {
     required this.materials,
     this.isPremium = false,
     this.isOpen = true,
+    this.photoUrl,
     this.onTap,
   });
 
@@ -48,56 +50,73 @@ class EstablishmentCardWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              height: 90,
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.1),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(14),
-                ),
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
               ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Icon(
-                      Icons.storefront,
-                      size: 36,
-                      color: colors.primary.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  Positioned(
-                    left: 8,
-                    bottom: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF293647),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            size: 10,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            distance,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
+              child: Container(
+                height: 90,
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.1),
+                ),
+                child: Stack(
+                  children: [
+                    if (photoUrl != null)
+                      Positioned.fill(
+                        child: Image.network(
+                          photoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Center(
+                            child: Icon(
+                              Icons.storefront,
+                              size: 36,
+                              color: colors.primary.withValues(alpha: 0.4),
                             ),
                           ),
-                        ],
+                        ),
+                      )
+                    else
+                      Center(
+                        child: Icon(
+                          Icons.storefront,
+                          size: 36,
+                          color: colors.primary.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    Positioned(
+                      left: 8,
+                      bottom: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF293647),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              size: 10,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              distance,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Padding(
