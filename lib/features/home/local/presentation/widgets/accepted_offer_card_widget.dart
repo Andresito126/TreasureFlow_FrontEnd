@@ -6,6 +6,8 @@ class AcceptedOfferCardWidget extends StatelessWidget {
   final String date;
   final String address;
   final VoidCallback? onTap;
+  final String statusLabel;
+  final Color? statusColor;
 
   const AcceptedOfferCardWidget({
     super.key,
@@ -14,6 +16,8 @@ class AcceptedOfferCardWidget extends StatelessWidget {
     required this.date,
     required this.address,
     this.onTap,
+    this.statusLabel = 'Aceptado',
+    this.statusColor,
   });
 
   @override
@@ -44,7 +48,11 @@ class AcceptedOfferCardWidget extends StatelessWidget {
                       color: colors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(Icons.inventory_2, size: 28, color: colors.primary.withValues(alpha: 0.4)),
+                    child: Icon(
+                      Icons.inventory_2,
+                      size: 28,
+                      color: colors.primary.withValues(alpha: 0.4),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -75,11 +83,17 @@ class AcceptedOfferCardWidget extends StatelessWidget {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            Icon(Icons.calendar_today, size: 12, color: colors.onSurface.withValues(alpha: 0.5)),
+                            Icon(
+                              Icons.calendar_today,
+                              size: 12,
+                              color: colors.onSurface.withValues(alpha: 0.5),
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               date,
-                              style: textTheme.bodySmall?.copyWith(fontSize: 11),
+                              style: textTheme.bodySmall?.copyWith(
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
@@ -103,16 +117,22 @@ class AcceptedOfferCardWidget extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: colors.primary,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                color: statusColor ?? colors.primary,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(16),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.check_circle_outline, size: 16, color: Colors.white),
+                  const Icon(
+                    Icons.check_circle_outline,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                   const SizedBox(width: 6),
                   Text(
-                    'Aceptado',
+                    statusLabel,
                     style: textTheme.bodySmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,

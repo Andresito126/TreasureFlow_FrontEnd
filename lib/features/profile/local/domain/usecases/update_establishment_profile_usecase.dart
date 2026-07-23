@@ -1,3 +1,4 @@
+import 'package:treasureflow/features/profile/local/domain/entities/establishment_profile.dart';
 import 'package:treasureflow/features/profile/local/domain/repositories/local_profile_repository.dart';
 
 class UpdateEstablishmentProfileUseCase {
@@ -11,6 +12,8 @@ class UpdateEstablishmentProfileUseCase {
     String? addressText,
     bool? hasVehicle,
     String? profilePictureUrl,
+    List<EstablishmentSchedule>? schedules,
+    List<String>? photoUrls,
   }) {
     return _repository.updateProfile(
       storeName: storeName,
@@ -18,6 +21,8 @@ class UpdateEstablishmentProfileUseCase {
       addressText: addressText,
       hasVehicle: hasVehicle,
       profilePictureUrl: profilePictureUrl,
+      schedules: schedules,
+      photoUrls: photoUrls,
     );
   }
 }

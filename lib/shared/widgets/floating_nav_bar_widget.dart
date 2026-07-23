@@ -20,10 +20,10 @@ class FloatingNavBarWidget extends StatelessWidget {
         label: 'Inicio',
         route: isEstablishment ? '/homeLocal' : '/homeCitizen',
       ),
-      const _NavItem(
+      _NavItem(
         icon: Icons.explore_rounded,
         label: 'Explorar',
-        route: '/feed',
+        route: isEstablishment ? '/feed' : '/establishments',
       ),
       if (isEstablishment)
         const _NavItem(

@@ -17,6 +17,8 @@ class LocalProfileRepositoryImpl implements LocalProfileRepository {
     String? addressText,
     bool? hasVehicle,
     String? profilePictureUrl,
+    List<EstablishmentSchedule>? schedules,
+    List<String>? photoUrls,
   }) {
     return _datasource.updateProfile(
       storeName: storeName,
@@ -24,6 +26,8 @@ class LocalProfileRepositoryImpl implements LocalProfileRepository {
       addressText: addressText,
       hasVehicle: hasVehicle,
       profilePictureUrl: profilePictureUrl,
+      schedules: schedules,
+      photoUrls: photoUrls,
     );
   }
 }

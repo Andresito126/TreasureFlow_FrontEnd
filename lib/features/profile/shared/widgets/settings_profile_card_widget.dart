@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class SettingsProfileCardWidget extends StatelessWidget {
+class SettingsProfileCardWidget extends StatefulWidget {
   final String name;
   final String email;
   final String? avatarUrl;
@@ -17,12 +17,27 @@ class SettingsProfileCardWidget extends StatelessWidget {
   });
 
   @override
+  State<SettingsProfileCardWidget> createState() =>
+      _SettingsProfileCardWidgetState();
+}
+
+class _SettingsProfileCardWidgetState extends State<SettingsProfileCardWidget> {
+  bool _imageFailed = false;
+
+  @override
+  void didUpdateWidget(covariant SettingsProfileCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.avatarUrl != widget.avatarUrl) _imageFailed = false;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final showAvatar = widget.avatarUrl != null && !_imageFailed;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -42,9 +57,14 @@ class SettingsProfileCardWidget extends StatelessWidget {
             CircleAvatar(
               radius: 26,
               backgroundColor: colors.primary.withValues(alpha: 0.1),
-              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-              child: avatarUrl == null
-                  ? Icon(fallbackIcon, size: 28, color: colors.primary)
+              backgroundImage: showAvatar
+                  ? NetworkImage(widget.avatarUrl!)
+                  : null,
+              onBackgroundImageError: showAvatar
+                  ? (_, _) => setState(() => _imageFailed = true)
+                  : null,
+              child: !showAvatar
+                  ? Icon(widget.fallbackIcon, size: 28, color: colors.primary)
                   : null,
             ),
             const SizedBox(width: 12),
@@ -53,13 +73,15 @@ class SettingsProfileCardWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    widget.name,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    email,
+                    widget.email,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall?.copyWith(
                       color: colors.onSurface.withValues(alpha: 0.5),
@@ -68,7 +90,10 @@ class SettingsProfileCardWidget extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: colors.onSurface.withValues(alpha: 0.4)),
+            Icon(
+              Icons.chevron_right,
+              color: colors.onSurface.withValues(alpha: 0.4),
+            ),
           ],
         ),
       ),

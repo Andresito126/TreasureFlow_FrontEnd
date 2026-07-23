@@ -33,6 +33,8 @@ class _CollectionDetailLocalScreenState
     with WidgetsBindingObserver {
   late final LocalCollectionDetailProvider _provider;
   final _weightController = TextEditingController();
+  final _priceController = TextEditingController();
+  bool _priceEditedManually = false;
   PaymentMethodType? _selectedMethod;
   bool _showCardForm = false;
 
@@ -50,6 +52,7 @@ class _CollectionDetailLocalScreenState
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _weightController.dispose();
+    _priceController.dispose();
     _provider.removeListener(_onProviderChanged);
     _provider.dispose();
     super.dispose();
@@ -86,7 +89,13 @@ class _CollectionDetailLocalScreenState
       return;
     }
 
-    final ok = await _provider.registerWeighing(weight);
+    final price = double.tryParse(_priceController.text.trim());
+    if (price == null || price <= 0) {
+      AppToast.show(context, 'Ingresa un monto válido', type: ToastType.warning);
+      return;
+    }
+
+    final ok = await _provider.registerWeighing(weight, finalAmount: price);
     if (!mounted) return;
     if (ok) {
       AppToast.show(
@@ -295,7 +304,6 @@ class _CollectionDetailLocalScreenState
 
     final offer = _provider.detail!.offer;
     final weight = double.tryParse(_weightController.text.trim());
-    final estimated = weight == null ? null : weight * offer.pricePerUnit;
 
     return [
       _buildInfoCard(),
@@ -307,7 +315,7 @@ class _CollectionDetailLocalScreenState
             _sectionTitle(Icons.scale_rounded, 'Registro de pesaje'),
             const SizedBox(height: 8),
             Text(
-              'Al registrar el peso confirmas que recibiste el material. El monto final se calcula automáticamente.',
+              'Al registrar el peso confirmas que recibiste el material. Puedes ajustar el monto si negociaste un precio distinto al ofertado.',
               style: textTheme.bodySmall?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.6),
               ),
@@ -328,11 +336,81 @@ class _CollectionDetailLocalScreenState
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
               ],
-              onChanged: (_) => setState(() {}),
+              onChanged: (value) {
+                if (!_priceEditedManually) {
+                  final w = double.tryParse(value.trim());
+                  _priceController.text =
+                      w == null ? '' : (w * offer.pricePerUnit).toStringAsFixed(2);
+                }
+                setState(() {});
+              },
               style: textTheme.titleMedium,
               decoration: InputDecoration(
                 hintText: '0.0',
                 suffixText: offer.unit,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.primary),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.primary, width: 1.5),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Monto a cobrar',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colors.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                if (_priceEditedManually)
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _priceEditedManually = false;
+                        _priceController.text = weight == null
+                            ? ''
+                            : (weight * offer.pricePerUnit).toStringAsFixed(2);
+                      });
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Usar sugerido',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _priceController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+              ],
+              onChanged: (_) {
+                _priceEditedManually = true;
+                setState(() {});
+              },
+              style: textTheme.titleMedium,
+              decoration: InputDecoration(
+                hintText: '0.00',
+                prefixText: '\$ ',
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: colors.primary),
@@ -361,9 +439,7 @@ class _CollectionDetailLocalScreenState
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      estimated == null
-                          ? 'El monto se calculará: peso × \$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}'
-                          : 'Monto a pagar: ${weight!.toStringAsFixed(2)} ${offer.unit} × \$${offer.pricePerUnit.toStringAsFixed(2)} = \$${estimated.toStringAsFixed(2)}',
+                      'Precio ofertado: \$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}. El monto sugerido se calcula automáticamente, pero puedes editarlo si negociaron otro precio.',
                       style: textTheme.bodySmall?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.6),
                       ),

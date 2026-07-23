@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:treasureflow/features/home/local/domain/entities/local_home_summary.dart';
 import 'package:treasureflow/features/home/local/domain/entities/local_home_feed_item.dart';
+import 'package:treasureflow/features/home/local/presentation/providers/local_home_summary_provider.dart';
 import 'package:treasureflow/features/home/local/presentation/providers/local_home_feed_provider.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/accepted_offer_card_widget.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/local_action_card_widget.dart';
-import 'package:treasureflow/features/home/local/presentation/widgets/review_card_widget.dart';
 import 'package:treasureflow/features/home/local/presentation/widgets/solicitud_card_widget.dart';
+import 'package:treasureflow/features/home/citizen/presentation/widgets/stat_card_widget.dart';
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
+import 'package:treasureflow/shared/theme/app_theme_extension.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 
 class HomeLocalScreen extends StatefulWidget {
@@ -23,6 +26,7 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LocalHomeFeedProvider>().load();
+      context.read<LocalHomeSummaryProvider>().load();
     });
   }
 
@@ -32,6 +36,7 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final feed = context.watch<LocalHomeFeedProvider>();
+    final home = context.watch<LocalHomeSummaryProvider>();
 
     return Scaffold(
       body: SafeArea(
@@ -42,11 +47,14 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(colors, textTheme),
+                  _buildHeader(home.data, colors, textTheme),
                   const SizedBox(height: 20),
 
                   const PremiumBannerWidget(),
                   const SizedBox(height: 20),
+
+                  _buildStats(home, colors, textTheme),
+                  const SizedBox(height: 24),
 
                   _buildActionOptions(colors),
                   const SizedBox(height: 24),
@@ -62,33 +70,18 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
                   const SizedBox(height: 24),
 
                   _buildSectionHeader(
-                    'Ofertas aceptadas',
-                    '1',
+                    'Ofertas pendientes',
+                    '${home.data?.pendingOffersCount ?? 0}',
                     colors,
                     textTheme,
                   ),
                   const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: () => context.push('/myPurchases'),
-                    child: const AcceptedOfferCardWidget(
-                      title: '50 botellas PET',
-                      price: '\$10.00',
-                      date: '2 Jun 2026',
-                      address:
-                          'Olivo Sur 503-315, Patria Nueva, 29045 Tuxtla Gutiérrez, Chis.',
-                    ),
-                  ),
+                  _buildPendingOffersSection(home, colors, textTheme),
                   const SizedBox(height: 24),
 
-                  _buildSectionHeader('Nuevas reseñas', '1', colors, textTheme),
+                  _buildSectionHeader('Nuevas reseñas', '0', colors, textTheme),
                   const SizedBox(height: 12),
-                  const ReviewCardWidget(
-                    reviewerName: 'María G.',
-                    rating: 5,
-                    comment:
-                        'Excelente atención, muy ordenados con los materiales.',
-                    timeAgo: 'hace 3 días',
-                  ),
+                  _emptySection('Aún no tienes reseñas', colors, textTheme),
                 ],
               ),
             ),
@@ -110,7 +103,8 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
     ColorScheme colors,
     TextTheme textTheme,
   ) {
-    if (feed.status == LocalHomeFeedStatus.loading || feed.status == LocalHomeFeedStatus.idle) {
+    if (feed.status == LocalHomeFeedStatus.loading ||
+        feed.status == LocalHomeFeedStatus.idle) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 24),
         child: Center(child: CircularProgressIndicator()),
@@ -161,12 +155,78 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
     );
   }
 
-  Widget _buildHeader(ColorScheme colors, TextTheme textTheme) {
+  Widget _buildPendingOffersSection(
+    LocalHomeSummaryProvider home,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    if (home.status == LocalHomeSummaryStatus.loading ||
+        home.status == LocalHomeSummaryStatus.idle) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (home.status == LocalHomeSummaryStatus.error) {
+      return Text(
+        home.errorMessage ?? 'No se pudieron cargar tus ofertas',
+        style: textTheme.bodySmall?.copyWith(color: colors.error),
+      );
+    }
+
+    final offers = home.data?.pendingOffers ?? [];
+    if (offers.isEmpty) {
+      return _emptySection('No tienes ofertas pendientes', colors, textTheme);
+    }
+
+    final blueHold = Theme.of(context).extension<AppThemeExtension>()!.blueHold;
+
+    return Column(
+      children: [
+        for (final offer in offers) ...[
+          AcceptedOfferCardWidget(
+            title: offer.publicationMaterial,
+            price: '\$${offer.pricePerUnit.toStringAsFixed(2)}/${offer.unit}',
+            date: offer.offeredAt,
+            address: offer.citizenName,
+            statusLabel: 'Pendiente',
+            statusColor: blueHold,
+            onTap: () =>
+                context.push('/wasteDetailLocal/${offer.publicationId}'),
+          ),
+          if (offer != offers.last) const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+
+  Widget _emptySection(
+    String message,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Text(
+        message,
+        style: textTheme.bodySmall?.copyWith(
+          color: colors.onSurface.withValues(alpha: 0.4),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+    LocalHomeSummary? data,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
     return Row(
       children: [
         Expanded(
           child: Text(
-            '¡Bienvenido Centro de Acopio la Palma!',
+            data != null ? '¡Bienvenido ${data.storeName}!' : '¡Bienvenido!',
             style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400),
           ),
         ),
@@ -187,8 +247,42 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
     );
   }
 
+  Widget _buildStats(
+    LocalHomeSummaryProvider home,
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
+    final data = home.data;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: StatCardWidget(
+              icon: Icons.account_balance_wallet_outlined,
+              value: data != null
+                  ? '\$${data.monthlySpend.toStringAsFixed(2)}'
+                  : '—',
+              title: 'Gasto del mes',
+              subtitle: 'En recolecciones',
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: StatCardWidget(
+              icon: Icons.local_shipping_outlined,
+              value: data != null ? '${data.monthlyCompletedPickups}' : '—',
+              title: 'Recolecciones',
+              subtitle: 'Completadas este mes',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionOptions(ColorScheme colors) {
-    return const IntrinsicHeight(
+    return IntrinsicHeight(
       child: Row(
         children: [
           Expanded(
@@ -196,16 +290,18 @@ class _HomeLocalScreenState extends State<HomeLocalScreen> {
               title: 'Ofertar residuos',
               subtitle: 'Ofrecer monto por residuos',
               icon: Icons.attach_money,
-              gradientColors: [Color(0xFF2D7D46), Color(0xFF4CAF50)],
+              gradientColors: const [Color(0xFF2D7D46), Color(0xFF4CAF50)],
+              onTap: () => context.push('/feed'),
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: LocalActionCardWidget(
               title: 'Atender solicitudes',
               subtitle: 'Revisar solicitudes para recolección',
               icon: Icons.assignment_outlined,
-              gradientColors: [Color(0xFFF5A623), Color(0xFFFEC562)],
+              gradientColors: const [Color(0xFFF5A623), Color(0xFFFEC562)],
+              onTap: () => context.push('/myPurchases'),
             ),
           ),
         ],

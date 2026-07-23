@@ -27,16 +27,20 @@ class DaySchedule {
   }) : ranges = ranges ?? [TimeRangeEntry.defaultRange()];
 }
 
+typedef ScheduleEntry = ({int dayOfWeek, String startTime, String endTime});
+
 class OperatingHoursSelector extends StatefulWidget {
   final ValueChanged<List<DaySchedule>>? onChanged;
   final bool singleDay;
   final bool singleRange;
+  final List<ScheduleEntry>? initialEntries;
 
   const OperatingHoursSelector({
     super.key,
     this.onChanged,
     this.singleDay = false,
     this.singleRange = false,
+    this.initialEntries,
   });
 
   @override
@@ -48,18 +52,75 @@ class _OperatingHoursSelectorState extends State<OperatingHoursSelector> {
 
   DaySchedule? _expandedDay;
 
+  static TimeOfDay _parseTime(String value) {
+    final parts = value.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
   @override
   void initState() {
     super.initState();
     _days = [
-      DaySchedule(shortLabel: 'L', fullName: 'Lunes', isOpen: false),
-      DaySchedule(shortLabel: 'M', fullName: 'Martes', isOpen: false),
-      DaySchedule(shortLabel: 'M', fullName: 'Miércoles', isOpen: false),
-      DaySchedule(shortLabel: 'J', fullName: 'Jueves', isOpen: false),
-      DaySchedule(shortLabel: 'V', fullName: 'Viernes', isOpen: false),
-      DaySchedule(shortLabel: 'S', fullName: 'Sábado', isOpen: false),
-      DaySchedule(shortLabel: 'D', fullName: 'Domingo', isOpen: false),
+      DaySchedule(
+        shortLabel: 'L',
+        fullName: 'Lunes',
+        isOpen: false,
+        ranges: [],
+      ),
+      DaySchedule(
+        shortLabel: 'M',
+        fullName: 'Martes',
+        isOpen: false,
+        ranges: [],
+      ),
+      DaySchedule(
+        shortLabel: 'M',
+        fullName: 'Miércoles',
+        isOpen: false,
+        ranges: [],
+      ),
+      DaySchedule(
+        shortLabel: 'J',
+        fullName: 'Jueves',
+        isOpen: false,
+        ranges: [],
+      ),
+      DaySchedule(
+        shortLabel: 'V',
+        fullName: 'Viernes',
+        isOpen: false,
+        ranges: [],
+      ),
+      DaySchedule(
+        shortLabel: 'S',
+        fullName: 'Sábado',
+        isOpen: false,
+        ranges: [],
+      ),
+      DaySchedule(
+        shortLabel: 'D',
+        fullName: 'Domingo',
+        isOpen: false,
+        ranges: [],
+      ),
     ];
+
+    final entries = widget.initialEntries;
+    if (entries != null) {
+      for (final entry in entries) {
+        final day = _days[entry.dayOfWeek - 1];
+        day.isOpen = true;
+        day.ranges.add(
+          TimeRangeEntry(
+            start: _parseTime(entry.startTime),
+            end: _parseTime(entry.endTime),
+          ),
+        );
+      }
+    }
+    for (final day in _days) {
+      if (day.ranges.isEmpty) day.ranges.add(TimeRangeEntry.defaultRange());
+    }
 
     _expandedDay = null;
   }

@@ -83,9 +83,14 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<bool> registerWeighing(double actualQuantity) => _runAction(
-    () => _repository.registerWeighing(_collectionId!, actualQuantity),
-  );
+  Future<bool> registerWeighing(double actualQuantity, {double? finalAmount}) =>
+      _runAction(
+        () => _repository.registerWeighing(
+          _collectionId!,
+          actualQuantity,
+          finalAmount: finalAmount,
+        ),
+      );
 
   Future<bool> cancelCollection() =>
       _runAction(() => _repository.cancelCollection(_collectionId!));

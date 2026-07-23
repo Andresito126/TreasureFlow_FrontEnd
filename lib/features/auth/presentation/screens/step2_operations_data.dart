@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/features/auth/domain/entities/operating_schedule.dart';
 import 'package:treasureflow/features/auth/presentation/providers/register_local_provider.dart';
-import 'package:treasureflow/features/auth/presentation/widgets/operating_hours_selector.dart';
+import 'package:treasureflow/shared/widgets/operating_hours_selector.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/category_card_widget.dart';

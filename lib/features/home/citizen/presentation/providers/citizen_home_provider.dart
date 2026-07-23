@@ -3,8 +3,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/home/citizen/domain/entities/citizen_home.dart';
 import 'package:treasureflow/features/home/citizen/domain/usecases/get_citizen_home_usecase.dart';
+import 'package:treasureflow/features/home/citizen/presentation/state/home_citizen_ui_state.dart';
 
-enum CitizenHomeStatus { idle, loading, success, error }
+export 'package:treasureflow/features/home/citizen/presentation/state/home_citizen_ui_state.dart'
+    show CitizenHomeStatus;
 
 class CitizenHomeProvider extends ChangeNotifier {
   final GetCitizenHomeUseCase _getCitizenHomeUseCase;
