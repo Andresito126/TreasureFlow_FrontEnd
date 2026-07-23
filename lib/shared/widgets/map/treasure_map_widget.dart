@@ -6,6 +6,13 @@ import 'package:treasureflow/core/maps/presentation/providers/map_provider.dart'
 import 'address_card_widget.dart';
 import 'place_search_field.dart';
 
+final _mexicoBounds = CameraTargetBounds(
+  LatLngBounds(
+    southwest: const LatLng(14.3, -118.5),
+    northeast: const LatLng(32.8, -86.5),
+  ),
+);
+
 class TreasureMapWidget extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
@@ -67,9 +74,11 @@ class _TreasureMapWidgetState extends State<TreasureMapWidget> {
             
             
               GoogleMap(
-              
-              
+
+
                 onMapCreated: (c) => _mapController = c,
+                cameraTargetBounds: _mexicoBounds,
+                minMaxZoomPreference: const MinMaxZoomPreference(4.5, null),
                 initialCameraPosition: CameraPosition(
                   target: provider.initialTarget,
                   zoom: 15,

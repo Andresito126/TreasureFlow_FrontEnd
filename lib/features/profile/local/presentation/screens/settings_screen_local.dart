@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:treasureflow/core/di/app_container.dart';
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
 import 'package:treasureflow/features/profile/local/di/local_profile_module.dart';
@@ -91,28 +92,10 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
                     onTap: () => context.push('/editEstablishmentProfile'),
                   ),
                   SettingsTileWidget(
-                    icon: Icons.photo_outlined,
-                    title: 'Adjuntar fotos',
-                    subtitle: 'Muestra tu local con fotos del lugar.',
-                    onTap: () {},
-                  ),
-                  SettingsTileWidget(
                     icon: Icons.star_outline,
                     title: 'Ver reseñas',
                     subtitle: 'Consulta lo que opinan los ciudadanos de ti.',
                     onTap: () => context.push('/localReviews'),
-                  ),
-                  SettingsTileWidget(
-                    icon: Icons.credit_card_outlined,
-                    title: 'Métodos de pago',
-                    subtitle: 'Administra cómo pagas tus recolecciones.',
-                    onTap: () {},
-                  ),
-                  SettingsTileWidget(
-                    icon: Icons.shield_outlined,
-                    title: 'Privacidad y seguridad',
-                    subtitle: 'Configura tu contraseña y protege tu cuenta.',
-                    onTap: () => context.push('/changePassword'),
                     showDivider: false,
                   ),
                 ],
@@ -121,6 +104,32 @@ class _SettingsScreenLocalState extends State<SettingsScreenLocal> {
 
               PremiumBannerWidget(onTap: () => context.push('/premiumLocal')),
               const SizedBox(height: 24),
+
+              const SettingsSectionLabel('SOPORTE'),
+              const SizedBox(height: 8),
+              SettingsGroupCard(
+                children: [
+                  SettingsTileWidget(
+                    icon: Icons.shield_outlined,
+                    title: 'Privacidad y seguridad',
+                    subtitle: 'Configura tu contraseña y protege tu cuenta.',
+                    onTap: () => context.push('/changePassword'),
+                  ),
+                  SettingsTileWidget(
+                    icon: Icons.description_outlined,
+                    title: 'Términos y condiciones',
+                    subtitle: 'Información legal de la plataforma.',
+                    onTap: () => launchUrl(
+                      Uri.parse(
+                        'https://molinamendozacarlosfabricio.github.io/landing-treasureflow/#privacidad',
+                      ),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    showDivider: false,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
               const SettingsLogoutTile(),
               const SizedBox(height: 16),

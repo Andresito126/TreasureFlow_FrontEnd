@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:treasureflow/features/home/shared/widgets/premium_banner_widget.dart';
 import 'package:treasureflow/features/profile/citizen/presentation/providers/profile_posts_provider.dart';
 import 'package:treasureflow/features/profile/shared/widgets/settings_group_card_widget.dart';
@@ -95,7 +96,12 @@ class _SettingsScreenCitizenState extends State<SettingsScreenCitizen> {
                     icon: Icons.description_outlined,
                     title: 'Términos y condiciones',
                     subtitle: 'Información legal de la plataforma.',
-                    onTap: () {},
+                    onTap: () => launchUrl(
+                      Uri.parse(
+                        'https://molinamendozacarlosfabricio.github.io/landing-treasureflow/#privacidad',
+                      ),
+                      mode: LaunchMode.externalApplication,
+                    ),
                     showDivider: false,
                   ),
                 ],
