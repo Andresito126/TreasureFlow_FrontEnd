@@ -13,7 +13,6 @@ class PremiumCitizenScreen extends StatelessWidget {
         PremiumFeature('Publicar residuos y objetos'),
         PremiumFeature('Mapa, ofertas y pagos en la app'),
         PremiumFeature('Historial y calificaciones'),
-        PremiumFeature('Fotos por publicación', freeLabel: '3', premiumLabel: '10'),
         PremiumFeature('Publicaciones destacadas', freeIncluded: false),
         PremiumFeature('Insignia Premium en tu perfil', freeIncluded: false),
         PremiumFeature('Aviso prioritario a establecimientos', freeIncluded: false),

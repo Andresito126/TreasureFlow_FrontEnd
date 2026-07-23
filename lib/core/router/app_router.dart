@@ -9,6 +9,7 @@ import 'package:treasureflow/core/router/premium_routes.dart';
 import 'package:treasureflow/core/router/sales_routes.dart';
 import 'package:treasureflow/core/router/tracking_routes.dart';
 import 'package:treasureflow/features/auth/presentation/providers/auth_provider.dart';
+import 'package:treasureflow/features/splash/presentation/screens/splash_screen.dart';
 
 const _onboardingPaths = {
   '/onboardingStep1',
@@ -25,7 +26,7 @@ GoRouter createRouter({
   required AuthProvider authProvider,
 }) {
   return GoRouter(
-    initialLocation: initialLocation,
+    initialLocation: '/splash',
     refreshListenable: authProvider,
     redirect: (context, state) {
       final isAuthenticated = authProvider.isAuthenticated;
@@ -62,6 +63,12 @@ GoRouter createRouter({
       return const SizedBox.shrink();
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => SplashScreen(
+          onFinished: () => context.go(initialLocation),
+        ),
+      ),
       ...onboardingRoutes,
       ...authRoutes,
       ...homeRoutes,
