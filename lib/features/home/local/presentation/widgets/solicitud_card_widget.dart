@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:treasureflow/shared/widgets/premium_badge_widget.dart';
 
 class SolicitudCardWidget extends StatelessWidget {
   final String title;
@@ -113,17 +112,6 @@ class SolicitudCardWidget extends StatelessWidget {
                               textTheme,
                               colors,
                             ),
-                            const SizedBox(width: 10),
-                            _infoChip(
-                              Icons.person_outline,
-                              publisherName,
-                              textTheme,
-                              colors,
-                            ),
-                            if (citizenIsPremium) ...[
-                              const SizedBox(width: 6),
-                              const PremiumBadgeWidget(fontSize: 7),
-                            ],
                           ],
                         ),
                         const SizedBox(height: 6),
