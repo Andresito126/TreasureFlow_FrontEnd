@@ -16,8 +16,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  static final _emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,}$');
 
   @override
   void initState() {
@@ -56,17 +59,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onLoginPressed() {
+    if (!_formKey.currentState!.validate()) return;
+
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-
-    if (email.isEmpty || password.isEmpty) {
-      AppToast.show(
-        context,
-        'Completa todos los campos',
-        type: ToastType.warning,
-      );
-      return;
-    }
 
     context.read<AuthProvider>().login(email: email, password: password);
   }
@@ -81,7 +77,9 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-          child: Column(
+          child: Form(
+            key: _formKey,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40),
@@ -138,6 +136,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       iconInput: Icons.mail_outline_rounded,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        final value = v?.trim() ?? '';
+                        if (value.isEmpty) return 'Ingresa tu correo';
+                        if (!_emailRegex.hasMatch(value)) {
+                          return 'Correo no válido';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
                     InputFieldWidget(
@@ -145,6 +151,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       iconInput: Icons.lock_outline_rounded,
                       isPassword: true,
                       controller: _passwordController,
+                      validator: (v) => (v == null || v.isEmpty)
+                          ? 'Ingresa tu contraseña'
+                          : null,
                     ),
                     const SizedBox(height: 12),
 
@@ -228,6 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),
