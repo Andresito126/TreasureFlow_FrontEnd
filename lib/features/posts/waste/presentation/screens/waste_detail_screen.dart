@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
+import 'package:treasureflow/features/collections/citizen/di/citizen_collections_module.dart';
 import 'package:treasureflow/features/collections/citizen/domain/entities/collection.dart';
 import 'package:treasureflow/features/posts/object/presentation/widgets/image_gallery_widget.dart';
 import 'package:treasureflow/features/posts/waste/di/waste_post_module.dart';
@@ -61,7 +62,9 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
     );
 
     final container = context.read<AppContainer>();
-    final repository = container.citizenCollectionsRepository;
+    final findByOffer = CitizenCollectionsModule(
+      container,
+    ).provideFindByOfferUseCase();
 
     Collection? collection;
     try {
@@ -69,7 +72,7 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
         if (attempt > 0) {
           await Future.delayed(const Duration(milliseconds: 700));
         }
-        collection = await repository.findByOfferId(offerId);
+        collection = await findByOffer(offerId);
       }
     } catch (_) {
       // se maneja abajo con collection == null

@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:treasureflow/core/di/app_container.dart';
-import 'package:treasureflow/features/collections/citizen/di/citizen_collections_module.dart';
 import 'package:treasureflow/features/collections/citizen/domain/entities/collection.dart';
 import 'package:treasureflow/features/collections/citizen/domain/entities/collection_offer_info.dart';
 import 'package:treasureflow/features/collections/citizen/domain/entities/payment.dart';
 import 'package:treasureflow/features/collections/citizen/presentation/providers/citizen_collection_detail_provider.dart';
 import 'package:treasureflow/features/collections/shared/utils/collection_receipt_pdf.dart';
+import 'package:treasureflow/features/collections/shared/widgets/collection_detail_row_widget.dart';
+import 'package:treasureflow/features/collections/shared/widgets/collection_section_title_widget.dart';
 import 'package:treasureflow/features/collections/shared/widgets/collection_stepper_widget.dart';
-import 'package:treasureflow/features/reviews/di/reviews_module.dart';
 import 'package:treasureflow/features/reviews/presentation/providers/submit_review_provider.dart';
-import 'package:treasureflow/features/tracking/citizen/di/tracking_module.dart';
 import 'package:treasureflow/features/tracking/citizen/presentation/providers/citizen_tracking_entry_provider.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
@@ -38,27 +36,22 @@ class _CollectionDetailCitizenScreenState
   @override
   void initState() {
     super.initState();
-    final container = context.read<AppContainer>();
-    _provider = CitizenCollectionsModule(container).provideDetailProvider();
+    
+    _provider = context.read<CitizenCollectionDetailProvider>();
     _provider.addListener(_onProviderChanged);
-    _provider.load(widget.collectionId);
 
-    _trackingEntry = TrackingModule(container).provideTrackingEntryProvider();
+    _trackingEntry = context.read<CitizenTrackingEntryProvider>();
     _trackingEntry.addListener(_onProviderChanged);
-    _trackingEntry.check();
 
-    _reviewEligibilityProvider = ReviewsModule(container).provideSubmitReviewProvider();
+    _reviewEligibilityProvider = context.read<SubmitReviewProvider>();
     _reviewEligibilityProvider.addListener(_onProviderChanged);
   }
 
   @override
   void dispose() {
     _provider.removeListener(_onProviderChanged);
-    _provider.dispose();
     _trackingEntry.removeListener(_onProviderChanged);
-    _trackingEntry.dispose();
     _reviewEligibilityProvider.removeListener(_onProviderChanged);
-    _reviewEligibilityProvider.dispose();
     super.dispose();
   }
 
@@ -255,7 +248,7 @@ class _CollectionDetailCitizenScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle(Icons.recycling_rounded, 'Recolección'),
+          CollectionSectionTitleWidget(icon: Icons.recycling_rounded, title: 'Recolección'),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -309,9 +302,7 @@ class _CollectionDetailCitizenScreenState
             ],
           ),
           Divider(height: 24, color: colors.outline.withValues(alpha: 0.3)),
-          _detailRow(
-            'Precio ofertado',
-            '\$${offer.pricePerUnit.toStringAsFixed(2)} por ${offer.unit}',
+          CollectionDetailRowWidget(label: 'Precio ofertado', value: '\$${offer.pricePerUnit.toStringAsFixed(2)} por ${offer.unit}',
           ),
         ],
       ),
@@ -451,13 +442,9 @@ class _CollectionDetailCitizenScreenState
               ),
             ),
             const SizedBox(height: 12),
-            _detailRow(
-              'Peso registrado',
-              '${quantity.toStringAsFixed(2)} ${offer.unit}',
+            CollectionDetailRowWidget(label: 'Peso registrado', value: '${quantity.toStringAsFixed(2)} ${offer.unit}',
             ),
-            _detailRow(
-              'Precio por ${offer.unit}',
-              '\$${offer.pricePerUnit.toStringAsFixed(2)}',
+            CollectionDetailRowWidget(label: 'Precio por ${offer.unit}', value: '\$${offer.pricePerUnit.toStringAsFixed(2)}',
             ),
             Divider(height: 24, color: colors.outline.withValues(alpha: 0.3)),
             Row(
@@ -609,17 +596,13 @@ class _CollectionDetailCitizenScreenState
               ),
             ),
             const SizedBox(height: 12),
-            _detailRow('Material', offer.wastePublicationTitle ?? 'Residuo'),
-            _detailRow(
-              'Establecimiento',
-              offer.establishmentName ?? 'Establecimiento',
+            CollectionDetailRowWidget(label: 'Material', value: offer.wastePublicationTitle ?? 'Residuo'),
+            CollectionDetailRowWidget(label: 'Establecimiento', value: offer.establishmentName ?? 'Establecimiento',
             ),
-            _detailRow(
-              'Peso final',
-              '${(collection.actualQuantity ?? 0).toStringAsFixed(2)} ${offer.unit}',
+            CollectionDetailRowWidget(label: 'Peso final', value: '${(collection.actualQuantity ?? 0).toStringAsFixed(2)} ${offer.unit}',
             ),
             if (payment != null)
-              _detailRow('Método de pago', payment.method.label),
+              CollectionDetailRowWidget(label: 'Método de pago', value: payment.method.label),
             Divider(height: 24, color: colors.outline.withValues(alpha: 0.3)),
             Row(
               children: [
@@ -744,53 +727,4 @@ class _CollectionDetailCitizenScreenState
     ];
   }
 
-  Widget _sectionTitle(IconData icon, String title) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            title,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _detailRow(String label, String value) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

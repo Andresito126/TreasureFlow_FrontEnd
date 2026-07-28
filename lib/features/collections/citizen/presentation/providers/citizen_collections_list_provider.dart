@@ -1,16 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/collections/citizen/domain/entities/collection_list_item.dart';
-import 'package:treasureflow/features/collections/citizen/domain/repositories/citizen_collections_repository.dart';
+import 'package:treasureflow/features/collections/citizen/domain/usecases/get_citizen_collections_usecase.dart';
+import 'package:treasureflow/features/collections/citizen/presentation/state/citizen_collections_ui_state.dart';
 
-enum CitizenListStatus { idle, loading, success, error }
+export 'package:treasureflow/features/collections/citizen/presentation/state/citizen_collections_ui_state.dart'
+    show CitizenListStatus;
 
 class CitizenCollectionsListProvider extends ChangeNotifier {
-  final CitizenCollectionsRepository _repository;
+  final GetCitizenCollectionsUseCase _getCollectionsUseCase;
 
   CitizenCollectionsListProvider({
-    required CitizenCollectionsRepository repository,
-  }) : _repository = repository;
+    required GetCitizenCollectionsUseCase getCollectionsUseCase,
+  }) : _getCollectionsUseCase = getCollectionsUseCase;
 
   CitizenListStatus _status = CitizenListStatus.idle;
   String? _errorMessage;
@@ -19,7 +21,6 @@ class CitizenCollectionsListProvider extends ChangeNotifier {
   CitizenListStatus get status => _status;
   String? get errorMessage => _errorMessage;
 
-  /// Solo las recolecciones en curso (ni completadas ni canceladas).
   List<CollectionListItem> get activeItems =>
       _items.where((i) => i.collection.status.isActive).toList();
 
@@ -31,7 +32,7 @@ class CitizenCollectionsListProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _items = await _repository.getCollections();
+      _items = await _getCollectionsUseCase();
       _status = CitizenListStatus.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;

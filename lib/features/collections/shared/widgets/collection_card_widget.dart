@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:treasureflow/shared/utils/collection_status_translator.dart';
 
-/// Card de una recolección en las listas de "Mis ventas" / "Mis compras".
-/// Componente puro: recibe primitivos, sin dependencias de entidades de rol.
+
+
 class CollectionCardWidget extends StatelessWidget {
   final String title;
   final String subtitle;
   final String? photoUrl;
-  final String statusRaw; // status crudo de la API (pending_delivery, ...)
+  final String statusRaw; 
   final int step; // 1..3
   final String amountLabel;
   final VoidCallback onTap;
