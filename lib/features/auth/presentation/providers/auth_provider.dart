@@ -8,9 +8,9 @@ import 'package:treasureflow/core/storage/user_storage.dart';
 import 'package:treasureflow/features/auth/domain/usecases/check_auth_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/login_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/logout_usecase.dart';
-import 'package:treasureflow/features/auth/presentation/providers/auth_ui_state.dart';
+import 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart';
 
-export 'package:treasureflow/features/auth/presentation/providers/auth_ui_state.dart'
+export 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart'
     show AuthUiState;
 
 class AuthProvider extends ChangeNotifier {

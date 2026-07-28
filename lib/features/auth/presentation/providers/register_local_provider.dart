@@ -5,9 +5,9 @@ import 'package:treasureflow/core/media/domain/usecases/upload_image_usecase.dar
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/auth/domain/entities/operating_schedule.dart';
 import 'package:treasureflow/features/auth/domain/usecases/sign_up_local_usecase.dart';
-import 'package:treasureflow/features/auth/presentation/providers/register_local_ui_state.dart';
+import 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart';
 
-export 'package:treasureflow/features/auth/presentation/providers/register_local_ui_state.dart'
+export 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart'
     show RegisterLocalStatus;
 
 class RegisterLocalProvider extends ChangeNotifier {

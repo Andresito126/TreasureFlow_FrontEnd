@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/features/auth/presentation/providers/register_local_provider.dart';
+import 'package:treasureflow/features/auth/presentation/widgets/register_avatar_picker_widget.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
+import 'package:treasureflow/shared/utils/form_validators.dart';
 
 class Step1BusinessData extends StatefulWidget {
   final VoidCallback onNext;
@@ -100,81 +102,12 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 160,
-              child: Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                  Container(
-                    height: 120,
-                    width: double.infinity,
-                    child: Image.asset(
-                      'assets/auth/banner.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: colors.surfaceContainerHighest,
-                        child: const Center(child: Icon(Icons.image, size: 50)),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    child: GestureDetector(
-                      onTap: _pickProfileImage,
-                      child: Consumer<RegisterLocalProvider>(
-                        builder: (context, provider, _) {
-                          return Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                              Container(
-                                height: 80,
-                                width: 80,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: colors.surface,
-                                  border: Border.all(color: colors.surface, width: 4),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipOval(
-                                  child: provider.profileImage != null
-                                      ? Image.file(provider.profileImage!, fit: BoxFit.cover)
-                                      : Image.asset(
-                                          'assets/auth/basurini_ball.png',
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(
-                                            Icons.storefront,
-                                            size: 40,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: colors.secondary,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: colors.surface, width: 2),
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt,
-                                  color: Colors.white,
-                                  size: 14,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+            Consumer<RegisterLocalProvider>(
+              builder: (context, provider, _) => RegisterAvatarPickerWidget(
+                selectedImage: provider.profileImage,
+                onTap: _pickProfileImage,
+                avatarSize: 80,
+                placeholderIcon: Icons.storefront,
               ),
             ),
 
@@ -211,12 +144,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                     hTPlaceHolder: 'Correo electrónico',
                     iconInput: Icons.email,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Ingresa tu correo';
-                      final emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,}$');
-                      if (!emailRegex.hasMatch(v.trim())) return 'Correo no válido';
-                      return null;
-                    },
+                    validator: FormValidators.email,
                   ),
 
                   const SizedBox(height: 16),
@@ -226,7 +154,7 @@ class _Step1BusinessDataState extends State<Step1BusinessData> {
                     hTPlaceHolder: 'Contraseña',
                     iconInput: Icons.lock,
                     isPassword: true,
-                    validator: (v) => v == null || v.length < 8 ? 'Mínimo 8 caracteres' : null,
+                    validator: FormValidators.minLengthPassword,
                   ),
 
                   const SizedBox(height: 24),

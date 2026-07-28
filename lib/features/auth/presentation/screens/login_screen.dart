@@ -7,6 +7,7 @@ import 'package:treasureflow/features/auth/presentation/widgets/auth_feature_ite
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
+import 'package:treasureflow/shared/utils/form_validators.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,8 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  static final _emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,}$');
 
   @override
   void initState() {
@@ -136,14 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       iconInput: Icons.mail_outline_rounded,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) {
-                        final value = v?.trim() ?? '';
-                        if (value.isEmpty) return 'Ingresa tu correo';
-                        if (!_emailRegex.hasMatch(value)) {
-                          return 'Correo no válido';
-                        }
-                        return null;
-                      },
+                      validator: FormValidators.email,
                     ),
                     const SizedBox(height: 16),
                     InputFieldWidget(
@@ -151,9 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       iconInput: Icons.lock_outline_rounded,
                       isPassword: true,
                       controller: _passwordController,
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? 'Ingresa tu contraseña'
-                          : null,
+                      validator: FormValidators.requiredPassword,
                     ),
                     const SizedBox(height: 12),
 

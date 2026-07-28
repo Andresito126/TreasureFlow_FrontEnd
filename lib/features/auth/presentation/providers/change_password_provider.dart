@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/auth/domain/usecases/change_password_usecase.dart';
-import 'package:treasureflow/features/auth/presentation/providers/change_password_ui_state.dart';
+import 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart';
 
-export 'package:treasureflow/features/auth/presentation/providers/change_password_ui_state.dart'
+export 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart'
     show ChangePasswordStatus;
 
 class ChangePasswordProvider extends ChangeNotifier {
