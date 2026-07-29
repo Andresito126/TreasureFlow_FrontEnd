@@ -136,6 +136,8 @@ class OfferItemWidget extends StatelessWidget {
               child: Text(
                 'Aceptar',
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: textTheme.bodySmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -161,6 +163,8 @@ class OfferItemWidget extends StatelessWidget {
               child: Text(
                 'Rechazar',
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: textTheme.bodySmall?.copyWith(
                   color: colors.error,
                   fontWeight: FontWeight.w600,

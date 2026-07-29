@@ -1,15 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/collection_list_item.dart';
-import 'package:treasureflow/features/collections/local/domain/repositories/local_collections_repository.dart';
+import 'package:treasureflow/features/collections/local/domain/usecases/get_local_collections_usecase.dart';
+import 'package:treasureflow/features/collections/local/presentation/state/local_collections_ui_state.dart';
 
-enum LocalListStatus { idle, loading, success, error }
+export 'package:treasureflow/features/collections/local/presentation/state/local_collections_ui_state.dart'
+    show LocalListStatus;
 
 class LocalCollectionsListProvider extends ChangeNotifier {
-  final LocalCollectionsRepository _repository;
+  final GetLocalCollectionsUseCase _getCollectionsUseCase;
 
-  LocalCollectionsListProvider({required LocalCollectionsRepository repository})
-      : _repository = repository;
+  LocalCollectionsListProvider({
+    required GetLocalCollectionsUseCase getCollectionsUseCase,
+  }) : _getCollectionsUseCase = getCollectionsUseCase;
 
   LocalListStatus _status = LocalListStatus.idle;
   String? _errorMessage;
@@ -30,7 +33,7 @@ class LocalCollectionsListProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _items = await _repository.getCollections();
+      _items = await _getCollectionsUseCase();
       _status = LocalListStatus.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;

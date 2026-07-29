@@ -3,18 +3,26 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/collections/citizen/domain/entities/collection_detail.dart';
-import 'package:treasureflow/features/collections/citizen/domain/repositories/citizen_collections_repository.dart';
+import 'package:treasureflow/features/collections/citizen/domain/usecases/cancel_citizen_collection_usecase.dart';
+import 'package:treasureflow/features/collections/citizen/domain/usecases/confirm_amount_usecase.dart';
+import 'package:treasureflow/features/collections/citizen/domain/usecases/get_citizen_collection_detail_usecase.dart';
+import 'package:treasureflow/features/collections/citizen/presentation/state/citizen_collections_ui_state.dart';
 
-enum CitizenDetailStatus { idle, loading, success, error }
-
-enum CitizenActionStatus { idle, working, done, error }
+export 'package:treasureflow/features/collections/citizen/presentation/state/citizen_collections_ui_state.dart'
+    show CitizenDetailStatus, CitizenActionStatus;
 
 class CitizenCollectionDetailProvider extends ChangeNotifier {
-  final CitizenCollectionsRepository _repository;
+  final GetCitizenCollectionDetailUseCase _getDetailUseCase;
+  final ConfirmAmountUseCase _confirmAmountUseCase;
+  final CancelCitizenCollectionUseCase _cancelCollectionUseCase;
 
   CitizenCollectionDetailProvider({
-    required CitizenCollectionsRepository repository,
-  }) : _repository = repository;
+    required GetCitizenCollectionDetailUseCase getDetailUseCase,
+    required ConfirmAmountUseCase confirmAmountUseCase,
+    required CancelCitizenCollectionUseCase cancelCollectionUseCase,
+  }) : _getDetailUseCase = getDetailUseCase,
+       _confirmAmountUseCase = confirmAmountUseCase,
+       _cancelCollectionUseCase = cancelCollectionUseCase;
 
   CitizenDetailStatus _status = CitizenDetailStatus.idle;
   String? _errorMessage;
@@ -40,7 +48,7 @@ class CitizenCollectionDetailProvider extends ChangeNotifier {
     _safeNotify();
 
     try {
-      _detail = await _repository.getCollectionDetail(collectionId);
+      _detail = await _getDetailUseCase(collectionId);
       _status = CitizenDetailStatus.success;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -57,7 +65,7 @@ class CitizenCollectionDetailProvider extends ChangeNotifier {
     final id = _collectionId;
     if (id == null) return;
     try {
-      _detail = await _repository.getCollectionDetail(id);
+      _detail = await _getDetailUseCase(id);
       _safeNotify();
     } catch (_) {
       // no altera el estado visible si falla
@@ -65,10 +73,10 @@ class CitizenCollectionDetailProvider extends ChangeNotifier {
   }
 
   Future<bool> confirmAmount() =>
-      _runAction(() => _repository.confirmAmount(_collectionId!));
+      _runAction(() => _confirmAmountUseCase(_collectionId!));
 
   Future<bool> cancelCollection() =>
-      _runAction(() => _repository.cancelCollection(_collectionId!));
+      _runAction(() => _cancelCollectionUseCase(_collectionId!));
 
   Future<bool> _runAction(Future<void> Function() action) async {
     if (_collectionId == null) return false;
@@ -94,9 +102,7 @@ class CitizenCollectionDetailProvider extends ChangeNotifier {
       return false;
     }
   }
-
-  /// Recarga el detalle periódicamente — para las pantallas de espera
-  /// (esperando pesaje / esperando pago del establecimiento).
+  
   void startPassiveRefresh({int seconds = 5}) {
     if (_passiveRefreshTimer != null) return;
     _passiveRefreshTimer = Timer.periodic(

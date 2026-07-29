@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/auth/domain/usecases/confirm_forgot_password_usecase.dart';
 import 'package:treasureflow/features/auth/domain/usecases/request_forgot_password_code_usecase.dart';
-import 'package:treasureflow/features/auth/presentation/providers/forgot_password_ui_state.dart';
+import 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart';
 
-export 'package:treasureflow/features/auth/presentation/providers/forgot_password_ui_state.dart'
+export 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart'
     show RequestCodeStatus, ResetPasswordStatus;
 
 class ForgotPasswordProvider extends ChangeNotifier {

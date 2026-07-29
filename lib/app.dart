@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/core/di/app_container.dart';
@@ -108,6 +109,28 @@ class _MyAppState extends State<MyApp> {
         theme: LightTheme.theme,
         darkTheme: DarkTheme.theme,
         themeMode: ThemeMode.system,
+        locale: DevicePreview.locale(context),
+        builder: (context, child) {
+          // El clamp de textScale debe aplicarse DESPUÉS de que DevicePreview
+          // inyecte su MediaQuery simulado (tamaño de pantalla + slider de
+          // texto), no antes — por eso el Builder va adentro del `child` que
+          // le pasamos a DevicePreview.appBuilder, no afuera.
+          final clampedChild = Builder(
+            builder: (innerContext) {
+              final mediaQuery = MediaQuery.of(innerContext);
+              return MediaQuery(
+                data: mediaQuery.copyWith(
+                  textScaler: mediaQuery.textScaler.clamp(
+                    minScaleFactor: 0.9,
+                    maxScaleFactor: 1.3,
+                  ),
+                ),
+                child: child!,
+              );
+            },
+          );
+          return DevicePreview.appBuilder(context, clampedChild);
+        },
       ),
     );
   }

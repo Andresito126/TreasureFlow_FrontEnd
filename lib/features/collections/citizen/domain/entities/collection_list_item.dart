@@ -1,7 +1,6 @@
 import 'package:treasureflow/features/collections/citizen/domain/entities/collection.dart';
 import 'package:treasureflow/features/collections/citizen/domain/entities/collection_offer_info.dart';
 
-/// Item de `GET /collections`: la collection + los datos de la oferta embebidos.
 class CollectionListItem {
   final Collection collection;
   final CollectionOfferInfo? offer;

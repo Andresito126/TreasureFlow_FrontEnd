@@ -8,6 +8,7 @@ import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
+import 'package:treasureflow/shared/utils/form_validators.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -97,7 +98,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final isLoading = _provider.status == ChangePasswordStatus.loading;
-    final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$');
 
     return Scaffold(
       body: SafeArea(
@@ -165,14 +165,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         hTPlaceHolder: 'Nueva contraseña',
                         iconInput: Icons.lock_reset_rounded,
                         isPassword: true,
-                        validator: (v) {
-                          if (v == null || v.length < 8)
-                            return 'Mínimo 8 caracteres';
-                          if (!passwordRegex.hasMatch(v)) {
-                            return 'Necesita mayúscula, minúscula y número';
-                          }
-                          return null;
-                        },
+                        validator: FormValidators.strongPassword,
                       ),
                       const SizedBox(height: 16),
                       InputFieldWidget(

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:treasureflow/core/di/app_container.dart';
-import 'package:treasureflow/features/collections/local/di/local_collections_module.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/collection.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/collection_offer_info.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/payment.dart';
@@ -11,6 +9,8 @@ import 'package:treasureflow/features/collections/local/presentation/widgets/car
 import 'package:treasureflow/features/collections/local/presentation/widgets/payment_voucher_widget.dart';
 import 'package:treasureflow/features/collections/local/presentation/providers/local_collection_detail_provider.dart';
 import 'package:treasureflow/features/collections/shared/utils/collection_receipt_pdf.dart';
+import 'package:treasureflow/features/collections/shared/widgets/collection_detail_row_widget.dart';
+import 'package:treasureflow/features/collections/shared/widgets/collection_section_title_widget.dart';
 import 'package:treasureflow/features/collections/shared/widgets/collection_stepper_widget.dart';
 import 'package:treasureflow/features/collections/local/presentation/widgets/conekta_method_selector_widget.dart';
 import 'package:treasureflow/shared/layouts/app_card_container.dart';
@@ -42,10 +42,9 @@ class _CollectionDetailLocalScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    final container = context.read<AppContainer>();
-    _provider = LocalCollectionsModule(container).provideDetailProvider();
+
+    _provider = context.read<LocalCollectionDetailProvider>();
     _provider.addListener(_onProviderChanged);
-    _provider.load(widget.collectionId);
   }
 
   @override
@@ -54,7 +53,6 @@ class _CollectionDetailLocalScreenState
     _weightController.dispose();
     _priceController.dispose();
     _provider.removeListener(_onProviderChanged);
-    _provider.dispose();
     super.dispose();
   }
 
@@ -91,7 +89,11 @@ class _CollectionDetailLocalScreenState
 
     final price = double.tryParse(_priceController.text.trim());
     if (price == null || price <= 0) {
-      AppToast.show(context, 'Ingresa un monto válido', type: ToastType.warning);
+      AppToast.show(
+        context,
+        'Ingresa un monto válido',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -284,13 +286,23 @@ class _CollectionDetailLocalScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle(Icons.recycling_rounded, 'Material a recibir'),
+          CollectionSectionTitleWidget(
+            icon: Icons.recycling_rounded,
+            title: 'Material a recibir',
+          ),
           const SizedBox(height: 12),
-          _detailRow('Material', offer.wastePublicationTitle ?? 'Residuo'),
-          _detailRow('Ciudadano', offer.citizenName ?? 'Ciudadano'),
-          _detailRow(
-            'Tu oferta',
-            '\$${offer.pricePerUnit.toStringAsFixed(2)} por ${offer.unit}',
+          CollectionDetailRowWidget(
+            label: 'Material',
+            value: offer.wastePublicationTitle ?? 'Residuo',
+          ),
+          CollectionDetailRowWidget(
+            label: 'Ciudadano',
+            value: offer.citizenName ?? 'Ciudadano',
+          ),
+          CollectionDetailRowWidget(
+            label: 'Tu oferta',
+            value:
+                '\$${offer.pricePerUnit.toStringAsFixed(2)} por ${offer.unit}',
           ),
         ],
       ),
@@ -312,7 +324,10 @@ class _CollectionDetailLocalScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionTitle(Icons.scale_rounded, 'Registro de pesaje'),
+            CollectionSectionTitleWidget(
+              icon: Icons.scale_rounded,
+              title: 'Registro de pesaje',
+            ),
             const SizedBox(height: 8),
             Text(
               'Al registrar el peso confirmas que recibiste el material. Puedes ajustar el monto si negociaste un precio distinto al ofertado.',
@@ -339,8 +354,9 @@ class _CollectionDetailLocalScreenState
               onChanged: (value) {
                 if (!_priceEditedManually) {
                   final w = double.tryParse(value.trim());
-                  _priceController.text =
-                      w == null ? '' : (w * offer.pricePerUnit).toStringAsFixed(2);
+                  _priceController.text = w == null
+                      ? ''
+                      : (w * offer.pricePerUnit).toStringAsFixed(2);
                 }
                 setState(() {});
               },
@@ -660,14 +676,24 @@ class _CollectionDetailLocalScreenState
               ),
             ),
             const SizedBox(height: 12),
-            _detailRow('Material', offer.wastePublicationTitle ?? 'Residuo'),
-            _detailRow('Ciudadano', offer.citizenName ?? 'Ciudadano'),
-            _detailRow(
-              'Peso final',
-              '${(collection.actualQuantity ?? 0).toStringAsFixed(2)} ${offer.unit}',
+            CollectionDetailRowWidget(
+              label: 'Material',
+              value: offer.wastePublicationTitle ?? 'Residuo',
+            ),
+            CollectionDetailRowWidget(
+              label: 'Ciudadano',
+              value: offer.citizenName ?? 'Ciudadano',
+            ),
+            CollectionDetailRowWidget(
+              label: 'Peso final',
+              value:
+                  '${(collection.actualQuantity ?? 0).toStringAsFixed(2)} ${offer.unit}',
             ),
             if (payment != null)
-              _detailRow('Método de pago', payment.method.label),
+              CollectionDetailRowWidget(
+                label: 'Método de pago',
+                value: payment.method.label,
+              ),
             Divider(height: 24, color: colors.outline.withValues(alpha: 0.3)),
             Row(
               children: [
@@ -769,55 +795,5 @@ class _CollectionDetailLocalScreenState
         onPressed: () => context.go('/myPurchases'),
       ),
     ];
-  }
-
-  Widget _sectionTitle(IconData icon, String title) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            title,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _detailRow(String label, String value) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

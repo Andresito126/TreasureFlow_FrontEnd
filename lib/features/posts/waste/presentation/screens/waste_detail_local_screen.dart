@@ -573,6 +573,8 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                     Flexible(
                       child: Text(
                         'Distancia: ${post.distance}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
@@ -609,14 +611,18 @@ class _WasteDetailLocalScreenState extends State<WasteDetailLocalScreen> {
                           ),
                         )
                       else ...[
-                        Text(
-                          post.myOffer != null
-                              ? 'Actualizar oferta'
-                              : 'Confirmar oferta',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+                        Flexible(
+                          child: Text(
+                            post.myOffer != null
+                                ? 'Actualizar oferta'
+                                : 'Confirmar oferta',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 6),

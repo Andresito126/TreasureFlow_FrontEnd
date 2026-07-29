@@ -9,6 +9,7 @@ import 'package:treasureflow/shared/layouts/app_card_container.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
+import 'package:treasureflow/shared/utils/form_validators.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -119,8 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
       return;
     }
-    final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$');
-    if (password.length < 8 || !passwordRegex.hasMatch(password)) {
+    if (!FormValidators.isStrongPassword(password)) {
       AppToast.show(
         context,
         'La contraseña necesita al menos 8 caracteres, una mayúscula, una minúscula y un número',

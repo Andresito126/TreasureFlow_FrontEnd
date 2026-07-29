@@ -7,6 +7,7 @@ import 'package:treasureflow/features/auth/presentation/widgets/auth_feature_ite
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/primary_button_blue_widget.dart';
+import 'package:treasureflow/shared/utils/form_validators.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +17,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -56,17 +58,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onLoginPressed() {
+    if (!_formKey.currentState!.validate()) return;
+
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-
-    if (email.isEmpty || password.isEmpty) {
-      AppToast.show(
-        context,
-        'Completa todos los campos',
-        type: ToastType.warning,
-      );
-      return;
-    }
 
     context.read<AuthProvider>().login(email: email, password: password);
   }
@@ -81,7 +76,9 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-          child: Column(
+          child: Form(
+            key: _formKey,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40),
@@ -138,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       iconInput: Icons.mail_outline_rounded,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      validator: FormValidators.email,
                     ),
                     const SizedBox(height: 16),
                     InputFieldWidget(
@@ -145,6 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       iconInput: Icons.lock_outline_rounded,
                       isPassword: true,
                       controller: _passwordController,
+                      validator: FormValidators.requiredPassword,
                     ),
                     const SizedBox(height: 12),
 
@@ -228,6 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),

@@ -6,26 +6,34 @@ import 'package:treasureflow/features/collections/local/domain/entities/collecti
 import 'package:treasureflow/features/collections/local/domain/entities/collection_detail.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/create_payment_result.dart';
 import 'package:treasureflow/features/collections/local/domain/entities/payment.dart';
-import 'package:treasureflow/features/collections/local/domain/repositories/local_collections_repository.dart';
+import 'package:treasureflow/features/collections/local/domain/usecases/cancel_local_collection_usecase.dart';
+import 'package:treasureflow/features/collections/local/domain/usecases/check_payment_status_usecase.dart';
+import 'package:treasureflow/features/collections/local/domain/usecases/create_payment_usecase.dart';
+import 'package:treasureflow/features/collections/local/domain/usecases/get_local_collection_detail_usecase.dart';
+import 'package:treasureflow/features/collections/local/domain/usecases/register_weighing_usecase.dart';
+import 'package:treasureflow/features/collections/local/presentation/state/local_collections_ui_state.dart';
 
-enum LocalDetailStatus { idle, loading, success, error }
-
-enum LocalActionStatus { idle, working, done, error }
-
-enum PaymentPollingStatus {
-  idle,
-  polling,
-  succeeded,
-  failedOrExpired,
-  timedOut,
-}
+export 'package:treasureflow/features/collections/local/presentation/state/local_collections_ui_state.dart'
+    show LocalDetailStatus, LocalActionStatus, PaymentPollingStatus;
 
 class LocalCollectionDetailProvider extends ChangeNotifier {
-  final LocalCollectionsRepository _repository;
+  final GetLocalCollectionDetailUseCase _getDetailUseCase;
+  final RegisterWeighingUseCase _registerWeighingUseCase;
+  final CreatePaymentUseCase _createPaymentUseCase;
+  final CheckPaymentStatusUseCase _checkPaymentStatusUseCase;
+  final CancelLocalCollectionUseCase _cancelCollectionUseCase;
 
   LocalCollectionDetailProvider({
-    required LocalCollectionsRepository repository,
-  }) : _repository = repository;
+    required GetLocalCollectionDetailUseCase getDetailUseCase,
+    required RegisterWeighingUseCase registerWeighingUseCase,
+    required CreatePaymentUseCase createPaymentUseCase,
+    required CheckPaymentStatusUseCase checkPaymentStatusUseCase,
+    required CancelLocalCollectionUseCase cancelCollectionUseCase,
+  }) : _getDetailUseCase = getDetailUseCase,
+       _registerWeighingUseCase = registerWeighingUseCase,
+       _createPaymentUseCase = createPaymentUseCase,
+       _checkPaymentStatusUseCase = checkPaymentStatusUseCase,
+       _cancelCollectionUseCase = cancelCollectionUseCase;
 
   LocalDetailStatus _status = LocalDetailStatus.idle;
   String? _errorMessage;
@@ -60,7 +68,7 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     _safeNotify();
 
     try {
-      _detail = await _repository.getCollectionDetail(collectionId);
+      _detail = await _getDetailUseCase(collectionId);
       _status = LocalDetailStatus.success;
       _resumePendingPaymentPollingIfNeeded();
     } on ApiException catch (e) {
@@ -78,14 +86,14 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     final id = _collectionId;
     if (id == null) return;
     try {
-      _detail = await _repository.getCollectionDetail(id);
+      _detail = await _getDetailUseCase(id);
       _safeNotify();
     } catch (_) {}
   }
 
   Future<bool> registerWeighing(double actualQuantity, {double? finalAmount}) =>
       _runAction(
-        () => _repository.registerWeighing(
+        () => _registerWeighingUseCase(
           _collectionId!,
           actualQuantity,
           finalAmount: finalAmount,
@@ -93,7 +101,7 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
       );
 
   Future<bool> cancelCollection() =>
-      _runAction(() => _repository.cancelCollection(_collectionId!));
+      _runAction(() => _cancelCollectionUseCase(_collectionId!));
 
   Future<bool> _runAction(Future<void> Function() action) async {
     if (_collectionId == null) return false;
@@ -127,7 +135,7 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     _safeNotify();
 
     try {
-      _paymentResult = await _repository.createPayment(
+      _paymentResult = await _createPaymentUseCase(
         _collectionId!,
         method: PaymentMethodType.card,
         tokenId: tokenId,
@@ -158,7 +166,7 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     _safeNotify();
 
     try {
-      _paymentResult = await _repository.createPayment(
+      _paymentResult = await _createPaymentUseCase(
         _collectionId!,
         method: method,
       );
@@ -218,7 +226,7 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     }
 
     try {
-      final result = await _repository.checkPaymentStatus(id);
+      final result = await _checkPaymentStatusUseCase(id);
 
       if (result.collectionStatus == CollectionStatus.completed) {
         _stopPolling();
@@ -239,7 +247,7 @@ class LocalCollectionDetailProvider extends ChangeNotifier {
     final id = _collectionId;
     if (id == null) return;
     try {
-      final result = await _repository.checkPaymentStatus(id);
+      final result = await _checkPaymentStatusUseCase(id);
       if (result.collectionStatus == CollectionStatus.completed) {
         _pollingStatus = PaymentPollingStatus.succeeded;
         await silentReload();

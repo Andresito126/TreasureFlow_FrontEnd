@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:treasureflow/core/media/domain/usecases/upload_image_usecase.dart';
 import 'package:treasureflow/core/network/api_client.dart';
 import 'package:treasureflow/features/auth/domain/usecases/sign_up_citizen_usecase.dart';
-import 'package:treasureflow/features/auth/presentation/providers/register_citizen_ui_state.dart';
+import 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart';
 
-export 'package:treasureflow/features/auth/presentation/providers/register_citizen_ui_state.dart'
+export 'package:treasureflow/features/auth/presentation/state/auth_ui_state.dart'
     show RegisterCitizenStatus;
 
 class RegisterCitizenProvider extends ChangeNotifier {

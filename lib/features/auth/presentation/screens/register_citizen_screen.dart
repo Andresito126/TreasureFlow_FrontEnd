@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/features/auth/presentation/providers/register_citizen_provider.dart';
+import 'package:treasureflow/features/auth/presentation/widgets/register_avatar_picker_widget.dart';
 import 'package:treasureflow/shared/widgets/input_field_widget.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/primary_button_green_widget.dart';
+import 'package:treasureflow/shared/utils/form_validators.dart';
 
 class RegisterCitizenScreen extends StatefulWidget {
   const RegisterCitizenScreen({super.key});
@@ -131,98 +133,10 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
 
               const SizedBox(height: 24),
 
-              SizedBox(
-                height: 160,
-                child: Stack(
-                  alignment: Alignment.topCenter,
-                  children: [
-                    Container(
-                      height: 120,
-                      width: double.infinity,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Image.asset(
-                        'assets/auth/banner.png',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: colors.surface,
-                            child: const Center(
-                              child: Icon(Icons.image, size: 50),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    Positioned(
-                      bottom: 0,
-                      child: GestureDetector(
-                        onTap: _pickImage,
-                        child: Consumer<RegisterCitizenProvider>(
-                          builder: (context, provider, _) {
-                            return Stack(
-                              alignment: Alignment.bottomRight,
-                              children: [
-                                Container(
-                                  width: 88,
-                                  height: 88,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: colors.surface,
-                                    border: Border.all(
-                                      color: colors.background,
-                                      width: 4,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: .10),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child: provider.selectedImage != null
-                                        ? Image.file(
-                                            provider.selectedImage!,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Image.asset(
-                                            'assets/auth/basurini_ball.png',
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) {
-                                              return const Icon(Icons.person, size: 42);
-                                            },
-                                          ),
-                                  ),
-                                ),
-
-                                Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: colors.secondary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: colors.background,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    size: 15,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+              Consumer<RegisterCitizenProvider>(
+                builder: (context, provider, _) => RegisterAvatarPickerWidget(
+                  selectedImage: provider.selectedImage,
+                  onTap: _pickImage,
                 ),
               ),
 
@@ -294,12 +208,7 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
                         hTPlaceHolder: 'Correo electrónico',
                         iconInput: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Ingresa tu correo';
-                          final emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,}$');
-                          if (!emailRegex.hasMatch(v.trim())) return 'Correo no válido';
-                          return null;
-                        },
+                        validator: FormValidators.email,
                       ),
 
                       const SizedBox(height: 16),
@@ -309,7 +218,7 @@ class _RegisterCitizenScreenState extends State<RegisterCitizenScreen> {
                         hTPlaceHolder: 'Contraseña',
                         iconInput: Icons.lock_outline,
                         isPassword: true,
-                        validator: (v) => v == null || v.length < 8 ? 'Mínimo 8 caracteres' : null,
+                        validator: FormValidators.minLengthPassword,
                       ),
 
                       const SizedBox(height: 32),
