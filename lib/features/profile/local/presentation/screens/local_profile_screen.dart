@@ -669,12 +669,17 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
+                  flex: 3,
                   child: Row(
                     children: [
-                      Text(
-                        dayLabel,
-                        style: textTheme.bodySmall?.copyWith(
-                          fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          dayLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+                          ),
                         ),
                       ),
                       if (isToday) ...[
@@ -715,19 +720,24 @@ class _LocalProfileScreenState extends State<LocalProfileScreen> {
                     ),
                   )
                 else
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: colors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      daySchedules
-                          .map((s) => '${s.startTime} – ${s.endTime}')
-                          .join(', '),
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colors.onSurface.withValues(alpha: 0.7),
-                        fontSize: 11,
+                  Flexible(
+                    flex: 2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        daySchedules
+                            .map((s) => '${s.startTime} – ${s.endTime}')
+                            .join(', '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colors.onSurface.withValues(alpha: 0.7),
+                          fontSize: 11,
+                        ),
                       ),
                     ),
                   ),

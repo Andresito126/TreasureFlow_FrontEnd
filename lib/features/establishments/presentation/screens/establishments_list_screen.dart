@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:treasureflow/features/establishments/presentation/providers/establishments_list_provider.dart';
 import 'package:treasureflow/features/home/citizen/presentation/widgets/establishment_card_widget.dart';
 import 'package:treasureflow/shared/utils/material_type_id_catalog.dart';
+import 'package:treasureflow/shared/utils/responsive_grid.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 
 class EstablishmentsListScreen extends StatefulWidget {
@@ -351,11 +352,12 @@ class _EstablishmentsListScreenState extends State<EstablishmentsListScreen> {
         child: GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           physics: const AlwaysScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: responsiveGridDelegate(
+            context,
             crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.72,
+            // EstablishmentCardWidget: imagen fija de 90px + nombre + chips
+            // de materiales (hasta 2 líneas) + fila de rating/estado.
+            contentHeight: 200,
           ),
           itemCount: provider.items.length + (provider.isLoadingMore ? 1 : 0),
           itemBuilder: (context, index) {

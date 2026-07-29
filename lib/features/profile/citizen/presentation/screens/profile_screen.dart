@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:treasureflow/features/profile/citizen/presentation/providers/profile_posts_provider.dart';
 import 'package:treasureflow/shared/utils/post_status_translator.dart';
+import 'package:treasureflow/shared/utils/responsive_grid.dart';
 import 'package:treasureflow/shared/widgets/app_toast.dart';
 import 'package:treasureflow/shared/widgets/floating_nav_bar_widget.dart';
 import 'package:treasureflow/shared/widgets/post_card_widget.dart';
@@ -83,7 +84,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 20),
                           Text(
                             'Mis publicaciones',
-                            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           _buildPostsContent(colors, textTheme),
@@ -227,7 +230,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             _statChip(
               label: 'Ganancias',
-              value: profile != null ? '\$${profile.totalEarnings.toStringAsFixed(2)}' : '—',
+              value: profile != null
+                  ? '\$${profile.totalEarnings.toStringAsFixed(2)}'
+                  : '—',
               colors: colors,
               textTheme: textTheme,
             ),
@@ -270,7 +275,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 2),
             Text(
@@ -297,7 +304,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Image.asset(
               'assets/auth/banner.png',
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(color: colors.primary.withValues(alpha: 0.15)),
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: colors.primary.withValues(alpha: 0.15)),
             ),
           ),
           Positioned(
@@ -312,13 +320,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: colors.surface,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 2)),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
                     ],
                   ),
                   child: CircleAvatar(
                     radius: 40,
                     backgroundColor: colors.primary.withValues(alpha: 0.1),
-                    backgroundImage: pictureUrl != null ? NetworkImage(pictureUrl) : null,
+                    backgroundImage: pictureUrl != null
+                        ? NetworkImage(pictureUrl)
+                        : null,
                     child: pictureUrl == null
                         ? Icon(Icons.person, size: 40, color: colors.primary)
                         : null,
@@ -347,7 +361,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Text(
                     name,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
                 if (isPremium) ...[
@@ -359,7 +376,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 2),
             Text(
               email,
-              style: textTheme.bodySmall?.copyWith(color: colors.onSurface.withValues(alpha: 0.5)),
+              style: textTheme.bodySmall?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.5),
+              ),
             ),
           ],
         );
@@ -367,7 +386,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _topIconButton(IconData icon, ColorScheme colors, {VoidCallback? onTap}) {
+  Widget _topIconButton(
+    IconData icon,
+    ColorScheme colors, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -410,7 +433,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Center(
               child: Text(
                 'Aún no tienes publicaciones',
-                style: textTheme.bodyMedium?.copyWith(color: colors.onSurface.withValues(alpha: 0.5)),
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurface.withValues(alpha: 0.5),
+                ),
               ),
             ),
           );
@@ -422,11 +447,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: provider.posts.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: responsiveGridDelegate(
+                context,
                 crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.78,
+
+                imageAspectRatio: 1.3,
+                contentHeight: 100,
               ),
               itemBuilder: (context, index) {
                 final post = provider.posts[index];
@@ -443,7 +469,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: post.publicationType == 'waste'
                       ? () => context.push('/wasteDetail/${post.id}')
                       : null,
-                  onMenuTap: () => _onMenuTap(post.id, post.publicationType, post.status),
+                  onMenuTap: () =>
+                      _onMenuTap(post.id, post.publicationType, post.status),
                 );
               },
             ),
@@ -463,5 +490,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
-
 }

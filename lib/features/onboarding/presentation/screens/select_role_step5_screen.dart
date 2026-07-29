@@ -27,15 +27,15 @@ class SelectRoleStep6Screen extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 16.0,
-                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -58,7 +58,7 @@ class SelectRoleStep6Screen extends StatelessWidget {
                       ],
                     ),
 
-                    const Spacer(flex: 1),
+                    const SizedBox(height: 24),
 
                     SizedBox(
                       height: (size.height * 0.30).clamp(180.0, 350.0),
@@ -168,7 +168,7 @@ class SelectRoleStep6Screen extends StatelessWidget {
                       },
                     ),
 
-                    const Spacer(flex: 2),
+                    const SizedBox(height: 32),
 
                     TextButton(
                       onPressed: () async {
@@ -201,8 +201,8 @@ class SelectRoleStep6Screen extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

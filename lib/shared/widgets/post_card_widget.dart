@@ -114,6 +114,8 @@ class PostCardWidget extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall?.copyWith(
                       color: colors.primary,
                       fontWeight: FontWeight.w600,
@@ -129,7 +131,14 @@ class PostCardWidget extends StatelessWidget {
                         const SizedBox(width: 12),
                         Icon(Icons.chat_bubble_outline, size: 14, color: colors.onSurface.withValues(alpha: 0.5)),
                         const SizedBox(width: 4),
-                        Text('$offersCount ofertas', style: textTheme.bodySmall?.copyWith(fontSize: 11)),
+                        Flexible(
+                          child: Text(
+                            '$offersCount ofertas',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.bodySmall?.copyWith(fontSize: 11),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -139,11 +148,15 @@ class PostCardWidget extends StatelessWidget {
                       children: [
                         Icon(Icons.near_me_outlined, size: 14, color: colors.onSurface.withValues(alpha: 0.5)),
                         const SizedBox(width: 4),
-                        Text(
-                          distanceLabel!,
-                          style: textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            color: colors.onSurface.withValues(alpha: 0.6),
+                        Flexible(
+                          child: Text(
+                            distanceLabel!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              color: colors.onSurface.withValues(alpha: 0.6),
+                            ),
                           ),
                         ),
                       ],

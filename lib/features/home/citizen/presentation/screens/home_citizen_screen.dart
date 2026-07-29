@@ -338,8 +338,10 @@ class _HomeCitizenScreenState extends State<HomeCitizenScreen> {
               ].map((card) {
                 return SizedBox(
                   width: cardWidth,
-                  height: cardHeight,
-                  child: card,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: cardHeight),
+                    child: card,
+                  ),
                 );
               }).toList(),
         );

@@ -5,6 +5,7 @@ import 'package:treasureflow/features/feed/presentation/providers/feed_provider.
 import 'package:treasureflow/features/posts/waste/navigation/waste_detail_navigation.dart';
 import 'package:treasureflow/shared/utils/material_type_translator.dart';
 import 'package:treasureflow/shared/utils/post_status_translator.dart';
+import 'package:treasureflow/shared/utils/responsive_grid.dart';
 import 'package:treasureflow/shared/widgets/post_card_widget.dart';
 
 class GeneralFeedTabWidget extends StatefulWidget {
@@ -90,20 +91,22 @@ class _GeneralFeedTabWidgetState extends State<GeneralFeedTabWidget> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.error_outline,
-                              size: 48,
-                              color: colors.error.withValues(alpha: 0.6)),
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: colors.error.withValues(alpha: 0.6),
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             provider.errorMessage ?? 'Error al cargar',
-                            style: textTheme.bodyMedium
-                                ?.copyWith(color: colors.error),
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colors.error,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 16),
                           FilledButton(
-                            onPressed: () =>
-                                provider.loadPosts(reset: true),
+                            onPressed: () => provider.loadPosts(reset: true),
                             child: const Text('Reintentar'),
                           ),
                         ],
@@ -119,16 +122,16 @@ class _GeneralFeedTabWidgetState extends State<GeneralFeedTabWidget> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.explore_off_outlined,
-                            size: 48,
-                            color:
-                                colors.onSurface.withValues(alpha: 0.3)),
+                        Icon(
+                          Icons.explore_off_outlined,
+                          size: 48,
+                          color: colors.onSurface.withValues(alpha: 0.3),
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           'Sin publicaciones por ahora',
                           style: textTheme.bodyMedium?.copyWith(
-                            color:
-                                colors.onSurface.withValues(alpha: 0.5),
+                            color: colors.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -140,12 +143,12 @@ class _GeneralFeedTabWidgetState extends State<GeneralFeedTabWidget> {
               return SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
                 sliver: SliverGrid(
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: responsiveGridDelegate(
+                    context,
                     crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.78,
+
+                    imageAspectRatio: 1.3,
+                    contentHeight: 100,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -156,16 +159,16 @@ class _GeneralFeedTabWidgetState extends State<GeneralFeedTabWidget> {
                             child: SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           ),
                         );
                       }
 
                       final post = provider.posts[index];
-                      final statusInfo =
-                          PostStatusTranslator.translate(post.status);
+                      final statusInfo = PostStatusTranslator.translate(
+                        post.status,
+                      );
                       final title = post.publicationType == 'waste'
                           ? MaterialTypeTranslator.translate('residuo')
                           : 'Objeto';
@@ -179,13 +182,12 @@ class _GeneralFeedTabWidgetState extends State<GeneralFeedTabWidget> {
                         viewsCount: post.viewsCount,
                         offersCount: post.offerCount,
                         onTap: post.publicationType == 'waste'
-                            ? () =>
-                                pushWasteDetail(context, post.id)
-                            : () => context.push(
-                                '/objectDetail/${post.id}'),
+                            ? () => pushWasteDetail(context, post.id)
+                            : () => context.push('/objectDetail/${post.id}'),
                       );
                     },
-                    childCount: provider.posts.length +
+                    childCount:
+                        provider.posts.length +
                         (provider.isLoadingMore ? 1 : 0),
                   ),
                 ),

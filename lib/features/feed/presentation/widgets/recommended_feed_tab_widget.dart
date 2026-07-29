@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:treasureflow/features/feed/domain/entities/recommended_post.dart';
 import 'package:treasureflow/features/feed/presentation/providers/recommended_feed_provider.dart';
 import 'package:treasureflow/features/posts/waste/navigation/waste_detail_navigation.dart';
+import 'package:treasureflow/shared/utils/responsive_grid.dart';
 import 'package:treasureflow/shared/widgets/post_card_widget.dart';
 
 const _fallbackCenter = LatLng(16.7569, -93.1292);
@@ -39,7 +40,9 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
       final provider = context.read<RecommendedFeedProvider>();
       debugPrint('[RecommendedFeedTabWidget] triggering loadPosts()');
       await provider.loadPosts();
-      debugPrint('[RecommendedFeedTabWidget] loadPosts done, status:${provider.status} posts:${provider.posts.length}');
+      debugPrint(
+        '[RecommendedFeedTabWidget] loadPosts done, status:${provider.status} posts:${provider.posts.length}',
+      );
       if (!mounted) return;
       _moveCameraToPosts(provider.posts);
     });
@@ -75,10 +78,6 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
     return LatLng(lat, lng);
   }
 
-  // Tamaño de celda en grados a partir del zoom, aproximación estilo Web
-  // Mercator (el mundo mide 256 * 2^zoom px a lo ancho en 360°). Se usa el
-  // mismo valor para latitud y longitud — ignora el estiramiento de
-  // Mercator, aceptable para agrupar visualmente a esta latitud.
   double _degreesPerCell(double zoom) {
     const targetPixels = 64.0;
     final worldWidth = 256 * math.pow(2, zoom);
@@ -140,7 +139,9 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
           icon: icon,
           infoWindow: InfoWindow(
             title: count > 1 ? '$count publicaciones aquí' : label,
-            snippet: count > 1 ? 'Toca para ver todas' : group.first.publishedAt,
+            snippet: count > 1
+                ? 'Toca para ver todas'
+                : group.first.publishedAt,
           ),
           onTap: () => count == 1
               ? pushWasteDetail(context, group.first.id)
@@ -187,8 +188,9 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
     final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, width, height));
     canvas.scale(pixelRatio);
 
-    final bgColor =
-        isFeatured ? const Color(0xFFF59E0B) : const Color(0xFF418839);
+    final bgColor = isFeatured
+        ? const Color(0xFFF59E0B)
+        : const Color(0xFF418839);
     final paint = Paint()..color = bgColor;
 
     canvas.drawRRect(
@@ -223,8 +225,9 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
     }
 
     const starSpacing = 4.0;
-    final reservedForStar =
-        starPainter != null ? starPainter.width + starSpacing : 0.0;
+    final reservedForStar = starPainter != null
+        ? starPainter.width + starSpacing
+        : 0.0;
     final textPainter = TextPainter(
       text: TextSpan(
         text: label,
@@ -242,7 +245,10 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
     final contentWidth = reservedForStar + textPainter.width;
     var dx = (baseWidth - contentWidth) / 2;
     if (starPainter != null) {
-      starPainter.paint(canvas, Offset(dx, (baseHeight - starPainter.height) / 2));
+      starPainter.paint(
+        canvas,
+        Offset(dx, (baseHeight - starPainter.height) / 2),
+      );
       dx += starPainter.width + starSpacing;
     }
     textPainter.paint(
@@ -257,7 +263,11 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
         baseWidth - badgeRadius - badgeMargin,
         badgeRadius + badgeMargin,
       );
-      canvas.drawCircle(badgeCenter, badgeRadius, Paint()..color = Colors.white);
+      canvas.drawCircle(
+        badgeCenter,
+        badgeRadius,
+        Paint()..color = Colors.white,
+      );
       canvas.drawCircle(
         badgeCenter,
         badgeRadius,
@@ -323,7 +333,11 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
                     shrinkWrap: true,
                     itemCount: group.length,
                     itemBuilder: (_, i) => _buildLocationPickerRow(
-                        sheetContext, group[i], colors, textTheme),
+                      sheetContext,
+                      group[i],
+                      colors,
+                      textTheme,
+                    ),
                   ),
                 ),
               ],
@@ -378,13 +392,17 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
                       Expanded(
                         child: Text(
                           post.materialTypeName,
-                          style: textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          style: textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       if (post.isFeatured)
-                        Icon(Icons.star_rounded,
-                            size: 16, color: colors.primary),
+                        Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: colors.primary,
+                        ),
                     ],
                   ),
                   Text(
@@ -405,8 +423,10 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.chevron_right,
-                color: colors.onSurface.withValues(alpha: 0.4)),
+            Icon(
+              Icons.chevron_right,
+              color: colors.onSurface.withValues(alpha: 0.4),
+            ),
           ],
         ),
       ),
@@ -443,11 +463,7 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
                   markers: _markersOf(provider.posts, pixelRatio, _currentZoom),
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
-                  // Reclama la arena de gestos de Flutter para cualquier
-                  // puntero que empiece sobre el mapa, evitando que el
-                  // PageView del TabBarView ancestro capture arrastres
-                  // horizontales y cambie de pestaña en vez de mover el mapa.
-                  // El mapa debe seguir sin anidarse dentro de un Scrollable.
+
                   gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                     Factory<OneSequenceGestureRecognizer>(
                       () => EagerGestureRecognizer(),
@@ -607,11 +623,12 @@ class _RecommendedFeedTabWidgetState extends State<RecommendedFeedTabWidget> {
     return GridView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: responsiveGridDelegate(
+        context,
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.78,
+
+        imageAspectRatio: 1.3,
+        contentHeight: 100,
       ),
       itemCount: provider.posts.length + (provider.isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {

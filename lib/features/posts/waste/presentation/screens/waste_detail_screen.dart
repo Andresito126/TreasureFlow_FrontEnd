@@ -422,11 +422,16 @@ class _WasteDetailScreenState extends State<WasteDetailScreen> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    Text(
-                                      _formatViewedAt(viewer.viewedAt),
-                                      style: textTheme.bodySmall?.copyWith(
-                                        color: colors.onSurface.withValues(alpha: 0.5),
-                                        fontSize: 11,
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        _formatViewedAt(viewer.viewedAt),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: colors.onSurface.withValues(alpha: 0.5),
+                                          fontSize: 11,
+                                        ),
                                       ),
                                     ),
                                   ],
