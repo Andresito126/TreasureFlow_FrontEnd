@@ -34,7 +34,11 @@ class MyApp extends StatefulWidget {
   final AppContainer container;
   final String initialLocation;
 
-  const MyApp({super.key, required this.container, required this.initialLocation});
+  const MyApp({
+    super.key,
+    required this.container,
+    required this.initialLocation,
+  });
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -72,22 +76,27 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
         ChangeNotifierProvider<RegisterCitizenProvider>(
-          create: (_) => CitizenAuthModule(widget.container).provideRegisterProvider(),
+          create: (_) =>
+              CitizenAuthModule(widget.container).provideRegisterProvider(),
         ),
         ChangeNotifierProvider<RegisterLocalProvider>(
-          create: (_) => LocalAuthModule(widget.container).provideRegisterProvider(),
+          create: (_) =>
+              LocalAuthModule(widget.container).provideRegisterProvider(),
         ),
         ChangeNotifierProvider<CreateWasteProvider>(
-          create: (_) => WastePostModule(widget.container).provideCreateWasteProvider(),
+          create: (_) =>
+              WastePostModule(widget.container).provideCreateWasteProvider(),
         ),
         ChangeNotifierProvider<ProfilePostsProvider>(
-          create: (_) => ProfileModule(widget.container).provideProfilePostsProvider(),
+          create: (_) =>
+              ProfileModule(widget.container).provideProfilePostsProvider(),
         ),
         ChangeNotifierProvider<FeedProvider>(
           create: (_) => FeedModule(widget.container).provideFeedProvider(),
         ),
         ChangeNotifierProvider<RecommendedFeedProvider>(
-          create: (_) => FeedModule(widget.container).provideRecommendedFeedProvider(),
+          create: (_) =>
+              FeedModule(widget.container).provideRecommendedFeedProvider(),
         ),
         ChangeNotifierProvider<CitizenHomeProvider>(
           create: (_) => CitizenHomeModule(widget.container).provideProvider(),
@@ -96,10 +105,13 @@ class _MyAppState extends State<MyApp> {
           create: (_) => LocalHomeModule(widget.container).provideProvider(),
         ),
         ChangeNotifierProvider<LocalHomeSummaryProvider>(
-          create: (_) => LocalHomeModule(widget.container).provideLocalHomeSummaryProvider(),
+          create: (_) => LocalHomeModule(
+            widget.container,
+          ).provideLocalHomeSummaryProvider(),
         ),
         ChangeNotifierProvider<EstablishmentsListProvider>(
-          create: (_) => EstablishmentsModule(widget.container).provideListProvider(),
+          create: (_) =>
+              EstablishmentsModule(widget.container).provideListProvider(),
         ),
       ],
       child: MaterialApp.router(
@@ -111,10 +123,6 @@ class _MyAppState extends State<MyApp> {
         themeMode: ThemeMode.system,
         locale: DevicePreview.locale(context),
         builder: (context, child) {
-          // El clamp de textScale debe aplicarse DESPUÉS de que DevicePreview
-          // inyecte su MediaQuery simulado (tamaño de pantalla + slider de
-          // texto), no antes — por eso el Builder va adentro del `child` que
-          // le pasamos a DevicePreview.appBuilder, no afuera.
           final clampedChild = Builder(
             builder: (innerContext) {
               final mediaQuery = MediaQuery.of(innerContext);
